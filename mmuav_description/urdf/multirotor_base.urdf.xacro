@@ -1,0 +1,451 @@
+<?xml version="1.0"?>
+
+<robot xmlns:xacro="http://ros.org/wiki/xacro">
+  <!-- Main multirotor link -->
+  <xacro:macro name="multirotor_base_macro"
+    params="robot_namespace mass body_width body_height mesh_file *inertia">
+    
+    <link name="base_link"></link>
+    <joint name="base_joint" type="fixed">
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <parent link="base_link" />
+      <child link="base_link_inertia" />
+    </joint>
+    <link name="base_link_inertia">
+      <inertial>
+        <mass value="${mass}" />  <!-- [kg] -->
+        <origin xyz="0 0 0" />
+        <xacro:insert_block name="inertia" />
+      </inertial>
+
+      <visual>
+        <origin xyz="0 0 0" rpy="0 0 0" />
+        <geometry>
+          <mesh filename="package://mmuav_description/meshes/${mesh_file}"
+            scale="1 1 1" />
+          <!--box size="${body_width} ${body_width} ${body_height}"/--> <!-- [m] [m] [m] -->
+        </geometry>
+      </visual>
+
+      <collision>
+        <origin xyz="0 0 0" rpy="0 0 0" />
+        <geometry>
+          <mesh filename="package://mmuav_description/meshes/${mesh_file}"
+            scale="1 1 1" />
+          <!--box size="${body_width} ${body_width} ${body_height}" /--> <!-- [m] [m] [m] -->
+        </geometry>
+      </collision>
+    </link>
+
+    <!-- IMU -->
+    <link name="imu_link">
+      <inertial>
+        <inertia ixx="0.00001" ixy="0.0" ixz="0.0" iyy="0.00001" iyz="0.0"
+          izz="0.00001" />
+        <mass value="0.01" />  <!-- [kg] -->
+        <origin xyz="0 0 0" rpy="0 0 0" />
+      </inertial>
+    </link>
+    <!-- IMU joint -->
+    <joint name="imu_joint" type="revolute">
+      <!--origin xyz="0 0 0" rpy="3.1416 0 0" / -->
+      <parent link="base_link" />
+      <child link="imu_link" />
+      <limit upper="0" lower="0" effort="0" velocity="0" />
+    </joint>
+    
+    <!-- attach multirotor_base_plugin to the base_link -->
+    <gazebo>
+      <plugin filename="librotors_gazebo_multirotor_base_plugin.so" name="rosbag">
+        <robotNamespace>$(arg name)</robotNamespace>
+        <linkName>base_link</linkName>
+        <rotorVelocitySlowdownSim>${rotor_velocity_slowdown_sim}</rotorVelocitySlowdownSim>
+      </plugin>
+    </gazebo>
+  </xacro:macro>
+
+  <!-- Rotor joint and link -->
+  <xacro:macro name="vertical_rotor"
+    params="robot_namespace suffix direction motor_constant moment_constant parent mass_rotor radius_rotor time_constant max_rot_velocity motor_number rotor_drag_coefficient rolling_moment_coefficient color *origin *inertia">
+    <joint name="rotor_${motor_number}_joint" type="continuous">
+      <xacro:insert_block name="origin" />
+      <axis xyz="0 0 1" />
+      <!-- TODO(ff): not currently set because it's not yet supported -->
+      <!-- <limit effort="2000" velocity="${max_rot_velocity}" /> -->
+      <parent link="${parent}" />
+      <child link="rotor_${motor_number}" />
+
+    </joint>
+    <!-- TODO(ff): not currently set because it's not yet supported -->
+    <!-- <gazebo reference="rotor_${motor_number}_joint"> <axis> <xyz>0 0 1</xyz> 
+      <limit> <velocity> ${max_rot_velocity} </velocity> </limit> </axis> </gazebo> -->
+    <link name="rotor_${motor_number}">
+      <inertial>
+        <mass value="${mass_rotor}" /> <!-- [kg] -->
+        <xacro:insert_block name="inertia" />
+      </inertial>
+      <visual>
+        <geometry>
+          <!-- <cylinder length="0.005" radius="${radius_rotor}"/> --> <!-- [m] -->
+          <mesh filename="package://mmuav_description/meshes/propeller_${direction}.dae"
+            scale="0.001 0.001 0.001" />
+          <!-- <box size="${2*radius_rotor} 0.01 0.005"/> -->
+        </geometry>
+      </visual>
+      <collision>
+        <geometry>
+          <cylinder length="0.005" radius="${radius_rotor}" /> <!-- [m] -->
+        </geometry>
+      </collision>
+    </link>
+    <gazebo>
+      <plugin name="${suffix}_motor_model" filename="librotors_gazebo_motor_model.so">
+        <jointName>rotor_${motor_number}_joint</jointName>
+        <linkName>rotor_${motor_number}</linkName>
+        <turningDirection>${direction}</turningDirection>
+        <timeConstant>${time_constant}</timeConstant>
+        <maxRotVelocity>${max_rot_velocity}</maxRotVelocity>
+        <motorConstant>${motor_constant}</motorConstant>
+        <momentConstant>${moment_constant}</momentConstant>
+        <commandTopic>${robot_namespace}/command/motors</commandTopic>
+        <motorNumber>${motor_number}</motorNumber>
+        <rotorDragCoefficient>${rotor_drag_coefficient}</rotorDragCoefficient>
+        <rollingMomentCoefficient>${rolling_moment_coefficient}</rollingMomentCoefficient>
+        <motorVelocityTopic>${robot_namespace}/motor_vel/${motor_number}</motorVelocityTopic>
+        <rotorVelocitySlowdownSim>${rotor_velocity_slowdown_sim}</rotorVelocitySlowdownSim>
+      </plugin>
+    </gazebo>
+    <gazebo reference="rotor_${motor_number}">
+      <material>Gazebo/${color}</material>
+    </gazebo>
+  </xacro:macro>
+
+  <!-- We add a <transmission> block for every joint that we wish to actuate. -->
+  <xacro:macro name="transmisija" params="trans_number joint_name">
+    <transmission name="transmission_${trans_number}">
+      <type>transmission_interface/SimpleTransmission</type>
+      <joint name="${joint_name}">
+        <hardwareInterface>EffortJointInterface</hardwareInterface>
+      </joint>
+      <actuator name="motor_${trans_number}">
+        <hardwareInterface>EffortActuatorInterface</hardwareInterface>
+        <mechanicalReduction>100</mechanicalReduction>
+      </actuator>
+    </transmission>
+  </xacro:macro>
+
+   <!-- camera -->
+  <xacro:macro name="camera_macro" params="robot_namespace">
+    <!-- joint -->
+    <joint name="camera_joint" type="fixed">
+      <axis xyz="0 1 0" />
+      <origin xyz="0 0 0.2" rpy="0 0 0" />
+      <parent link="base_link" />
+      <child link="camera_link" />
+    </joint>
+
+    <!-- link -->
+    <link name="camera_link">
+      <collision>
+        <origin xyz="0 0 0" rpy="0 0 0" />
+        <geometry>
+          <box size="0.1 0.1 0.1" />
+        </geometry>
+      </collision>
+
+      <visual>
+        <origin xyz="0 0 0" rpy="0 0 0" />
+        <geometry>
+          <box size="0.1 0.1 0.1" />
+        </geometry>
+        <material name="red" />
+      </visual>
+
+      <inertial>
+        <mass value="1e-5" />
+        <origin xyz="0 0 0" rpy="0 0 0" />
+        <inertia ixx="1e-6" ixy="0" ixz="0" iyy="1e-6" iyz="0" izz="1e-6" />
+      </inertial>
+    </link>
+    <gazebo reference="camera_link">
+      <sensor type="camera" name="camera1">
+        <update_rate>30.0</update_rate>
+        <camera name="head">
+          <horizontal_fov>2</horizontal_fov>
+          <image>
+            <width>800</width>
+            <height>600</height>
+            <format>R8G8B8</format>
+          </image>
+          <clip>
+            <near>0.02</near>
+            <far>300</far>
+          </clip>
+          <noise>
+            <type>gaussian</type>
+            <mean>0.0</mean>
+            <stddev>0.007</stddev>
+          </noise>
+        </camera>
+        <plugin name="camera_controller" filename="libgazebo_ros_camera.so">
+          <alwaysOn>true</alwaysOn>
+          <updateRate>0.0</updateRate>
+          <cameraName>${robot_namespace}/camera1</cameraName>
+          <imageTopicName>image_raw</imageTopicName>
+          <cameraInfoTopicName>camera_info</cameraInfoTopicName>
+          <frameName>camera_link</frameName>
+          <hackBaseline>0.07</hackBaseline>
+          <distortionK1>0.0</distortionK1>
+          <distortionK2>0.0</distortionK2>
+          <distortionK3>0.0</distortionK3>
+          <distortionT1>0.0</distortionT1>
+          <distortionT2>0.0</distortionT2>
+        </plugin>
+      </sensor>
+    </gazebo>
+  </xacro:macro>
+
+  <xacro:macro name="manipulator"
+  params="link_length link_width link_mass link_mesh_file parent suffix *axis *origin">
+    <!--_____________________________________________________________-->
+    <!--LINK1 Dynamixel-->
+    <!--_____________________________________________________________-->
+    <link name='dynamixel_1_${suffix}'>
+      
+      <inertial>
+        <mass value="0.055" />
+        <origin xyz="0.01261097 0 0.00120978" rpy="0 0 0"/>
+        <inertia
+          ixx="0.00000885" ixy="0" ixz="-0.00000024"
+          iyx="0" iyy="0.00001597" iyz="0"
+          izx="-0.00000024" izy="0" izz="0.00001335"/>
+      </inertial>
+            
+      <visual>
+        <origin xyz="0 0 0" rpy="0 0 0" />
+        <geometry>
+          <mesh filename="package://mmuav_description/meshes/AX12.dae"
+            scale="1 1 1" />
+        </geometry>
+      </visual>
+      
+      <collision name='collision'>
+        <origin xyz="0 0 0" rpy="0 0 0"/>
+        <geometry>
+          <mesh filename="package://mmuav_description/meshes/AX12.dae"
+            scale="1 1 1" />
+           <!--box size="0.05 0.041 0.032"/-->
+        </geometry>
+      </collision>
+    </link>
+
+    <!--_____________________________________________________________-->
+    <!--LINK1 F3-->
+    <!--_____________________________________________________________-->
+    <link name='link_F3_fixed_${suffix}'>
+      
+      <inertial>
+        <mass value="0.055" />
+        <origin xyz="0 0 0" rpy="0 0 0"/>
+        <inertia
+          ixx="0.001"
+          iyy="0"
+          izz="0"
+          ixy="0.0" ixz="0.0" iyz="0.0" />
+      </inertial>
+            
+      <visual>
+        <origin xyz="0 0 0" rpy="0 0 0" />
+        <geometry>
+          <mesh filename="package://mmuav_description/meshes/F3.dae"
+            scale="1 1 1" />
+        </geometry>
+      </visual>
+
+      <collision name='collision'>
+        <origin xyz="0 0 0" rpy="0 0 0"/>
+        <geometry>
+          <mesh filename="package://mmuav_description/meshes/F3.dae"
+            scale="1 1 1" />
+           <!--box size="0.05 0.041 0.032"/-->
+        </geometry>
+      </collision>
+    </link>
+
+    <!--_____________________________________________________________-->
+    <!--LINK1 F4-->
+    <!--_____________________________________________________________-->
+    <link name='link_F4_fixed_${suffix}'>
+      
+      <inertial>
+        <mass value="0.055" />
+        <origin xyz="0 0 0" rpy="0 0 0"/>
+        <inertia
+          ixx="0"
+          iyy="0"
+          izz="0"
+          ixy="0.0" ixz="0.0" iyz="0.0" />
+      </inertial>
+            
+      <visual>
+        <origin xyz="0 0 0" rpy="0 0 0" />
+        <geometry>
+          <mesh filename="package://mmuav_description/meshes/F4.dae"
+            scale="1 1 1" />
+        </geometry>
+      </visual>
+
+      <collision name='collision'>
+        <origin xyz="0 0 0" rpy="0 0 0"/>
+        <geometry>
+          <mesh filename="package://mmuav_description/meshes/F4.dae"
+            scale="1 1 1" />
+           <!--box size="0.05 0.041 0.032"/-->
+        </geometry>
+      </collision>
+    </link>
+
+    <!--_____________________________________________________________-->
+    <!--LINK2 Dynamixel-->
+    <!--_____________________________________________________________-->
+    <link name='dynamixel_2_${suffix}'>
+      
+      <inertial>
+        <mass value="0.055" />
+        <origin xyz="0.01261097 0 0.00120978" rpy="0 0 0"/>
+        <inertia
+          ixx="0.00000885" ixy="0" ixz="-0.00000024"
+          iyx="0" iyy="0.00001597" iyz="0"
+          izx="-0.00000024" izy="0" izz="0.00001335"/>
+      </inertial>
+            
+      <visual>
+        <origin xyz="0 0 0" rpy="0 0 0" />
+        <geometry>
+          <mesh filename="package://mmuav_description/meshes/AX12.dae"
+            scale="1 1 1" />
+        </geometry>
+      </visual>
+
+      <collision name='collision'>
+        <origin xyz="0 0 0" rpy="0 0 0"/>
+        <geometry>
+          <mesh filename="package://mmuav_description/meshes/AX12.dae"
+            scale="1 1 1" />
+           <!--box size="0.05 0.041 0.032"/-->
+        </geometry>
+      </collision>
+    </link>
+
+    <!--_____________________________________________________________-->
+    <!--GRIPPER PART1-->
+    <!--_____________________________________________________________-->
+    <link name='link_gripper1_${suffix}'>
+      
+      <inertial>
+        <mass value="0.055" />
+        <origin xyz="0 0 0" rpy="0 0 0"/>
+        <inertia
+          ixx="0"
+          iyy="0"
+          izz="0"
+          ixy="0.0" ixz="0.0" iyz="0.0" />
+      </inertial>
+            
+      <visual>
+        <origin xyz="0 0 0" rpy="0 0 0" />
+        <geometry>
+          <mesh filename="package://mmuav_description/meshes/gripper_part1.dae"
+            scale="1 1 1" />
+        </geometry>
+      </visual>
+
+      <collision name='collision'>
+        <origin xyz="0 0 0" rpy="0 0 0"/>
+        <geometry>
+          <mesh filename="package://mmuav_description/meshes/gripper_part1.dae"
+            scale="1 1 1" />
+           <!--box size="0.05 0.041 0.032"/-->
+        </geometry>
+      </collision>
+    </link>
+
+    <!--_____________________________________________________________-->
+    <!--GRIPPER PART2-->
+    <!--_____________________________________________________________-->
+    <link name='link_gripper2_${suffix}'>
+      
+      <inertial>
+        <mass value="0.01" />
+        <origin xyz="0.02116183 0 0" rpy="1.57079632679 0 0"/>
+        <inertia
+          ixx="0.00000124"
+          iyy="0.00000161"
+          izz="0.00000270"
+          ixy="0.0" ixz="0.0" iyz="0.0" />
+      </inertial>
+            
+      <visual>
+        <origin xyz="0.02047 -0.00104 -0.00134" rpy="0 0 0" />
+        <geometry>
+          <mesh filename="package://mmuav_description/meshes/gripper_part2.dae"
+            scale="1 1 1" />
+        </geometry>
+      </visual>
+
+      <collision name='collision'>
+        <origin xyz="0.02047 -0.00104 -0.00134" rpy="0 0 0"/>
+        <geometry>
+          <mesh filename="package://mmuav_description/meshes/gripper_part2.dae"
+            scale="1 1 1" />
+           <!--box size="0.05 0.041 0.032"/-->
+        </geometry>
+      </collision>
+    </link>
+
+    <joint name="joint_q1_${suffix}" type="revolute">
+      <parent link="${parent}"/>
+      <child link="dynamixel_1_${suffix}" />
+      <xacro:insert_block name="origin"/>
+      <limit upper="2" lower="-2" effort="10" velocity="1"/>
+      <xacro:insert_block name="axis"/>
+    </joint>
+
+    <joint name="Dynamixel1ToF3_${suffix}" type="fixed">
+        <origin xyz="0.0415 0 0" rpy="0 -1.57079633 0"/>
+        <parent link="dynamixel_1_${suffix}"/>
+        <child link="link_F3_fixed_${suffix}"/>
+    </joint>
+
+    <joint name="F3ToF4_${suffix}" type="fixed">
+        <origin xyz="0 0 -0.0525" rpy="0 3.14159265359 0"/>
+        <parent link="link_F3_fixed_${suffix}"/>
+        <child link="link_F4_fixed_${suffix}"/>
+    </joint>
+
+    <joint name="joint_q2_${suffix}" type="revolute">
+      <parent link="link_F4_fixed_${suffix}"/>
+      <child link="dynamixel_2_${suffix}" />
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <limit upper="1.79769e+308" lower="-1.79769e+308" effort="10" velocity="1"/>
+      <axis xyz="0 1 0" />
+    </joint>
+
+    <joint name="Dynamixel2ToGripper_${suffix}" type="fixed">
+        <origin xyz="0.04842 -0.00104 0.00134" rpy="0 0 0"/>
+        <parent link="dynamixel_2_${suffix}"/>
+        <child link="link_gripper1_${suffix}"/>
+    </joint>
+
+    <joint name="joint_q3_passive_${suffix}" type="revolute">
+      <parent link="link_gripper1_${suffix}"/>
+      <child link="link_gripper2_${suffix}" />
+      <origin xyz="0.01265148 0.00103883 0.00134042" rpy="0 0 0"/>
+      <limit upper="1.79769e+308" lower="-1.79769e+308" effort="10" velocity="1"/>
+      <axis xyz="0 1 0" />
+    </joint>
+
+  </xacro:macro>
+
+
+</robot>
