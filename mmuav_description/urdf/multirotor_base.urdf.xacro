@@ -27,14 +27,14 @@
         </geometry>
       </visual>
 
-      <collision>
+      <!--collision>
         <origin xyz="0 0 0" rpy="0 0 0" />
         <geometry>
           <mesh filename="package://mmuav_description/meshes/${mesh_file}"
             scale="1 1 1" />
-          <!--box size="${body_width} ${body_width} ${body_height}" /--> <!-- [m] [m] [m] -->
+          <box size="${body_width} ${body_width} ${body_height}" />
         </geometry>
-      </collision>
+      </collision-->
     </link>
 
     <!-- IMU -->
@@ -230,11 +230,11 @@
       </visual>
       
       <collision name='collision'>
-        <origin xyz="0 0 0" rpy="0 0 0"/>
+        <origin xyz="0.01261097 0 0.00120978" rpy="0 0 0"/>
         <geometry>
-          <mesh filename="package://mmuav_description/meshes/AX12.dae"
-            scale="1 1 1" />
-           <!--box size="0.05 0.041 0.032"/-->
+          <!--mesh filename="package://mmuav_description/meshes/AX12.dae"
+            scale="1 1 1" /-->
+           <box size="0.05 0.041 0.032"/>
         </geometry>
       </collision>
     </link>
@@ -245,13 +245,12 @@
     <link name='link_F3_fixed_${suffix}'>
       
       <inertial>
-        <mass value="0.055" />
-        <origin xyz="0 0 0" rpy="0 0 0"/>
+        <mass value="0.00323" />
+        <origin xyz="0.00000191 0.00240389 0" rpy="0 0 0"/>
         <inertia
-          ixx="0.001"
-          iyy="0"
-          izz="0"
-          ixy="0.0" ixz="0.0" iyz="0.0" />
+          ixx="0.00000047" ixy="0" ixz="0.0"
+          iyx="0" iyy="0.00000065" iyz="0"
+          izx="0.0" izy="0" izz="0.00000020"/>
       </inertial>
             
       <visual>
@@ -261,15 +260,6 @@
             scale="1 1 1" />
         </geometry>
       </visual>
-
-      <collision name='collision'>
-        <origin xyz="0 0 0" rpy="0 0 0"/>
-        <geometry>
-          <mesh filename="package://mmuav_description/meshes/F3.dae"
-            scale="1 1 1" />
-           <!--box size="0.05 0.041 0.032"/-->
-        </geometry>
-      </collision>
     </link>
 
     <!--_____________________________________________________________-->
@@ -278,13 +268,12 @@
     <link name='link_F4_fixed_${suffix}'>
       
       <inertial>
-        <mass value="0.055" />
-        <origin xyz="0 0 0" rpy="0 0 0"/>
+        <mass value="0.01" />
+        <origin xyz="0 -0.03040000 -0.00860000" rpy="0 0 0"/>
         <inertia
-          ixx="0"
-          iyy="0"
-          izz="0"
-          ixy="0.0" ixz="0.0" iyz="0.0" />
+          ixx="0.00000845" ixy="0" ixz="0.0"
+          iyx="0" iyy="0.00000180" iyz="-0.00000279"
+          izx="0.0" izy="-0.00000279" izz="0.00000750"/>
       </inertial>
             
       <visual>
@@ -294,15 +283,6 @@
             scale="1 1 1" />
         </geometry>
       </visual>
-
-      <collision name='collision'>
-        <origin xyz="0 0 0" rpy="0 0 0"/>
-        <geometry>
-          <mesh filename="package://mmuav_description/meshes/F4.dae"
-            scale="1 1 1" />
-           <!--box size="0.05 0.041 0.032"/-->
-        </geometry>
-      </collision>
     </link>
 
     <!--_____________________________________________________________-->
@@ -328,11 +308,11 @@
       </visual>
 
       <collision name='collision'>
-        <origin xyz="0 0 0" rpy="0 0 0"/>
+        <origin xyz="0.01261097 0 0.00120978" rpy="0 0 0"/>
         <geometry>
-          <mesh filename="package://mmuav_description/meshes/AX12.dae"
-            scale="1 1 1" />
-           <!--box size="0.05 0.041 0.032"/-->
+          <!--mesh filename="package://mmuav_description/meshes/AX12.dae"
+            scale="1 1 1" /-->
+           <box size="0.05 0.041 0.032"/>
         </geometry>
       </collision>
     </link>
@@ -343,13 +323,12 @@
     <link name='link_gripper1_${suffix}'>
       
       <inertial>
-        <mass value="0.055" />
-        <origin xyz="0 0 0" rpy="0 0 0"/>
+        <mass value="0.0109" />
+        <origin xyz="0.00028510 0.00103830 0.00134070" rpy="0 0 0"/>
         <inertia
-          ixx="0"
-          iyy="0"
-          izz="0"
-          ixy="0.0" ixz="0.0" iyz="0.0" />
+          ixx="0.00000124" ixy="0" ixz="0.0"
+          iyx="0" iyy="0.00000170" iyz="0"
+          izx="0.0" izy="0" izz="0.00000137"/>
       </inertial>
             
       <visual>
@@ -359,15 +338,6 @@
             scale="1 1 1" />
         </geometry>
       </visual>
-
-      <collision name='collision'>
-        <origin xyz="0 0 0" rpy="0 0 0"/>
-        <geometry>
-          <mesh filename="package://mmuav_description/meshes/gripper_part1.dae"
-            scale="1 1 1" />
-           <!--box size="0.05 0.041 0.032"/-->
-        </geometry>
-      </collision>
     </link>
 
     <!--_____________________________________________________________-->
@@ -441,8 +411,9 @@
       <parent link="link_gripper1_${suffix}"/>
       <child link="link_gripper2_${suffix}" />
       <origin xyz="0.01265148 0.00103883 0.00134042" rpy="0 0 0"/>
-      <limit upper="1.79769e+308" lower="-1.79769e+308" effort="10" velocity="1"/>
+      <limit upper="1.0471975512" lower="-1.0471975512" effort="10" velocity="1"/>
       <axis xyz="0 1 0" />
+      <dynamics damping="0.0" friction="0.04"/>
     </joint>
 
   </xacro:macro>
