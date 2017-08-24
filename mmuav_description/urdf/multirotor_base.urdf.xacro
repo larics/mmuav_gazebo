@@ -377,7 +377,7 @@
       <parent link="${parent}"/>
       <child link="dynamixel_1_${suffix}" />
       <xacro:insert_block name="origin"/>
-      <limit upper="2" lower="-2" effort="10" velocity="1"/>
+      <limit upper="3.14" lower="-3.14" effort="10" velocity="1"/>
       <xacro:insert_block name="axis"/>
     </joint>
 
@@ -397,7 +397,7 @@
       <parent link="link_F4_fixed_${suffix}"/>
       <child link="dynamixel_2_${suffix}" />
       <origin xyz="0 0 0" rpy="0 0 0"/>
-      <limit upper="1.79769e+308" lower="-1.79769e+308" effort="10" velocity="1"/>
+      <limit upper="3.14" lower="-3.14" effort="10" velocity="1"/>
       <axis xyz="0 1 0" />
     </joint>
 
@@ -411,7 +411,7 @@
       <parent link="link_gripper1_${suffix}"/>
       <child link="link_gripper2_${suffix}" />
       <origin xyz="0.01265148 0.00103883 0.00134042" rpy="0 0 0"/>
-      <limit upper="1.0471975512" lower="-1.0471975512" effort="10" velocity="1"/>
+      <limit upper="1.57" lower="-1.57" effort="10" velocity="1"/>
       <axis xyz="0 1 0" />
       <dynamics damping="0.0" friction="0.04"/>
     </joint>
