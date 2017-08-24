@@ -125,10 +125,10 @@
     <transmission name="transmission_${trans_number}">
       <type>transmission_interface/SimpleTransmission</type>
       <joint name="${joint_name}">
-        <hardwareInterface>EffortJointInterface</hardwareInterface>
+        <hardwareInterface>hardware_interface/EffortJointInterface</hardwareInterface>
       </joint>
       <actuator name="motor_${trans_number}">
-        <hardwareInterface>EffortActuatorInterface</hardwareInterface>
+        <hardwareInterface>hardware_interface/EffortActuatorInterface</hardwareInterface>
         <mechanicalReduction>100</mechanicalReduction>
       </actuator>
     </transmission>
