@@ -187,12 +187,22 @@
 
   <xacro:transmisija 
     trans_number="2" 
-    joint_name="joint_q1_right">
+    joint_name="joint_q3_passive_left">
   </xacro:transmisija>
 
   <xacro:transmisija 
     trans_number="3"
+    joint_name="joint_q1_right">
+  </xacro:transmisija>
+
+  <xacro:transmisija 
+    trans_number="4"
     joint_name="joint_q2_right">
+  </xacro:transmisija>
+
+    <xacro:transmisija 
+    trans_number="5"
+    joint_name="joint_q3_passive_right">
   </xacro:transmisija>
 
 </robot>
