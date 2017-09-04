@@ -5,11 +5,14 @@ find_package(catkin REQUIRED COMPONENTS
     roscpp
     rospy
     std_msgs
-    genmsg
+    dynamic_reconfigure
 )
 
 find_package(cmake_modules REQUIRED)
 
+generate_dynamic_reconfigure_options(
+    config/MmuavZCtlParams.cfg
+    )
 
 catkin_package(
 )
@@ -19,8 +22,8 @@ include_directories(
   ${catkin_INCLUDE_DIRS}
 )
 
-install(DIRECTORY config
-  DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION})
+#install(DIRECTORY config
+#  DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION})
 
-install(DIRECTORY launch
-  DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION})
+#install(DIRECTORY launch
+#  DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION})
