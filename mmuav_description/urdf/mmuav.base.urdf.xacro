@@ -70,6 +70,7 @@
     body_width="${body_width}"
     body_height="${body_height}"
     mesh_file="${body_mesh_file}">
+    <origin xyz="0 0 0" rpy="0 0 0"/>
     <xacro:insert_block name="body_inertia" />
   </xacro:multirotor_base_macro>
 

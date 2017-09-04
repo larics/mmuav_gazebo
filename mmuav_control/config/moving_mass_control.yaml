@@ -1,0 +1,24 @@
+mmcuav:
+  # Publish all joint states -----------------------------------
+  joint_state_controller:
+    type: joint_state_controller/JointStateController
+    publish_rate: 100
+    
+    
+  # Position Controllers ---------------------------------------
+  movable_mass_0_position_controller:
+    type: effort_controllers/JointPositionController
+    joint: stick_to_movable_mass_0
+    pid: {p: 175.0, i: 4.75, d: 4.25, i_clamp_max: 0.08, i_clamp_min: -0.08}
+  movable_mass_1_position_controller:
+    type: effort_controllers/JointPositionController
+    joint: stick_to_movable_mass_1
+    pid: {p: 175.0, i: 4.75, d: 4.25, i_clamp_max: 0.08, i_clamp_min: -0.08}
+  movable_mass_2_position_controller:
+    type: effort_controllers/JointPositionController
+    joint: stick_to_movable_mass_2
+    pid: {p: 175.0, i: 4.75, d: 4.25, i_clamp_max: 0.08, i_clamp_min: -0.08}
+  movable_mass_3_position_controller:
+    type: effort_controllers/JointPositionController
+    joint: stick_to_movable_mass_3
+    pid: {p: 175.0, i: 4.75, d: 4.25, i_clamp_max: 0.08, i_clamp_min: -0.08}

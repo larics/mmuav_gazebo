@@ -3,11 +3,11 @@
 <robot xmlns:xacro="http://ros.org/wiki/xacro">
   <!-- Main multirotor link -->
   <xacro:macro name="multirotor_base_macro"
-    params="robot_namespace mass body_width body_height mesh_file *inertia">
+    params="robot_namespace mass body_width body_height mesh_file *origin *inertia">
     
     <link name="base_link"></link>
     <joint name="base_joint" type="fixed">
-      <origin xyz="0 0 0" rpy="0 0 0" />
+      <xacro:insert_block name="origin"/>
       <parent link="base_link" />
       <child link="base_link_inertia" />
     </joint>
@@ -27,14 +27,14 @@
         </geometry>
       </visual>
 
-      <!--collision>
+      <collision>
         <origin xyz="0 0 0" rpy="0 0 0" />
         <geometry>
-          <mesh filename="package://mmuav_description/meshes/${mesh_file}"
-            scale="1 1 1" />
+          <!--mesh filename="package://mmuav_description/meshes/${mesh_file}"
+            scale="1 1 1" /-->
           <box size="${body_width} ${body_width} ${body_height}" />
         </geometry>
-      </collision-->
+      </collision>
     </link>
 
     <!-- IMU -->
@@ -415,6 +415,41 @@
       <axis xyz="0 1 0" />
     </joint>
 
+  </xacro:macro>
+
+  <!-- Definition of movable mass macro -->
+  <xacro:macro name="movable_mass" params="mass_number parent mass dimension path_len color x_axis y_axis z_axis orientation *origin *inertia">
+    <joint name="stick_to_movable_mass_${mass_number}" type="prismatic">
+      <xacro:insert_block name="origin"/>
+      <axis xyz="${x_axis} ${y_axis} ${z_axis}"/>
+      <parent link="${parent}"/>
+      <child link="movable_mass_${mass_number}"/>
+      <limit lower="${-path_len/2}" upper="${path_len/2}" effort="10000" velocity="20"/>
+      <dynamics damping="10" />
+    </joint>
+    <link name="movable_mass_${mass_number}">
+      <visual>
+        <origin rpy="0 0 ${orientation}" xyz="0 0 ${0*dimension/2}"/>
+        <geometry>
+          <box size="${1*dimension} ${1*dimension} ${1*dimension}"/>
+        </geometry>
+      </visual>
+      <collision>
+        <origin rpy="0 0 0" xyz="0 0 ${0*dimension/2}"/>
+        <geometry>
+          <box size="${1*dimension} ${1*dimension} ${1*dimension}"/>
+        </geometry>
+      </collision>
+      <inertial>
+        <origin rpy="0 0 0" xyz="0 0 ${0*dimension/2}"/>
+        <mass value="${mass}"/>
+        <xacro:insert_block name="inertia"/>
+      </inertial>
+    </link>
+
+    <gazebo reference="movable_mass_${mass_number}">
+      <material>Gazebo/${color}</material>
+    </gazebo>
   </xacro:macro>
 
 
