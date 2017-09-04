@@ -65,14 +65,15 @@ def ik_both_arms(q01_list, q02_list, goal, L1, L2, L3):
     DH[0,3] = L1
     DH[1,3] = L2
 
-    q01 = (q01_list[0], q01_list[1], q01_list[2])
-    q02 = (q02_list[0], q02_list[1], q02_list[2])
+    q01 = [q01_list[0], q01_list[1], q01_list[2]]
+    q02 = [q02_list[0], q02_list[1], q02_list[2]]
     Q1 = copy.deepcopy(q01)
     Q2 = copy.deepcopy(q02)
     #We want to use the null space of the arms to find the closes solution of inverse kinematics
     DQ_min = np.infty
     #Passive joint at the endeffector can rotate +/-30 degrees 
     N=90
+    PHI=100.0
     for phi in range(-N,N):
         phi=phi*np.pi/180
         #Find the goal position for the arms
@@ -89,12 +90,22 @@ def ik_both_arms(q01_list, q02_list, goal, L1, L2, L3):
         #Find minimal distance in Q space
         if (DQ<DQ_min):
             DQ_min=DQ
-            Q1=q1
-            Q2=q2
-            PHI= phi
+            #Q1=[0,0,0]
+            #Q2=[0,0,0]
+            for i in range(2):
+                Q1[i] = q1[i]
+                Q2[i] = q2[i]
+            #Q1=list(q1)
+            #Q2=list(q2)
+            PHI=phi
+            Q1[2] = PHI
+            Q2[2] = PHI
 
-    print "PHI: ", PHI*180/math.pi
+    #print "PHI: ", PHI*180/math.pi
 
+    # Put phi in q1 and q2
+    #print Q1
+    
     return [Q1, Q2]
 
 

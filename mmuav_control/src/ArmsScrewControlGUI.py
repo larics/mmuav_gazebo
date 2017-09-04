@@ -16,6 +16,7 @@ from geometry_msgs.msg import Quaternion, Pose, PoseStamped
 from geometry_msgs.msg import Vector3
 import DualManipulatorPassiveJointKinematics as arms_kinematics_screw
 from math import sin, cos, pi
+import time
 
 
 class ArmsControlGUI():
@@ -44,8 +45,8 @@ class ArmsControlGUI():
 		self.window.ArmsWSpinBox.valueChanged.connect(self.ArmsWSpinBoxCallback)
 		self.window.ArmsL3SpinBox.valueChanged.connect(self.ArmsL3SpinBoxCallback)
 
-		self.armsQRight = [0.748, -1.5986, 0]
-		self.armsQLeft = [0.748, -1.5986, 0]
+		self.armsQRight = [-1.771+2.35, -2.213+1.57, -1.2]
+		self.armsQLeft = [1.364-0.785, -2.213+1.57, -1.2]
 		self.L3 = 0.05
 
 		self.armsPosition = [0, 0] # x,y
@@ -55,10 +56,20 @@ class ArmsControlGUI():
 			Float64, queue_size=1)
 		self.JointRight2Pub = rospy.Publisher("/mmuav/joint2_right_controller/command", 
 			Float64, queue_size=1)
+		self.JointRight3Pub = rospy.Publisher("/mmuav/joint3_right_controller/command", 
+			Float64, queue_size=1)
 		self.JointLeft1Pub = rospy.Publisher("/mmuav/joint1_left_controller/command", 
 			Float64, queue_size=1)
 		self.JointLeft2Pub = rospy.Publisher("/mmuav/joint2_left_controller/command", 
 			Float64, queue_size=1)
+		self.JointLeft3Pub = rospy.Publisher("/mmuav/joint3_left_controller/command", 
+			Float64, queue_size=1)
+		# Sleep to initialize publishers and publish initial pose
+		time.sleep(2.0)
+		self.PublishData()
+
+
+
 
 		# Subscribers to arducopter pose and screw pose
 		self.arducopterPoseSub = rospy.Subscriber("vrpn_client_node/arducopter/pose", PoseStamped, 
@@ -111,12 +122,13 @@ class ArmsControlGUI():
 		pass
 
 	def Inverse(self):
-		L1 = 0.093
+		L1 = 0.094
 		L2 = 0.061
 		L3 = self.L3
 
 		arms_pos = [self.armsPosition[0]*cos(-pi/4) - self.armsPosition[1]*sin(-pi/4), \
 			self.armsPosition[0]*sin(-pi/4) + self.armsPosition[1]*cos(-pi/4)]
+		#arms_pos = [-self.armsPosition[0], -self.armsPosition[1]]
 
 		q = arms_kinematics_screw.ik_both_arms(self.armsQRight, self.armsQLeft, 
 			arms_pos, L1, L2, L3)
@@ -126,16 +138,18 @@ class ArmsControlGUI():
 		#print self.armsQRight, self.armsQLeft
 
 		self.PublishData()
-		print "Data"
-		print self.armsPosition
-		print self.armsQRight
-		print self.armsQLeft
+		#print "Data"
+		#print self.armsPosition
+		#print self.armsQRight
+		#print self.armsQLeft
 
 	def PublishData(self):
 		self.JointRight1Pub.publish(Float64(self.armsQRight[0]-2.35))
 		self.JointRight2Pub.publish(Float64(self.armsQRight[1]-1.57))
+		self.JointRight3Pub.publish(Float64(self.armsQRight[2]))
 		self.JointLeft1Pub.publish(Float64(self.armsQLeft[0]+0.785))
 		self.JointLeft2Pub.publish(Float64(self.armsQLeft[1]-1.57))
+		self.JointLeft3Pub.publish(Float64(self.armsQLeft[2]))
 
 	def arducopterPoseCallback(self, msg):
 		self.arducopterPose = msg.pose
