@@ -11,8 +11,15 @@ find_package(catkin REQUIRED COMPONENTS
 find_package(cmake_modules REQUIRED)
 
 generate_dynamic_reconfigure_options(
+    # Generic UAV parameters
+    config/UavZCtlParams.cfg
+    config/UavAttitudeCtlParams.cfg
+    # MMUAV parameters
     config/MmuavZCtlParams.cfg
     config/MmuavAttitudeCtlParams.cfg
+    # MMCUAV parameters
+    config/MmcuavZCtlParams.cfg
+    config/MmcuavAttitudeCtlParams.cfg
     )
 
 catkin_package(

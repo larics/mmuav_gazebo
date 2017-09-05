@@ -6,10 +6,11 @@ import rospy
 from pid import PID
 from geometry_msgs.msg import Vector3, Vector3Stamped, PoseWithCovarianceStamped
 from sensor_msgs.msg import Imu
+from nav_msgs.msg import Odometry
 from std_msgs.msg import Float32, Float64
 from mmuav_msgs.msg import PIDController
 from dynamic_reconfigure.server import Server
-from mmuav_control.cfg import MmuavAttitudeCtlParamsConfig
+from mmuav_control.cfg import MmcuavAttitudeCtlParamsConfig
 import math
 from datetime import datetime
 from rosgraph_msgs.msg import Clock
@@ -63,31 +64,31 @@ class AttitudeControl:
         ##################################################################
         # Add your PID params here
 
-        self.pid_roll.set_kp(3.0)
-        self.pid_roll.set_ki(1.0)
+        self.pid_roll.set_kp(2.32)
+        self.pid_roll.set_ki(0)
         self.pid_roll.set_kd(0)
 
-        self.pid_roll_rate.set_kp(2.5)
-        self.pid_roll_rate.set_ki(0.0)
+        self.pid_roll_rate.set_kp(0.1)
+        self.pid_roll_rate.set_ki(0)
         self.pid_roll_rate.set_kd(0)
-        self.pid_roll_rate.set_lim_high(0.3)
-        self.pid_roll_rate.set_lim_low(-0.3)
+        self.pid_roll_rate.set_lim_high(0.08)
+        self.pid_roll_rate.set_lim_low(-0.08)
 
-        self.pid_pitch.set_kp(3.0)
-        self.pid_pitch.set_ki(1.0)
+        self.pid_pitch.set_kp(2.32)
+        self.pid_pitch.set_ki(0)
         self.pid_pitch.set_kd(0)
 
-        self.pid_pitch_rate.set_kp(2.5)
-        self.pid_pitch_rate.set_ki(0.0)
+        self.pid_pitch_rate.set_kp(0.1)
+        self.pid_pitch_rate.set_ki(0)
         self.pid_pitch_rate.set_kd(0)
-        self.pid_pitch_rate.set_lim_high(0.3)
-        self.pid_pitch_rate.set_lim_low(-0.3)
+        self.pid_pitch_rate.set_lim_high(0.08)
+        self.pid_pitch_rate.set_lim_low(-0.08)
 
         self.pid_yaw.set_kp(1.0)
         self.pid_yaw.set_ki(0)
-        self.pid_yaw.set_kd(0)
+        self.pid_yaw.set_kd(0.1)
 
-        self.pid_yaw_rate.set_kp(1.0)
+        self.pid_yaw_rate.set_kp(200.0)
         self.pid_yaw_rate.set_ki(0)
         self.pid_yaw_rate.set_kd(0)
 
@@ -95,13 +96,13 @@ class AttitudeControl:
         ##################################################################
         ##################################################################
 
-        self.rate = 100.0
+        self.rate = rospy.get_param('rate', 100)
         self.ros_rate = rospy.Rate(self.rate)                 # attitude control at 100 Hz
 
         self.t_old = 0
 
         rospy.Subscriber('imu', Imu, self.ahrs_cb)
-        rospy.Subscriber('mot_vel_ref', Float32, self.mot_vel_ref_cb)
+        rospy.Subscriber('mot_vel_ref', Float64, self.mot_vel_ref_cb)
         rospy.Subscriber('euler_ref', Vector3, self.euler_ref_cb)
         rospy.Subscriber('/clock', Clock, self.clock_cb)
 
@@ -116,7 +117,7 @@ class AttitudeControl:
         self.pub_pid_pitch_rate = rospy.Publisher('pid_pitch_rate', PIDController, queue_size=1)
         self.pub_pid_yaw = rospy.Publisher('pid_yaw', PIDController, queue_size=1)
         self.pub_pid_yaw_rate = rospy.Publisher('pid_yaw_rate', PIDController, queue_size=1)
-        self.cfg_server = Server(MmuavAttitudeCtlParamsConfig, self.cfg_callback)
+        self.cfg_server = Server(MmcuavAttitudeCtlParamsConfig, self.cfg_callback)
 
     def run(self):
         '''
@@ -128,7 +129,7 @@ class AttitudeControl:
 
         print 'Received first clock message'
 
-        while not (self.start_flag) and (not rospy.is_shutdown()):
+        while (not self.start_flag) and (not rospy.is_shutdown()):
             print "Waiting for the first measurement."
             rospy.sleep(0.5)
         print "Starting attitude control."
@@ -141,11 +142,8 @@ class AttitudeControl:
 
         while not rospy.is_shutdown():
             #self.ros_rate.sleep()
-            rospy.sleep(0.01)
-        if not self.start_flag:
-            "Waiting for the first IMU measurement."
-            rospy.sleep(0.5)
-        else:
+            rospy.sleep(1.0/float(self.rate))
+
             clock_now = self.clock
             dt_clk = (clock_now.clock - clock_old.clock).to_sec()
 
@@ -194,6 +192,7 @@ class AttitudeControl:
             attitude_output.vector.y = pitch_rate_output
             attitude_output.vector.z = yaw_rate_output
             attitude_output.header.stamp = rospy.Time.now()
+            self.attitude_pub.publish(attitude_output)
 
             # Publish PID data - could be usefule for tuning
             self.pub_pid_roll.publish(self.pid_roll.create_msg())
@@ -231,7 +230,7 @@ class AttitudeControl:
 
         # gyro measurements (p,q,r)
         p = msg.angular_velocity.x
-        q = msg.angular_velocity.yaw
+        q = msg.angular_velocity.y
         r = msg.angular_velocity.z
 
         sx = math.sin(self.euler_mv.x)   # sin(roll)
@@ -317,6 +316,6 @@ class AttitudeControl:
 
 if __name__ == '__main__':
 
-    rospy.init_node('mmuav_attitude_ctl')
+    rospy.init_node('mmcuav_attitude_ctl')
     attitude_ctl = AttitudeControl()
     attitude_ctl.run()
