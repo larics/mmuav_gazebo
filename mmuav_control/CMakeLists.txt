@@ -20,6 +20,9 @@ generate_dynamic_reconfigure_options(
     # MMCUAV parameters
     config/MmcuavZCtlParams.cfg
     config/MmcuavAttitudeCtlParams.cfg
+    # VPC MMCUAV parameters
+    config/VpcMmcuavZCtlParams.cfg
+    config/VpcMmcuavAttitudeCtlParams.cfg
     )
 
 catkin_package(
