@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 import rospy
-from std_msgs.msg import Float64
+from std_msgs.msg import Float64, Float64MultiArray
 from sensor_msgs.msg import Imu
 from struct import *
 import serial
@@ -19,17 +19,8 @@ class StepperInterface():
         self.serial_device.stopbits = serial.STOPBITS_ONE
         self.serial_device.bytesize = serial.EIGHTBITS
 
-        self.mass1 = 0
-        self.mass2 = 0
-        self.mass3 = 0
-        self.mass4 = 0
-
-        self.r = rospy.Rate(60)
-
-        rospy.Subscriber('movable_mass_0_position_controller/command', Float64, self.mm1_cb)
-        rospy.Subscriber('movable_mass_1_position_controller/command', Float64, self.mm2_cb)
-        rospy.Subscriber('movable_mass_2_position_controller/command', Float64, self.mm3_cb)
-        rospy.Subscriber('movable_mass_3_position_controller/command', Float64, self.mm4_cb)
+        rospy.Subscriber('movable_mass_all/command', Float64MultiArray, self.all_mass_cb, queue_size=1)
+        self.mass_all_array = [0.0, 0.0, 0.0, 0.0]
 
     def run(self):
 
@@ -42,49 +33,26 @@ class StepperInterface():
 
         print 'Serial communication opened!'
 
-        while not rospy.is_shutdown():
-            ##Check for messages with 60 Hz
+        rospy.spin()
 
-            s = pack('iiiicxxx', self.mass1, self.mass2, self.mass3, self.mass4, 'C')
+    def all_mass_cb(self,msg):
+        if len(msg.data) < 4:
+            print "Not enough data, should be at least 4. Length: ", len(msg.data)
+        else:
+            for i in range(len(msg.data)):
+                self.mass_all_array[i] = msg.data[i]
+                if (self.mass_all_array[i] > 0.08):
+                    self.mass_all_array[i] = 0.08
+                elif (self.mass_all_array[i] < -0.08):
+                    self.mass_all_array[i] = -0.08
 
-            ##Debug print
-            print self.mass1
-
-            self.serial_device.write(s)
-            self.r.sleep()
-
-
-    def mm1_cb(self,msg):
-        if (msg.data > 0.08):
-            msg.data = 0.08
-        elif (msg.data < -0.08):
-            msg.data = -0.08
-
-        self.mass1 = round(5000*msg.data)
-
-    def mm2_cb(self,msg):
-        if (msg.data > 0.08):
-            msg.data = 0.08
-        elif (msg.data < -0.08):
-            msg.data = -0.08
-
-        self.mass2 = round(5000*msg.data)
-
-    def mm3_cb(self,msg):
-        if (msg.data > 0.08):
-            msg.data = 0.08
-        elif (msg.data < -0.08):
-            msg.data = -0.08
-
-        self.mass3 = round(5000*msg.data)
-
-    def mm4_cb(self,msg):
-        if (msg.data > 0.08):
-            msg.data = 0.08
-        elif (msg.data < -0.08):
-            msg.data = -0.08
-
-        self.mass4 = round(5000*msg.data)
+        # Write immediately
+        s = pack('iiiicxxx',    round(5000*self.mass_all_array[0]), 
+                                round(5000*self.mass_all_array[1]*0),
+                                round(5000*self.mass_all_array[2]),
+                                round(5000*self.mass_all_array[3]*0),
+                                'C')
+        self.serial_device.write(s)
 
 
 if __name__ == '__main__':
