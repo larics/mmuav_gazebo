@@ -38,6 +38,7 @@ class MergeControllerOutputs:
         self.mass_left_pub = rospy.Publisher('movable_mass_1_position_controller/command', Float64, queue_size=1)
         self.mass_back_pub = rospy.Publisher('movable_mass_2_position_controller/command', Float64, queue_size=1)
         self.mass_right_pub = rospy.Publisher('movable_mass_3_position_controller/command', Float64, queue_size=1)
+        self.mass_all_pub = rospy.Publisher('movable_mass_all/command', Float64MultiArray, queue_size=1)
 
         # Subscribers to height and attitude controllers
         rospy.Subscriber('attitude_command', Float64MultiArray, 
@@ -80,6 +81,9 @@ class MergeControllerOutputs:
             self.mass_back_pub.publish(Float64(moving_mass_back))
             self.mass_left_pub.publish(Float64(moving_mass_left))
             self.mass_right_pub.publish(Float64(moving_mass_right))
+            all_mass_msg = Float64MultiArray()
+            all_mass_msg.data = [moving_mass_front, moving_mass_left, moving_mass_back, moving_mass_right]
+            self.mass_all_pub.publish(all_mass_msg)
 
 
     def attitude_command_cb(self, msg):
