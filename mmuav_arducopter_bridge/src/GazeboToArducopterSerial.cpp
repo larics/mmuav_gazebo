@@ -17,6 +17,11 @@ GazeboToArducopterSerial::GazeboToArducopterSerial()
     // Set up node handle for topics
     all_mass_sub = nhTopics.subscribe("movable_mass_all/command", 1,
         &GazeboToArducopterSerial::allMassCallback, this);
+    dynamic_reconfigure::Server<mmuav_arducopter_bridge::StepperParametersConfig> server;
+    dynamic_reconfigure::Server<mmuav_arducopter_bridge::StepperParametersConfig>::CallbackType f;
+
+    f = boost::bind(&GazeboToArducopterSerial::reconfigureCallback, this, _1, _2);
+    server.setCallback(f);
 }
 
 GazeboToArducopterSerial::~GazeboToArducopterSerial()
@@ -125,7 +130,7 @@ int GazeboToArducopterSerial::SetSerialAttributes(string port, int baudrate)
     return 1;
 }
 
-int GazeboToArducopterSerial::SerialWrite(int m[4])
+int GazeboToArducopterSerial::SerialWrite(int m[4], unsigned char terminator)
 {   
     unsigned char dataByte;
     for (int i=0; i < 4; i++)
@@ -139,7 +144,7 @@ int GazeboToArducopterSerial::SerialWrite(int m[4])
         dataByte = m[i] >> 24;
         write(USB, &dataByte, 1);
     }
-    dataByte = 67;
+    dataByte = terminator;
     write(USB, &dataByte, 1);
     dataByte = 0;
     write(USB, &dataByte, 1);
@@ -148,6 +153,8 @@ int GazeboToArducopterSerial::SerialWrite(int m[4])
 
     return 1;
 }
+
+
 
 int GazeboToArducopterSerial::SerialRead()
 {
@@ -219,5 +226,20 @@ void GazeboToArducopterSerial::allMassCallback(const std_msgs::Float64MultiArray
     // Create big string
     m[1]*=0.0;
     m[3]*=0.0;
-    SerialWrite(m);
+    SerialWrite(m, 67);
+}
+
+void GazeboToArducopterSerial::reconfigureCallback(mmuav_arducopter_bridge::StepperParametersConfig &config, uint32_t level) {
+  
+  int m[4] = {0,0,0,0};
+  ROS_INFO("Reconfigure Request: %d %d %d %d", 
+            config.gain, config.ang_speed_pps, 
+            config.ang_acc_pos_ppss, config.ang_acc_neg_ppss);
+  m[0] = config.gain;
+  m[1] = config.ang_speed_pps;
+  m[2] = config.ang_acc_pos_ppss;
+  m[3] = config.ang_acc_neg_ppss;
+
+  SerialWrite(m, 83); 
+
 }

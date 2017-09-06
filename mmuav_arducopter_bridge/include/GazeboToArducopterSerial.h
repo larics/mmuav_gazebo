@@ -20,6 +20,8 @@ Author: Antun Ivanovic
 #include <fcntl.h>
 
 #include <std_msgs/Float64MultiArray.h>
+#include <mmuav_arducopter_bridge/StepperParametersConfig.h>
+#include <dynamic_reconfigure/server.h>
 
 using namespace std;
 
@@ -37,7 +39,7 @@ private:
     int USB;
     int SetSerialAttributes(string port, int baudrate);
     int baudrate; string port;
-    int SerialWrite(int m[4]);
+    int SerialWrite(int m[4], unsigned char terminator);
     int SerialRead();
 
     // ROS-related
@@ -45,4 +47,6 @@ private:
     ros::NodeHandle nhParams, nhTopics;
     ros::Subscriber all_mass_sub;
     void allMassCallback(const std_msgs::Float64MultiArray &msg);
+    void reconfigureCallback(mmuav_arducopter_bridge::StepperParametersConfig &config, uint32_t level);
+
 };
