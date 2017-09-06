@@ -17,6 +17,11 @@ include_directories(
   ${catkin_INCLUDE_DIRS}
 )
 
+add_library(gazeboToArducopter src/GazeboToArducopterSerial.cpp)
+target_link_libraries(gazeboToArducopter ${catkin_LIBRARIES})
+add_executable(gazeboToArducopterSerialNode src/gazeboToArducopterSerialNode.cpp)
+target_link_libraries(gazeboToArducopterSerialNode ${catkin_LIBRARIES} gazeboToArducopter)
+
 #install(DIRECTORY config
 #  DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION})
 
