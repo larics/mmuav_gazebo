@@ -112,12 +112,17 @@ class AttitudeControl:
         self.pid_vpc_pitch.set_lim_high(200)
         self.pid_vpc_pitch.set_lim_low(-200)
 
+        # Filter parameters
+        self.rate_mv_filt_K = 1.0
+        self.rate_mv_filt_T = 0.02
+
 
         ##################################################################
         ##################################################################
 
         self.rate = rospy.get_param('rate', 100)
         self.ros_rate = rospy.Rate(self.rate)                 # attitude control at 100 Hz
+        self.Ts = 1.0/float(self.rate)
 
         self.t_old = 0
 
@@ -246,8 +251,6 @@ class AttitudeControl:
         We used the following order of rotation - 1)yaw, 2) pitch, 3) roll
         :param msg: Type sensor_msgs/Imu
         '''
-        if not self.start_flag:
-            self.start_flag = True
 
         qx = msg.orientation.x
         qy = msg.orientation.y
@@ -274,7 +277,21 @@ class AttitudeControl:
         self.euler_rate_mv.y = cx * q - sx * r
         self.euler_rate_mv.z = sx / cy * q + cx / cy * r
 
-        self.euler_rate_mv_old = copy.deepcopy(self.euler_rate_mv_old)
+        # If we are in first pass initialize filter
+        if not self.start_flag:
+            self.start_flag = True
+            self.euler_rate_mv_old = copy.deepcopy(self.euler_rate_mv)
+
+        # Filtering angular velocities
+        self.euler_rate_mv.x = filterPT1(self.euler_rate_mv_old.x, 
+            self.euler_rate_mv.x, self.rate_mv_filt_T, self.Ts, self.rate_mv_filt_K)
+        self.euler_rate_mv.y = filterPT1(self.euler_rate_mv_old.y, 
+            self.euler_rate_mv.y, self.rate_mv_filt_T, self.Ts, self.rate_mv_filt_K)
+        self.euler_rate_mv.z = filterPT1(self.euler_rate_mv_old.z, 
+            self.euler_rate_mv.z, self.rate_mv_filt_T, self.Ts, self.rate_mv_filt_K)
+
+        # Set old to current
+        self.euler_rate_mv_old = copy.deepcopy(self.euler_rate_mv)
 
     def euler_ref_cb(self, msg):
         '''
@@ -325,6 +342,10 @@ class AttitudeControl:
             config.vpc_pitch_ki = self.pid_vpc_pitch.get_ki()
             config.vpc_pitch_kd = self.pid_vpc_pitch.get_kd()
 
+            # Rate filter
+            config.vpc_rate_mv_filt_K = self.rate_mv_filt_K
+            config.vpc_rate_mv_filt_T = self.rate_mv_filt_T
+
             self.config_start = True
         else:
             # The following code just sets up the P,I,D gains for all controllers
@@ -357,11 +378,15 @@ class AttitudeControl:
             self.pid_vpc_roll.set_ki(config.vpc_roll_ki)
             self.pid_vpc_roll.set_kd(config.vpc_roll_kd)
 
+            # Rate filter
+            self.rate_mv_filt_K = config.vpc_rate_mv_filt_K
+            self.rate_mv_filt_T = config.vpc_rate_mv_filt_T
+
         # this callback should return config data back to server
         return config
 
 if __name__ == '__main__':
 
-    rospy.init_node('mmcuav_attitude_ctl')
+    rospy.init_node('vpc_mmcuav_attitude_ctl')
     attitude_ctl = AttitudeControl()
     attitude_ctl.run()
