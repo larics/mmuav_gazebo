@@ -14,6 +14,8 @@ from mmuav_control.cfg import VpcMmcuavAttitudeCtlParamsConfig
 import math
 from datetime import datetime
 from rosgraph_msgs.msg import Clock
+import simple_filters
+import copy
 
 class AttitudeControl:
     '''
@@ -48,6 +50,7 @@ class AttitudeControl:
         self.w_sp = 0                       # referent value for motor velocity - it should be the output of height controller
 
         self.euler_rate_mv = Vector3()      # measured angular velocities
+        self.euler_rate_mv_old = Vector3()
 
         self.clock = Clock()
 
@@ -270,6 +273,8 @@ class AttitudeControl:
         self.euler_rate_mv.x = p + sx * ty * q + cx * ty * r
         self.euler_rate_mv.y = cx * q - sx * r
         self.euler_rate_mv.z = sx / cy * q + cx / cy * r
+
+        self.euler_rate_mv_old = copy.deepcopy(self.euler_rate_mv_old)
 
     def euler_ref_cb(self, msg):
         '''
