@@ -81,9 +81,9 @@ class AttitudeControl:
         self.pid_roll_rate.set_lim_high(0.08)
         self.pid_roll_rate.set_lim_low(-0.08)
 
-        self.pid_pitch.set_kp(2.32)
-        self.pid_pitch.set_ki(0)
-        self.pid_pitch.set_kd(0)
+        self.pid_pitch.set_kp(3.0)
+        self.pid_pitch.set_ki(0.2)
+        self.pid_pitch.set_kd(0.2)
 
         self.pid_pitch_rate.set_kp(0.1)
         self.pid_pitch_rate.set_ki(0)
@@ -283,11 +283,11 @@ class AttitudeControl:
             self.euler_rate_mv_old = copy.deepcopy(self.euler_rate_mv)
 
         # Filtering angular velocities
-        self.euler_rate_mv.x = filterPT1(self.euler_rate_mv_old.x, 
+        self.euler_rate_mv.x = simple_filters.filterPT1(self.euler_rate_mv_old.x, 
             self.euler_rate_mv.x, self.rate_mv_filt_T, self.Ts, self.rate_mv_filt_K)
-        self.euler_rate_mv.y = filterPT1(self.euler_rate_mv_old.y, 
+        self.euler_rate_mv.y = simple_filters.filterPT1(self.euler_rate_mv_old.y, 
             self.euler_rate_mv.y, self.rate_mv_filt_T, self.Ts, self.rate_mv_filt_K)
-        self.euler_rate_mv.z = filterPT1(self.euler_rate_mv_old.z, 
+        self.euler_rate_mv.z = simple_filters.filterPT1(self.euler_rate_mv_old.z, 
             self.euler_rate_mv.z, self.rate_mv_filt_T, self.Ts, self.rate_mv_filt_K)
 
         # Set old to current
@@ -377,6 +377,10 @@ class AttitudeControl:
             self.pid_vpc_roll.set_kp(config.vpc_roll_kp)
             self.pid_vpc_roll.set_ki(config.vpc_roll_ki)
             self.pid_vpc_roll.set_kd(config.vpc_roll_kd)
+
+            self.pid_vpc_pitch.set_kp(config.vpc_pitch_kp)
+            self.pid_vpc_pitch.set_ki(config.vpc_pitch_ki)
+            self.pid_vpc_pitch.set_kd(config.vpc_pitch_kd)
 
             # Rate filter
             self.rate_mv_filt_K = config.vpc_rate_mv_filt_K
