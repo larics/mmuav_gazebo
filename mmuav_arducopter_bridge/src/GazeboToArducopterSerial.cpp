@@ -17,8 +17,6 @@ GazeboToArducopterSerial::GazeboToArducopterSerial()
     // Set up node handle for topics
     all_mass_sub = nhTopics.subscribe("movable_mass_all/command", 1,
         &GazeboToArducopterSerial::allMassCallback, this);
-    dynamic_reconfigure::Server<mmuav_arducopter_bridge::StepperParametersConfig> server;
-    dynamic_reconfigure::Server<mmuav_arducopter_bridge::StepperParametersConfig>::CallbackType f;
 
     f = boost::bind(&GazeboToArducopterSerial::reconfigureCallback, this, _1, _2);
     server.setCallback(f);

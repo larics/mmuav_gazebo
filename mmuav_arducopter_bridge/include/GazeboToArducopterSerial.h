@@ -47,6 +47,8 @@ private:
     ros::NodeHandle nhParams, nhTopics;
     ros::Subscriber all_mass_sub;
     void allMassCallback(const std_msgs::Float64MultiArray &msg);
+    dynamic_reconfigure::Server<mmuav_arducopter_bridge::StepperParametersConfig> server;
+    dynamic_reconfigure::Server<mmuav_arducopter_bridge::StepperParametersConfig>::CallbackType f;
     void reconfigureCallback(mmuav_arducopter_bridge::StepperParametersConfig &config, uint32_t level);
 
 };
