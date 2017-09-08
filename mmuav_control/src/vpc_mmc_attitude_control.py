@@ -84,7 +84,7 @@ class AttitudeControl:
         self.pid_roll_rate.set_lim_low(-0.08)
 
         self.pid_pitch.set_kp(3.0)
-        self.pid_pitch.set_ki(0.2)
+        self.pid_pitch.set_ki(0.4)
         self.pid_pitch.set_kd(0.2)
 
         self.pid_pitch_rate.set_kp(0.1)
@@ -117,6 +117,11 @@ class AttitudeControl:
         # Filter parameters
         self.rate_mv_filt_K = 1.0
         self.rate_mv_filt_T = 0.02
+        # Reference prefilters
+        self.roll_reference_prefilter_K = 1.0
+        self.roll_reference_prefilter_T = 0.0
+        self.pitch_reference_prefilter_K = 1.0
+        self.pitch_reference_prefilter_T = 0.1
 
         # Offsets for pid outputs
         self.roll_rate_output_trim = 0.0
@@ -177,8 +182,12 @@ class AttitudeControl:
             #self.ros_rate.sleep()
             rospy.sleep(1.0/float(self.rate))
 
-            self.euler_sp_filt.x = simple_filters.filterPT1(self.euler_sp_old.x, self.euler_sp.x, 0.1, self.Ts, 1.0)
-            self.euler_sp_filt.y = simple_filters.filterPT1(self.euler_sp_old.y, self.euler_sp.y, 0.1, self.Ts, 1.0)
+            self.euler_sp_filt.x = simple_filters.filterPT1(self.euler_sp_old.x, 
+                self.euler_sp.x, self.roll_reference_prefilter_T, self.Ts, 
+                self.roll_reference_prefilter_K)
+            self.euler_sp_filt.y = simple_filters.filterPT1(self.euler_sp_old.y, 
+                self.euler_sp.y, self.pitch_reference_prefilter_T, self.Ts, 
+                self.pitch_reference_prefilter_K)
             #self.euler_sp.z = simple_filters.filterPT1(self.euler_sp_old.z, self.euler_sp.z, 0.2, self.Ts, 1.0)
 
             self.euler_sp_old = copy.deepcopy(self.euler_sp_filt)
@@ -355,8 +364,13 @@ class AttitudeControl:
             config.vpc_pitch_kd = self.pid_vpc_pitch.get_kd()
 
             # Rate filter
-            config.vpc_rate_mv_filt_K = self.rate_mv_filt_K
-            config.vpc_rate_mv_filt_T = self.rate_mv_filt_T
+            config.rate_mv_filt_K = self.rate_mv_filt_K
+            config.rate_mv_filt_T = self.rate_mv_filt_T
+            # Roll and pitch reference prefilters
+            config.roll_reference_prefilter_K = self.roll_reference_prefilter_K
+            config.roll_reference_prefilter_T = self.roll_reference_prefilter_T
+            config.pitch_reference_prefilter_K = self.pitch_reference_prefilter_K
+            config.pitch_reference_prefilter_T = self.pitch_reference_prefilter_T
 
             # Rate output offsets
             config.roll_rate_output_trim = self.roll_rate_output_trim
@@ -400,8 +414,13 @@ class AttitudeControl:
             self.pid_vpc_pitch.set_kd(config.vpc_pitch_kd)
 
             # Rate filter
-            self.rate_mv_filt_K = config.vpc_rate_mv_filt_K
-            self.rate_mv_filt_T = config.vpc_rate_mv_filt_T
+            self.rate_mv_filt_K = config.rate_mv_filt_K
+            self.rate_mv_filt_T = config.rate_mv_filt_T
+            # Roll and pitch reference prefilters
+            self.roll_reference_prefilter_K = config.roll_reference_prefilter_K
+            self.roll_reference_prefilter_T = config.roll_reference_prefilter_T
+            self.pitch_reference_prefilter_K = config.pitch_reference_prefilter_K
+            self.pitch_reference_prefilter_T = config.pitch_reference_prefilter_T
 
             # Rate output offsets
             self.roll_rate_output_trim = config.roll_rate_output_trim
