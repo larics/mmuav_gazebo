@@ -130,6 +130,8 @@ int GazeboToArducopterSerial::SetSerialAttributes(string port, int baudrate)
 
 int GazeboToArducopterSerial::SerialWrite(int m[4], unsigned char terminator)
 {   
+    //if (terminator == 67) cout << "Writing motor references to serial port." << endl;
+    //else if (terminator == 83) cout << "Writing parameters to serial port." << endl;
     unsigned char dataByte;
     for (int i=0; i < 4; i++)
     {
@@ -205,7 +207,8 @@ int GazeboToArducopterSerial::SerialRead()
 }
 
 void GazeboToArducopterSerial::allMassCallback(const std_msgs::Float64MultiArray &msg)
-{
+{   
+    float scaler = 4500.0;
     int m[4] = {0,0,0,0};
     if (msg.data.size() < 4)
     {
@@ -215,9 +218,9 @@ void GazeboToArducopterSerial::allMassCallback(const std_msgs::Float64MultiArray
     {
         for(int i = 0; i < msg.data.size(); i++)
         {
-            m[i] = int(4000.0*msg.data[i]);
-            if (msg.data[i] > 0.08) m[i] = int(4000.0*0.08);
-            else if (msg.data[i] < -0.08) m[i] = int(-4000.0*0.08);
+            m[i] = int(scaler*msg.data[i]);
+            if (msg.data[i] > 0.08) m[i] = int(scaler*0.08);
+            else if (msg.data[i] < -0.08) m[i] = int(-scaler*0.08);
         }
     }
 
