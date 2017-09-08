@@ -235,11 +235,11 @@ void GazeboToArducopterSerial::reconfigureCallback(mmuav_arducopter_bridge::Step
   int m[4] = {0,0,0,0};
   ROS_INFO("Reconfigure Request: %d %d %d %d", 
             config.gain, config.ang_speed_pps, 
-            config.ang_acc_pos_ppss, config.ang_acc_neg_ppss);
+            config.ang_acc_pos_ppss, config.deadzone);
   m[0] = config.gain;
   m[1] = config.ang_speed_pps;
   m[2] = config.ang_acc_pos_ppss;
-  m[3] = config.ang_acc_neg_ppss;
+  m[3] = config.deadzone;
 
   SerialWrite(m, 83); 
 
