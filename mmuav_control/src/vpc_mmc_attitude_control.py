@@ -46,6 +46,8 @@ class AttitudeControl:
         self.config_start = False           # flag indicates if the config callback is called for the first time
         self.euler_mv = Vector3()           # measured euler angles
         self.euler_sp = Vector3(0, 0, 0)    # euler angles referent values
+        self.euler_sp_old = Vector3(0, 0, 0)
+        self.euler_sp_filt = Vector3(0, 0, 0)
 
         self.w_sp = 0                       # referent value for motor velocity - it should be the output of height controller
 
@@ -107,7 +109,7 @@ class AttitudeControl:
         self.pid_vpc_roll.set_lim_low(-200)
 
         self.pid_vpc_pitch.set_kp(0)
-        self.pid_vpc_pitch.set_ki(1.0)
+        self.pid_vpc_pitch.set_ki(0.0)
         self.pid_vpc_pitch.set_kd(0)
         self.pid_vpc_pitch.set_lim_high(200)
         self.pid_vpc_pitch.set_lim_low(-200)
@@ -115,6 +117,10 @@ class AttitudeControl:
         # Filter parameters
         self.rate_mv_filt_K = 1.0
         self.rate_mv_filt_T = 0.02
+
+        # Offsets for pid outputs
+        self.roll_rate_output_trim = 0.0
+        self.pitch_rate_output_trim = 0.0
 
 
         ##################################################################
@@ -171,6 +177,12 @@ class AttitudeControl:
             #self.ros_rate.sleep()
             rospy.sleep(1.0/float(self.rate))
 
+            self.euler_sp_filt.x = simple_filters.filterPT1(self.euler_sp_old.x, self.euler_sp.x, 0.1, self.Ts, 1.0)
+            self.euler_sp_filt.y = simple_filters.filterPT1(self.euler_sp_old.y, self.euler_sp.y, 0.1, self.Ts, 1.0)
+            #self.euler_sp.z = simple_filters.filterPT1(self.euler_sp_old.z, self.euler_sp.z, 0.2, self.Ts, 1.0)
+
+            self.euler_sp_old = copy.deepcopy(self.euler_sp_filt)
+
             clock_now = self.clock
             dt_clk = (clock_now.clock - clock_old.clock).to_sec()
 
@@ -187,23 +199,23 @@ class AttitudeControl:
                 dt_clk = 0.01
 
             # Roll
-            roll_rate_sv = self.pid_roll.compute(self.euler_sp.x, self.euler_mv.x, dt_clk)
+            roll_rate_sv = self.pid_roll.compute(self.euler_sp_filt.x, self.euler_mv.x, dt_clk)
             # roll rate pid compute
-            roll_rate_output = self.pid_roll_rate.compute(roll_rate_sv, self.euler_rate_mv.x, dt_clk)
+            roll_rate_output = self.pid_roll_rate.compute(roll_rate_sv, self.euler_rate_mv.x, dt_clk) + self.roll_rate_output_trim
 
             # Pitch
-            pitch_rate_sv = self.pid_pitch.compute(self.euler_sp.y, self.euler_mv.y, dt_clk)
+            pitch_rate_sv = self.pid_pitch.compute(self.euler_sp_filt.y, self.euler_mv.y, dt_clk)
             # pitch rate pid compute
-            pitch_rate_output = self.pid_pitch_rate.compute(pitch_rate_sv, self.euler_rate_mv.y, dt_clk)
+            pitch_rate_output = self.pid_pitch_rate.compute(pitch_rate_sv, self.euler_rate_mv.y, dt_clk) + self.pitch_rate_output_trim
 
             # Yaw
-            yaw_rate_sv = self.pid_yaw.compute(self.euler_sp.z, self.euler_mv.z, dt_clk)
+            yaw_rate_sv = self.pid_yaw.compute(self.euler_sp_filt.z, self.euler_mv.z, dt_clk)
             # yaw rate pid compute
             yaw_rate_output = self.pid_yaw_rate.compute(yaw_rate_sv, self.euler_rate_mv.z, dt_clk)
 
             # VPC stuff
             vpc_roll_output = -self.pid_vpc_roll.compute(0.0, roll_rate_output, dt_clk)
-
+            # Due to some wiring errors we set output to +, should be -
             vpc_pitch_output = -self.pid_vpc_pitch.compute(0.0, pitch_rate_output, dt_clk)
 
 
@@ -346,6 +358,11 @@ class AttitudeControl:
             config.vpc_rate_mv_filt_K = self.rate_mv_filt_K
             config.vpc_rate_mv_filt_T = self.rate_mv_filt_T
 
+            # Rate output offsets
+            config.roll_rate_output_trim = self.roll_rate_output_trim
+            config.pitch_rate_output_trim = self.pitch_rate_output_trim
+
+
             self.config_start = True
         else:
             # The following code just sets up the P,I,D gains for all controllers
@@ -385,6 +402,10 @@ class AttitudeControl:
             # Rate filter
             self.rate_mv_filt_K = config.vpc_rate_mv_filt_K
             self.rate_mv_filt_T = config.vpc_rate_mv_filt_T
+
+            # Rate output offsets
+            self.roll_rate_output_trim = config.roll_rate_output_trim
+            self.pitch_rate_output_trim = config.pitch_rate_output_trim
 
         # this callback should return config data back to server
         return config
