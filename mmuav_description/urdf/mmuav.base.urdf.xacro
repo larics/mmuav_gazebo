@@ -70,7 +70,7 @@
     body_width="${body_width}"
     body_height="${body_height}"
     mesh_file="${body_mesh_file}">
-    <origin xyz="0 0 0" rpy="0 0 0"/>
+    <origin xyz="0 0 0" rpy="0 0 ${-PI/4}"/>
     <xacro:insert_block name="body_inertia" />
   </xacro:multirotor_base_macro>
 
@@ -90,7 +90,7 @@
     rotor_drag_coefficient="${rotor_drag_coefficient}"
     rolling_moment_coefficient="${rolling_moment_coefficient}"
     color="Red">
-    <origin xyz="${cos45*arm_length} ${sin45*arm_length} ${rotor_offset_top}" rpy="0 0 0" />
+    <origin xyz="${1*arm_length} ${0*arm_length} ${rotor_offset_top}" rpy="0 0 0" />
     <xacro:insert_block name="rotor_inertia" />
   </xacro:vertical_rotor>
 
@@ -108,8 +108,8 @@
     motor_number="1"
     rotor_drag_coefficient="${rotor_drag_coefficient}"
     rolling_moment_coefficient="${rolling_moment_coefficient}"
-    color="Red">
-    <origin xyz="${cos45*arm_length} ${-sin45*arm_length} ${rotor_offset_top}" rpy="0 0 0" />
+    color="Blue">
+    <origin xyz="${0*arm_length} ${1*arm_length} ${rotor_offset_top}" rpy="0 0 0" />
     <xacro:insert_block name="rotor_inertia" />
   </xacro:vertical_rotor>
 
@@ -127,8 +127,8 @@
     motor_number="2"
     rotor_drag_coefficient="${rotor_drag_coefficient}"
     rolling_moment_coefficient="${rolling_moment_coefficient}"
-    color="Blue">
-    <origin xyz="${-cos45*arm_length} ${sin45*arm_length} ${rotor_offset_top}" rpy="0 0 0" />
+    color="Red">
+    <origin xyz="${-1*arm_length} ${0*arm_length} ${rotor_offset_top}" rpy="0 0 0" />
     <xacro:insert_block name="rotor_inertia" />
   </xacro:vertical_rotor>
 
@@ -147,7 +147,7 @@
     rotor_drag_coefficient="${rotor_drag_coefficient}"
     rolling_moment_coefficient="${rolling_moment_coefficient}"
     color="Blue">
-    <origin xyz="${-cos45*arm_length} ${-sin45*arm_length} ${rotor_offset_top}" rpy="0 0 0" />
+    <origin xyz="${0*arm_length} ${-1*arm_length} ${rotor_offset_top}" rpy="0 0 0" />
     <xacro:insert_block name="rotor_inertia" />
   </xacro:vertical_rotor>
 
@@ -160,7 +160,8 @@
     parent="base_link"
     suffix="left">
     <axis xyz="0 1 0" />
-    <origin xyz="-0.11188 0.11206 -0.07349" rpy="-1.57079632679 0 0"/>  
+    <!-- origin xyz="${-0.11188*sin45} ${0.11206*cos45} -0.07349" rpy="-1.57079632679 0 0"/ -->
+    <origin xyz="0 0.158342 -0.07349" rpy="-1.57079632679 0 0"/>
   </xacro:manipulator>
 
      <!-- Adding right manipulator -->
@@ -172,7 +173,8 @@
     parent="base_link"
     suffix="right">
     <axis xyz="0 1 0" />
-    <origin xyz="0.11205 -0.11188 -0.07349" rpy="-1.57079632679 0 0"/>
+    <!--origin xyz="${0.11205**sin45} ${-0.11188*cos45} -0.07349" rpy="-1.57079632679 0 0"/ -->
+    <origin xyz="0 -0.158342 -0.07349" rpy="-1.57079632679 0 0"/>
   </xacro:manipulator>
 
   <!-- Add transmission for joints--> 
@@ -201,7 +203,7 @@
     joint_name="joint_q2_right">
   </xacro:transmisija>
 
-    <xacro:transmisija 
+  <xacro:transmisija 
     trans_number="5"
     joint_name="joint_q3_passive_right">
   </xacro:transmisija>
