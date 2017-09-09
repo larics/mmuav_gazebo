@@ -88,8 +88,8 @@ class AttitudeControl:
         self.pid_pitch.set_kd(0.2)
 
         self.pid_pitch_rate.set_kp(0.1)
-        self.pid_pitch_rate.set_ki(0)
-        self.pid_pitch_rate.set_kd(0)
+        self.pid_pitch_rate.set_ki(0.0)
+        self.pid_pitch_rate.set_kd(0.0)
         self.pid_pitch_rate.set_lim_high(0.08)
         self.pid_pitch_rate.set_lim_low(-0.08)
 
