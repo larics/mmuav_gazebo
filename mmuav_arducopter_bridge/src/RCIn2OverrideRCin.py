@@ -17,6 +17,10 @@ class RCIn2OverrideRCIn():
         self.euler_ref_pub = rospy.Publisher('euler_ref', Vector3, queue_size=1)
         self.euler_ref_msg = Vector3()
 
+        self.roll_command = 0.0
+        self.pitch_command = 0.0
+        self.yaw_command = 0.0
+
         self.vpc_roll = 0.0
         self.vpc_pitch = 0.0
         self.motor_velocity = 0.0
@@ -40,8 +44,15 @@ class RCIn2OverrideRCIn():
                 for i in range(8):
                     rc_channels.channels[i] = self.received_rc_msg.channels[i]
 
-                rc_channels.channels[1] = 1500 + 2.5*self.vpc_roll
+                #rc_channels.channels[1] = 1500 + 2.5*self.vpc_roll
                 rc_channels.channels[0] = 1500 + 2.5*self.vpc_pitch
+                #rc_channels.channels[3] = 1500 + 0.5*(rc_channels.channels[3] - 1500.0)
+                #pitch_int = int(500.0*self.pitch_command)
+                #if pitch_int < -500:
+                #    pitch_int = -500
+                #elif pitch_int > 500:
+                #    pitch_int = 500
+                #rc_channels.channels[0] = 1500 + pitch_int
                 self.overrideRCIn_pub.publish(rc_channels)
 
     def check_mode(self):
@@ -61,6 +72,9 @@ class RCIn2OverrideRCIn():
         if len(msg.data) < 5:
             print "Not enough data, should be 5. Length: ", len(msg.data)
         else:
+            self.roll_command = msg.data[0]
+            self.pitch_command = msg.data[1]
+            self.yaw_command = msg.data[2]
             self.vpc_roll = msg.data[3]
             self.vpc_pitch = msg.data[4]
 
