@@ -53,6 +53,8 @@ def ik_2R_MMUAV_closest(q_start,Goal,DH,L1,L2):
     for i in range(2):
         if np.linalg.norm(np.transpose(np.matrix(Goal))-dk_calculate(q[:,i],DH)[1][0:3,3]) < 1e-2:
             qdistance = q_start - np.transpose(q[:,min_i])
+            qdistance = ( qdistance + np.pi) % (2.0 * np.pi ) - np.pi
+            # Wrap to PI for qdistance
             if np.linalg.norm(qdistance) < min_dist:
                 min_dist = np.linalg.norm(qdistance)
                 min_i = i          
@@ -98,8 +100,8 @@ def ik_both_arms(q01_list, q02_list, goal, L1, L2, L3):
             #Q1=list(q1)
             #Q2=list(q2)
             PHI=phi
-            Q1[2] = PHI
-            Q2[2] = PHI
+            Q1[2] = -PHI
+            Q2[2] = -PHI
 
     #print "PHI: ", PHI*180/math.pi
 

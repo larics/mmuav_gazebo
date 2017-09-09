@@ -229,14 +229,14 @@
         </geometry>
       </visual>
       
-      <collision name='collision'>
+      <!--collision name='collision'>
         <origin xyz="0.01261097 0 0.00120978" rpy="0 0 0"/>
         <geometry>
-          <!--mesh filename="package://mmuav_description/meshes/AX12.dae"
-            scale="1 1 1" /-->
-           <box size="0.05 0.041 0.032"/>
+          <mesh filename="package://mmuav_description/meshes/AX12.dae"
+            scale="1 1 1" />
+           <box size="0.05 0.041 0.032" scale="0.01 0.01 0.01"/>
         </geometry>
-      </collision>
+      </collision-->
     </link>
 
     <!--_____________________________________________________________-->
@@ -307,14 +307,14 @@
         </geometry>
       </visual>
 
-      <collision name='collision'>
+      <!-- collision name='collision'>
         <origin xyz="0.01261097 0 0.00120978" rpy="0 0 0"/>
         <geometry>
-          <!--mesh filename="package://mmuav_description/meshes/AX12.dae"
-            scale="1 1 1" /-->
-           <box size="0.05 0.041 0.032"/>
+          <mesh filename="package://mmuav_description/meshes/AX12.dae"
+            scale="1 1 1" />
+           <box size="0.05 0.041 0.032" scale="0.01 0.01 0.01"/>
         </geometry>
-      </collision>
+      </collision-->
     </link>
 
     <!--_____________________________________________________________-->
@@ -346,38 +346,46 @@
     <link name='link_gripper2_${suffix}'>
       
       <inertial>
-        <mass value="0.01" />
-        <origin xyz="0.02116183 0 0" rpy="1.57079632679 0 0"/>
-        <inertia
+        <mass value="0.5" />
+        <!-- origin xyz="0.02116183 0 0" rpy="1.57079632679 0 0"/ -->
+        <origin xyz="0.08 0 0" rpy="0 0 0"/>
+        <!--inertia
           ixx="0.00000124"
           iyy="0.00000161"
           izz="0.00000270"
+          ixy="0.0" ixz="0.0" iyz="0.0" / -->
+        <inertia
+          ixx="0.00015"
+          iyy="0.00015"
+          izz="0.00015"
           ixy="0.0" ixz="0.0" iyz="0.0" />
       </inertial>
             
       <visual>
-        <origin xyz="0.02047 -0.00104 -0.00134" rpy="0 0 0" />
+        <!-- origin xyz="0.02047 -0.00104 -0.00134" rpy="0 0 0" / -->
+        <origin xyz="0.08 0.0 0.0" rpy="0 0 0" />
         <geometry>
-          <mesh filename="package://mmuav_description/meshes/gripper_part2.dae"
-            scale="1 1 1" />
+          <!--mesh filename="package://mmuav_description/meshes/gripper_part2.dae"
+            scale="0.1 0.1 0.1" / -->
+           <sphere radius="0.015"/>
         </geometry>
       </visual>
 
-      <collision name='collision'>
+      <!--collision name='collision'>
         <origin xyz="0.02047 -0.00104 -0.00134" rpy="0 0 0"/>
         <geometry>
           <mesh filename="package://mmuav_description/meshes/gripper_part2.dae"
-            scale="1 1 1" />
-           <!--box size="0.05 0.041 0.032"/-->
+            scale="0.1 0.1 0.1" />
+           <box size="0.05 0.041 0.032"/>
         </geometry>
-      </collision>
+      </collision-->
     </link>
 
     <joint name="joint_q1_${suffix}" type="revolute">
       <parent link="${parent}"/>
       <child link="dynamixel_1_${suffix}" />
       <xacro:insert_block name="origin"/>
-      <limit upper="3.14" lower="-3.14" effort="10" velocity="1"/>
+      <limit upper="3.14" lower="-3.14" effort="200" velocity="5"/>
       <xacro:insert_block name="axis"/>
     </joint>
 
@@ -397,7 +405,7 @@
       <parent link="link_F4_fixed_${suffix}"/>
       <child link="dynamixel_2_${suffix}" />
       <origin xyz="0 0 0" rpy="0 0 0"/>
-      <limit upper="3.14" lower="-3.14" effort="10" velocity="1"/>
+      <limit upper="3.14" lower="-3.14" effort="200" velocity="5"/>
       <axis xyz="0 1 0" />
     </joint>
 
@@ -411,7 +419,7 @@
       <parent link="link_gripper1_${suffix}"/>
       <child link="link_gripper2_${suffix}" />
       <origin xyz="0.01265148 0.00103883 0.00134042" rpy="0 0 0"/>
-      <limit upper="1.57" lower="-1.57" effort="10" velocity="1"/>
+      <limit upper="1.57" lower="-1.57" effort="2" velocity="1.47"/>
       <axis xyz="0 1 0" />
     </joint>
 

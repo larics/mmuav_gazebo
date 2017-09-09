@@ -45,8 +45,8 @@ class ArmsControlGUI():
 		self.window.ArmsWSpinBox.valueChanged.connect(self.ArmsWSpinBoxCallback)
 		self.window.ArmsL3SpinBox.valueChanged.connect(self.ArmsL3SpinBoxCallback)
 
-		self.armsQRight = [-1.771+2.35, -2.213+1.57, -1.2]
-		self.armsQLeft = [1.364-0.785, -2.213+1.57, -1.2]
+		self.armsQRight = [-1.0+1.57, -2.0+1.57, -1.2]
+		self.armsQLeft = [2.0-1.57, -2.0+1.57, -1.2]
 		self.L3 = 0.05
 
 		self.armsPosition = [0, 0] # x,y
@@ -126,9 +126,9 @@ class ArmsControlGUI():
 		L2 = 0.061
 		L3 = self.L3
 
-		arms_pos = [self.armsPosition[0]*cos(-pi/4) - self.armsPosition[1]*sin(-pi/4), \
-			self.armsPosition[0]*sin(-pi/4) + self.armsPosition[1]*cos(-pi/4)]
-		#arms_pos = [-self.armsPosition[0], -self.armsPosition[1]]
+		#arms_pos = [self.armsPosition[0]*cos(pi/4) - self.armsPosition[1]*sin(pi/4), \
+		#	self.armsPosition[0]*sin(pi/4) + self.armsPosition[1]*cos(pi/4)]
+		arms_pos = [self.armsPosition[1], -self.armsPosition[0]]
 
 		q = arms_kinematics_screw.ik_both_arms(self.armsQRight, self.armsQLeft, 
 			arms_pos, L1, L2, L3)
@@ -144,10 +144,10 @@ class ArmsControlGUI():
 		#print self.armsQLeft
 
 	def PublishData(self):
-		self.JointRight1Pub.publish(Float64(self.armsQRight[0]-2.35))
+		self.JointRight1Pub.publish(Float64(self.armsQRight[0]-1.57))
 		self.JointRight2Pub.publish(Float64(self.armsQRight[1]-1.57))
 		self.JointRight3Pub.publish(Float64(self.armsQRight[2]))
-		self.JointLeft1Pub.publish(Float64(self.armsQLeft[0]+0.785))
+		self.JointLeft1Pub.publish(Float64(self.armsQLeft[0]+1.57))
 		self.JointLeft2Pub.publish(Float64(self.armsQLeft[1]-1.57))
 		self.JointLeft3Pub.publish(Float64(self.armsQLeft[2]))
 

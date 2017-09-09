@@ -1,0 +1,38 @@
+<?xml version="1.0"?>
+
+<robot name="sphere_magnet" xmlns:xacro="http://ros.org/wiki/xacro">
+    <link name="magnet">
+      
+      <visual>
+        <origin rpy="0 0 0" xyz="0 0 0"/>
+        <geometry>
+            <box size="0.2 0.2 0.2"/>
+        </geometry>
+      </visual>
+
+      <collision>
+        <origin rpy="0 0 0" xyz="0 0 0"/>
+        <geometry>
+            <box size="0.2 0.2 0.2"/>
+        </geometry>
+      </collision>
+
+      <inertial>
+        <origin rpy="0 0 0" xyz="0 0 0"/>
+        <mass value="25"/>
+        <inertia ixx="0.01" ixy="0.0" ixz="0.0" iyy="0.01" iyz="0.0" izz="0.01" />
+      </inertial>
+  </link>
+  <gazebo> 
+    <plugin name="dipole_magnet" filename="libstorm_gazebo_dipole_magnet.so">
+        <bodyName>magnet</bodyName>
+        <dipole_moment>0 0 400</dipole_moment>
+        <gain>1</gain> <!-- Magnet gain, additional param that controls the overal magnet moment. Gain can be changed online through ros topic-->
+        <!-- Set to 0 if not using ROS -->
+        <shouldPublish>1</shouldPublish>
+        <topicNs>magnet_object</topicNs>
+        <updateRate>100</updateRate>
+    </plugin>
+  </gazebo>
+
+</robot>
