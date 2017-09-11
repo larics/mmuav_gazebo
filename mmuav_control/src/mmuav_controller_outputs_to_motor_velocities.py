@@ -21,6 +21,8 @@ class MergeControllerOutputs:
         self.roll_command = 0.0
         self.pitch_command = 0.0
         self.yaw_command = 0.0
+        self.vpc_roll_command = 0.0
+        self.vpc_pitch_command = 0.0
 
         self.mot_vel_ref = 0.0
 
@@ -60,10 +62,10 @@ class MergeControllerOutputs:
             self.ros_rate.sleep()
 
             # Compute motor velocities, + configuration
-            mot1 = self.mot_vel_ref - self.pitch_command + self.yaw_command
-            mot2 = self.mot_vel_ref + self.roll_command - self.yaw_command
-            mot3 = self.mot_vel_ref + self.pitch_command + self.yaw_command
-            mot4 = self.mot_vel_ref - self.roll_command - self.yaw_command
+            mot1 = self.mot_vel_ref - self.vpc_pitch_command
+            mot2 = self.mot_vel_ref + self.vpc_roll_command
+            mot3 = self.mot_vel_ref + self.vpc_pitch_command
+            mot4 = self.mot_vel_ref - self.vpc_roll_command
 
             mot_speed_msg = Actuators()
             mot_speed_msg.header.stamp = rospy.Time.now()
@@ -77,8 +79,8 @@ class MergeControllerOutputs:
 
 
     def attitude_command_cb(self, msg):
-        if len(msg.data) < 7:
-            print "Not enough data, should be 7. Length: ", len(msg.data)
+        if len(msg.data) < 9:
+            print "Not enough data, should be 9. Length: ", len(msg.data)
         else:
             self.attitude_command_received_flag = True
             self.q1_left = msg.data[0]
@@ -86,6 +88,8 @@ class MergeControllerOutputs:
             self.q1_right = msg.data[3]
             self.q2_right = msg.data[4]
             self.yaw_command = msg.data[6]
+            self.vpc_roll_command = msg.data[7]
+            self.vpc_pitch_command = msg.data[8]
 
 
     def motor_velocity_ref_cb(self, msg):

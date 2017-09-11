@@ -76,28 +76,18 @@
   </xacro:odometry_plugin_macro>
 
 
-  <gazebo> 
+  <!--gazebo> 
     <plugin name="dipole_magnet" filename="libstorm_gazebo_dipole_magnet.so">
         <bodyName>link_gripper2_left</bodyName>
         <dipole_moment>1 0 1</dipole_moment>
-        <gain>1</gain> <!-- Magnet gain, additional param that controls the overal magnet moment. Gain can be changed online through ros topic-->
+        <gain>1</gain--> <!-- Magnet gain, additional param that controls the overal magnet moment. Gain can be changed online through ros topic-->
         <!-- Set to 0 if not using ROS -->
-        <shouldPublish>1</shouldPublish>
+        <!--houldPublish>1</shouldPublish>
         <topicNs>magnet_left</topicNs>
         <updateRate>100</updateRate>
     </plugin>
-  </gazebo>
+  </gazebo-->
 
-  <gazebo> 
-    <plugin name="dipole_magnet" filename="libstorm_gazebo_dipole_magnet.so">
-        <bodyName>link_gripper2_right</bodyName>
-        <dipole_moment>1 0 1</dipole_moment>
-        <gain>1</gain> <!-- Magnet gain, additional param that controls the overal magnet moment. Gain can be changed online through ros topic-->
-        <!-- Set to 0 if not using ROS -->
-        <shouldPublish>1</shouldPublish>
-        <topicNs>magnet_right</topicNs>
-        <updateRate>100</updateRate>
-    </plugin>
-  </gazebo>
+
 
 </robot>

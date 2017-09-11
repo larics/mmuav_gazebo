@@ -146,10 +146,10 @@ class ArmsControlGUI():
 	def PublishData(self):
 		self.JointRight1Pub.publish(Float64(self.armsQRight[0]-1.57))
 		self.JointRight2Pub.publish(Float64(self.armsQRight[1]-1.57))
-		self.JointRight3Pub.publish(Float64(self.armsQRight[2]))
+		self.JointRight3Pub.publish(Float64(-self.armsQRight[2]))
 		self.JointLeft1Pub.publish(Float64(self.armsQLeft[0]+1.57))
 		self.JointLeft2Pub.publish(Float64(self.armsQLeft[1]-1.57))
-		self.JointLeft3Pub.publish(Float64(self.armsQLeft[2]))
+		self.JointLeft3Pub.publish(Float64(-self.armsQLeft[2]))
 
 	def arducopterPoseCallback(self, msg):
 		self.arducopterPose = msg.pose

@@ -5,7 +5,7 @@
   <arg name="tf_prefix" default="$(optenv ROS_NAMESPACE)"/>
   <arg name="x" default="0.0"/>
   <arg name="y" default="0.0"/>
-  <arg name="z" default="0.15967"/>
+  <arg name="z" default="1.15967"/>
   <arg name="enable_logging" default="false"/>
   <arg name="enable_ground_truth" default="true"/>
   <arg name="log_file" default="mmuav_log"/>

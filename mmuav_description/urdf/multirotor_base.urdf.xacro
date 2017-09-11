@@ -27,14 +27,14 @@
         </geometry>
       </visual>
 
-      <collision>
+      <!--collision>
         <origin xyz="0 0 0" rpy="0 0 0" />
         <geometry>
-          <!--mesh filename="package://mmuav_description/meshes/${mesh_file}"
-            scale="1 1 1" /-->
+          <mesh filename="package://mmuav_description/meshes/${mesh_file}"
+            scale="1 1 1" />
           <box size="${body_width} ${body_width} ${body_height}" />
         </geometry>
-      </collision>
+      </collision-->
     </link>
 
     <!-- IMU -->
@@ -129,9 +129,38 @@
       </joint>
       <actuator name="motor_${trans_number}">
         <hardwareInterface>hardware_interface/EffortActuatorInterface</hardwareInterface>
-        <mechanicalReduction>100</mechanicalReduction>
+        <mechanicalReduction>1</mechanicalReduction>
       </actuator>
     </transmission>
+  </xacro:macro>
+
+  <xacro:macro name="landing_gear" params="gear_num parent mass dim_x dim_y dim_z *origin *inertia">
+    <joint name="land_gear_${gear_num}" type="fixed">
+      <xacro:insert_block name="origin"/>
+      <axis xyz="0 0 1"/>
+      <parent link="${parent}"/>
+      <child link="land_gear_${gear_num}"/>
+    </joint>
+    <link name="land_gear_${gear_num}">
+      <visual>
+        <origin rpy="0 0 0" xyz="0 0 0"/>
+        <geometry>
+          <box size="0.01 0.01 0.0001"/>
+        </geometry>
+      </visual>
+      <collision>
+        <origin rpy="0 0 0" xyz="0 0 0"/>
+        <geometry>
+          <box size="${dim_x} ${dim_y} ${dim_z}"/>
+        </geometry>
+      </collision>
+      <inertial>
+         <origin rpy="0 0 0" xyz="0 0 0"/>
+        <mass value="${mass}"/>
+        <xacro:insert_block name="inertia"/>
+      </inertial>
+    </link>
+
   </xacro:macro>
 
    <!-- camera -->
@@ -346,9 +375,9 @@
     <link name='link_gripper2_${suffix}'>
       
       <inertial>
-        <mass value="0.5" />
+        <mass value="0.25" />
         <!-- origin xyz="0.02116183 0 0" rpy="1.57079632679 0 0"/ -->
-        <origin xyz="0.08 0 0" rpy="0 0 0"/>
+        <origin xyz="0.04 0 0" rpy="0 0 0"/>
         <!--inertia
           ixx="0.00000124"
           iyy="0.00000161"
@@ -381,12 +410,13 @@
       </collision-->
     </link>
 
-    <joint name="joint_q1_${suffix}" type="revolute">
+    <joint name="joint_q1_${suffix}" type="continuous">
       <parent link="${parent}"/>
       <child link="dynamixel_1_${suffix}" />
       <xacro:insert_block name="origin"/>
-      <limit upper="3.14" lower="-3.14" effort="200" velocity="5"/>
+      <limit upper="3.14" lower="-3.14" effort="400" velocity="1"/>
       <xacro:insert_block name="axis"/>
+      <dynamics damping="0.07" friction="0.0"/>
     </joint>
 
     <joint name="Dynamixel1ToF3_${suffix}" type="fixed">
@@ -401,12 +431,13 @@
         <child link="link_F4_fixed_${suffix}"/>
     </joint>
 
-    <joint name="joint_q2_${suffix}" type="revolute">
+    <joint name="joint_q2_${suffix}" type="continuous">
       <parent link="link_F4_fixed_${suffix}"/>
       <child link="dynamixel_2_${suffix}" />
       <origin xyz="0 0 0" rpy="0 0 0"/>
-      <limit upper="3.14" lower="-3.14" effort="200" velocity="5"/>
+      <limit upper="3.14" lower="-3.14" effort="200" velocity="1"/>
       <axis xyz="0 1 0" />
+      <dynamics damping="0.07" friction="0.0"/>
     </joint>
 
     <joint name="Dynamixel2ToGripper_${suffix}" type="fixed">
@@ -415,12 +446,14 @@
         <child link="link_gripper1_${suffix}"/>
     </joint>
 
-    <joint name="joint_q3_passive_${suffix}" type="revolute">
+    <joint name="joint_q3_passive_${suffix}" type="continuous">
       <parent link="link_gripper1_${suffix}"/>
       <child link="link_gripper2_${suffix}" />
       <origin xyz="0.01265148 0.00103883 0.00134042" rpy="0 0 0"/>
-      <limit upper="1.57" lower="-1.57" effort="2" velocity="1.47"/>
+      <limit upper="3.14" lower="-3.14" effort="20" velocity="1"/>
       <axis xyz="0 1 0" />
+      <dynamics damping="0.07" friction="0.0"/>
+      <!--dynamics damping="0.4" friction="0.04"/-->
     </joint>
 
   </xacro:macro>

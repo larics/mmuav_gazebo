@@ -124,7 +124,7 @@ class HeightControl:
 
             self.t_old = t
             #                              (m_uav + m_arms)/(C*4)
-            self.mot_speed_hover = math.sqrt(9.81*(2.5)/(8.54858e-06*4.0))
+            self.mot_speed_hover = math.sqrt(9.81*(2.5+1.0)/(8.54858e-06*4.0))
             # prefilter for reference
             #a = 0.1
             #self.z_ref_filt = (1-a) * self.z_ref_filt  + a * self.z_sp

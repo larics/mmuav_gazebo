@@ -106,8 +106,7 @@ def ik_both_arms(q01_list, q02_list, goal, L1, L2, L3):
     #print "PHI: ", PHI*180/math.pi
 
     # Put phi in q1 and q2
-    #print Q1
-    
+    #print Q1    
     return [Q1, Q2]
 
 

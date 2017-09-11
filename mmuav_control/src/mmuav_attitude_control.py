@@ -15,6 +15,7 @@ from datetime import datetime
 from rosgraph_msgs.msg import Clock
 import DualManipulatorPassiveJointKinematics as ArmsKinematics
 import copy
+import simple_filters
 
 class AttitudeControl:
     '''
@@ -49,6 +50,7 @@ class AttitudeControl:
         self.w_sp = 0                       # referent value for motor velocity - it should be the output of height controller
 
         self.euler_rate_mv = Vector3()      # measured angular velocities
+        self.euler_rate_mv_old = Vector3()
 
         self.clock = Clock()
 
@@ -61,29 +63,32 @@ class AttitudeControl:
         self.pid_yaw = PID()                            # yaw controller
         self.pid_yaw_rate = PID()                       # yaw rate (wz) controller
 
+        self.pid_vpc_roll = PID()
+        self.pid_vpc_pitch = PID()
+
         ##################################################################
         ##################################################################
         # Add your PID params here
 
-        self.pid_roll.set_kp(2.32)
+        self.pid_roll.set_kp(1.3)
         self.pid_roll.set_ki(0)
         self.pid_roll.set_kd(0)
 
-        self.pid_roll_rate.set_kp(0.1)
+        self.pid_roll_rate.set_kp(0.03)
         self.pid_roll_rate.set_ki(0.0)
         self.pid_roll_rate.set_kd(0)
-        self.pid_roll_rate.set_lim_high(0.3)
-        self.pid_roll_rate.set_lim_low(-0.3)
+        self.pid_roll_rate.set_lim_high(0.04)
+        self.pid_roll_rate.set_lim_low(-0.04)
 
-        self.pid_pitch.set_kp(2.32)
+        self.pid_pitch.set_kp(1.3)
         self.pid_pitch.set_ki(0)
         self.pid_pitch.set_kd(0)
 
-        self.pid_pitch_rate.set_kp(0.1)
+        self.pid_pitch_rate.set_kp(0.03)
         self.pid_pitch_rate.set_ki(0)
         self.pid_pitch_rate.set_kd(0)
-        self.pid_pitch_rate.set_lim_high(0.3)
-        self.pid_pitch_rate.set_lim_low(-0.3)
+        self.pid_pitch_rate.set_lim_high(0.04)
+        self.pid_pitch_rate.set_lim_low(-0.04)
 
         self.pid_yaw.set_kp(1.0)
         self.pid_yaw.set_ki(0)
@@ -93,15 +98,33 @@ class AttitudeControl:
         self.pid_yaw_rate.set_ki(0)
         self.pid_yaw_rate.set_kd(0)
 
+        # VPC pids, initially 0 so vpc is inactive
+        self.pid_vpc_roll.set_kp(0)
+        self.pid_vpc_roll.set_ki(0)
+        self.pid_vpc_roll.set_kd(0)
+        self.pid_vpc_roll.set_lim_high(200)
+        self.pid_vpc_roll.set_lim_low(-200)
+
+        self.pid_vpc_pitch.set_kp(0)
+        self.pid_vpc_pitch.set_ki(0)
+        self.pid_vpc_pitch.set_kd(0)
+        self.pid_vpc_pitch.set_lim_high(200)
+        self.pid_vpc_pitch.set_lim_low(-200)
+
 
         ##################################################################
         ##################################################################
+
+        # Filter parameters
+        self.rate_mv_filt_K = 1.0
+        self.rate_mv_filt_T = 0.0
 
         self.q_left = [-1.0+1.57, -2.0+1.57, -1.2]
         self.q_right = [2.0-1.57, -2.0+1.57, -1.2]
 
         self.rate = rospy.get_param('rate', 100)
         self.ros_rate = rospy.Rate(self.rate)                 # attitude control at 100 Hz
+        self.Ts = 1.0/float(self.rate)
 
         self.t_old = 0
 
@@ -121,6 +144,8 @@ class AttitudeControl:
         self.pub_pid_pitch_rate = rospy.Publisher('pid_pitch_rate', PIDController, queue_size=1)
         self.pub_pid_yaw = rospy.Publisher('pid_yaw', PIDController, queue_size=1)
         self.pub_pid_yaw_rate = rospy.Publisher('pid_yaw_rate', PIDController, queue_size=1)
+        self.pub_pid_vpc_roll = rospy.Publisher('pid_vpc_roll', PIDController, queue_size=1)
+        self.pub_pid_vpc_pitch = rospy.Publisher('pid_vpc_pitch', PIDController, queue_size=1)
         self.cfg_server = Server(MmuavAttitudeCtlParamsConfig, self.cfg_callback)
 
     def run(self):
@@ -154,11 +179,11 @@ class AttitudeControl:
             clock_old = clock_now
             if dt_clk > (1.0 / self.rate + 0.005):
                 self.count += 1
-                print self.count, ' - ',  dt_clk
+                #print self.count, ' - ',  dt_clk
 
             if dt_clk < (1.0 / self.rate - 0.005):
                 self.count += 1
-                print self.count, ' - ',  dt_clk
+                #print self.count, ' - ',  dt_clk
 
             # Roll
             roll_rate_sv = self.pid_roll.compute(self.euler_sp.x, self.euler_mv.x, dt_clk)
@@ -175,6 +200,10 @@ class AttitudeControl:
             # yaw rate pid compute
             yaw_rate_output = self.pid_yaw_rate.compute(yaw_rate_sv, self.euler_rate_mv.z, dt_clk)
 
+            # VPC outputs
+            vpc_roll_output = -self.pid_vpc_roll.compute(0.0, roll_rate_output, dt_clk)
+            vpc_pitch_output = -self.pid_vpc_pitch.compute(0.0, pitch_rate_output, dt_clk)
+
 
             # Roll and pitch rate outputs are position of the center of the
             # mass of arms. Here we compute q.
@@ -183,8 +212,8 @@ class AttitudeControl:
             L1 = 0.094
             L2 = 0.061
             L3 = 0.08
-            arms_pos = [roll_rate_output, -pitch_rate_output]
-            print arms_pos
+            arms_pos = [-roll_rate_output, -pitch_rate_output]
+            #print arms_pos
             q = ArmsKinematics.ik_both_arms(self.q_right, 
                 self.q_left, arms_pos, L1, L2, L3)
             self.q_right = copy.deepcopy(q[0])
@@ -194,7 +223,8 @@ class AttitudeControl:
 
             attitude_output = Float64MultiArray()
             attitude_output.data = [q_left[0]+1.57, q_left[1]-1.57, q_left[2], \
-                q_right[0]-1.57, q_right[1]-1.57, q_right[2], yaw_rate_output]
+                q_right[0]-1.57, q_right[1]-1.57, q_right[2], yaw_rate_output, \
+                vpc_roll_output, vpc_pitch_output]
             self.attitude_pub.publish(attitude_output)
 
             # Publish PID data - could be usefule for tuning
@@ -204,6 +234,9 @@ class AttitudeControl:
             self.pub_pid_pitch_rate.publish(self.pid_pitch_rate.create_msg())
             self.pub_pid_yaw.publish(self.pid_yaw.create_msg())
             self.pub_pid_yaw_rate.publish(self.pid_yaw_rate.create_msg())
+            # Publish VPC pid data
+            self.pub_pid_vpc_roll.publish(self.pid_vpc_roll.create_msg())
+            self.pub_pid_vpc_pitch.publish(self.pid_vpc_pitch.create_msg())
 
     def mot_vel_ref_cb(self, msg):
         '''
@@ -218,8 +251,6 @@ class AttitudeControl:
         We used the following order of rotation - 1)yaw, 2) pitch, 3) roll
         :param msg: Type sensor_msgs/Imu
         '''
-        if not self.start_flag:
-            self.start_flag = True
 
         qx = msg.orientation.x
         qy = msg.orientation.y
@@ -245,6 +276,21 @@ class AttitudeControl:
         self.euler_rate_mv.x = p + sx * ty * q + cx * ty * r
         self.euler_rate_mv.y = cx * q - sx * r
         self.euler_rate_mv.z = sx / cy * q + cx / cy * r
+
+        if not self.start_flag:
+            self.start_flag = True
+            self.euler_rate_mv_old = copy.deepcopy(self.euler_rate_mv)
+
+        # Filtering angular velocities
+        #self.euler_rate_mv.x = simple_filters.filterPT1(self.euler_rate_mv_old.x, 
+        #    self.euler_rate_mv.x, self.rate_mv_filt_T, self.Ts, self.rate_mv_filt_K)
+        #self.euler_rate_mv.y = simple_filters.filterPT1(self.euler_rate_mv_old.y, 
+        #    self.euler_rate_mv.y, self.rate_mv_filt_T, self.Ts, self.rate_mv_filt_K)
+        #self.euler_rate_mv.z = simple_filters.filterPT1(self.euler_rate_mv_old.z, 
+        #    self.euler_rate_mv.z, self.rate_mv_filt_T, self.Ts, self.rate_mv_filt_K)
+
+        # Set old to current
+        self.euler_rate_mv_old = copy.deepcopy(self.euler_rate_mv)
 
     def euler_ref_cb(self, msg):
         '''
@@ -286,6 +332,15 @@ class AttitudeControl:
             config.yaw_r_ki = self.pid_yaw_rate.get_ki()
             config.yaw_r_kd = self.pid_yaw_rate.get_kd()
 
+            # VPC pids
+            config.vpc_roll_kp = self.pid_vpc_roll.get_kp()
+            config.vpc_roll_ki = self.pid_vpc_roll.get_ki()
+            config.vpc_roll_kd = self.pid_vpc_roll.get_kd()
+
+            config.vpc_pitch_kp = self.pid_vpc_pitch.get_kp()
+            config.vpc_pitch_ki = self.pid_vpc_pitch.get_ki()
+            config.vpc_pitch_kd = self.pid_vpc_pitch.get_kd()
+
             self.config_start = True
         else:
             # The following code just sets up the P,I,D gains for all controllers
@@ -313,6 +368,15 @@ class AttitudeControl:
             self.pid_yaw_rate.set_kp(config.yaw_r_kp)
             self.pid_yaw_rate.set_ki(config.yaw_r_ki)
             self.pid_yaw_rate.set_kd(config.yaw_r_kd)
+
+            # VPC pids
+            self.pid_vpc_roll.set_kp(config.vpc_roll_kp)
+            self.pid_vpc_roll.set_ki(config.vpc_roll_ki)
+            self.pid_vpc_roll.set_kd(config.vpc_roll_kd)
+
+            self.pid_vpc_pitch.set_kp(config.vpc_pitch_kp)
+            self.pid_vpc_pitch.set_ki(config.vpc_pitch_ki)
+            self.pid_vpc_pitch.set_kd(config.vpc_pitch_kd)
 
         # this callback should return config data back to server
         return config

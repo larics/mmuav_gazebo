@@ -9,9 +9,12 @@
   <node name="controller_spawner" pkg="controller_manager" type="spawner" respawn="false"
     output="screen" ns="$(arg namespace)"  args="joint_state_controller
     joint1_left_controller
-    joint2_left_controller 
     joint1_right_controller
-    joint2_right_controller">
+    joint2_left_controller
+    joint2_right_controller
+    joint3_left_controller
+    joint3_right_controller
+    ">
     <remap from="/robot_description" to="$(arg namespace)/robot_description"/>
   </node>
     
