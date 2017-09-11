@@ -88,6 +88,65 @@
     </plugin>
   </gazebo-->
 
+    <!-- Mount first generic pose sensor-->
+  <xacro:odometry_plugin_macro
+    namespace="$(arg name)"
+    odometry_sensor_suffix="2"
+    child_frame_id="base"
+    parent_link="link_gripper2_left"
+    pose_topic="link_gripper2_left/pose"
+    pose_with_covariance_topic="link_gripper2_left/pose_with_covariance"
+    position_topic="link_gripper2_left/position"
+    transform_topic="link_gripper2_left/transform"
+    odometry_topic="link_gripper2_left/odometry"
+    parent_frame_id="world"
+    mass_odometry_sensor="0.01"
+    measurement_divisor="10"
+    measurement_delay="10"
+    unknown_delay="0.0"
+    noise_normal_position="0.0 0.0 0.0"
+    noise_normal_quaternion="0.0 0.0 0.0"
+    noise_normal_linear_velocity="0 0 0"
+    noise_normal_angular_velocity="0 0 0"
+    noise_uniform_position="0 0 0"
+    noise_uniform_quaternion="0 0 0"
+    noise_uniform_linear_velocity="0 0 0"
+    noise_uniform_angular_velocity="0 0 0"
+    enable_odometry_map="false"
+    odometry_map=""
+    image_scale="0.1">
+    <inertia ixx="0.00001" ixy="0.0" ixz="0.0" iyy="0.00001" iyz="0.0" izz="0.00001" /> <!-- [kg m^2] [kg m^2] [kg m^2] [kg m^2] [kg m^2] [kg m^2] -->
+    <origin xyz="-0.0 0.0 0" rpy="0.0 0.0 0.0" />
+  </xacro:odometry_plugin_macro>
 
+  <xacro:odometry_plugin_macro
+    namespace="$(arg name)"
+    odometry_sensor_suffix="3"
+    child_frame_id="base"
+    parent_link="link_gripper2_right"
+    pose_topic="link_gripper2_right/pose"
+    pose_with_covariance_topic="link_gripper2_right/pose_with_covariance"
+    position_topic="link_gripper2_right/position"
+    transform_topic="link_gripper2_right/transform"
+    odometry_topic="link_gripper2_right/odometry"
+    parent_frame_id="world"
+    mass_odometry_sensor="0.01"
+    measurement_divisor="10"
+    measurement_delay="10"
+    unknown_delay="0.0"
+    noise_normal_position="0.0 0.0 0.0"
+    noise_normal_quaternion="0.0 0.0 0.0"
+    noise_normal_linear_velocity="0 0 0"
+    noise_normal_angular_velocity="0 0 0"
+    noise_uniform_position="0 0 0"
+    noise_uniform_quaternion="0 0 0"
+    noise_uniform_linear_velocity="0 0 0"
+    noise_uniform_angular_velocity="0 0 0"
+    enable_odometry_map="false"
+    odometry_map=""
+    image_scale="0.1">
+    <inertia ixx="0.00001" ixy="0.0" ixz="0.0" iyy="0.00001" iyz="0.0" izz="0.00001" /> <!-- [kg m^2] [kg m^2] [kg m^2] [kg m^2] [kg m^2] [kg m^2] -->
+    <origin xyz="-0.0 0.0 0" rpy="0.0 0.0 0.0" />
+  </xacro:odometry_plugin_macro>
 
 </robot>
