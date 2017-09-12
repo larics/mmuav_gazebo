@@ -66,7 +66,7 @@
 
   <!-- Rotor joint and link -->
   <xacro:macro name="vertical_rotor"
-    params="robot_namespace suffix direction motor_constant moment_constant parent mass_rotor radius_rotor time_constant max_rot_velocity motor_number rotor_drag_coefficient rolling_moment_coefficient color *origin *inertia">
+    params="robot_namespace suffix direction motor_constant moment_constant parent mass_rotor radius_rotor time_constant_up time_constant_down max_rot_velocity motor_number rotor_drag_coefficient rolling_moment_coefficient color *origin *inertia">
     <joint name="rotor_${motor_number}_joint" type="continuous">
       <xacro:insert_block name="origin" />
       <axis xyz="0 0 1" />
@@ -103,7 +103,8 @@
         <jointName>rotor_${motor_number}_joint</jointName>
         <linkName>rotor_${motor_number}</linkName>
         <turningDirection>${direction}</turningDirection>
-        <timeConstant>${time_constant}</timeConstant>
+        <timeConstantUp>${time_constant_up}</timeConstantUp>
+        <timeConstantDown>${time_constant_down}</timeConstantDown>
         <maxRotVelocity>${max_rot_velocity}</maxRotVelocity>
         <motorConstant>${motor_constant}</motorConstant>
         <momentConstant>${moment_constant}</momentConstant>
@@ -414,7 +415,7 @@
       <parent link="${parent}"/>
       <child link="dynamixel_1_${suffix}" />
       <xacro:insert_block name="origin"/>
-      <limit upper="3.14" lower="-3.14" effort="400" velocity="1"/>
+      <limit upper="3.14" lower="-3.14" effort="10000000" velocity="20"/>
       <xacro:insert_block name="axis"/>
       <dynamics damping="0.07" friction="0.0"/>
     </joint>
@@ -435,7 +436,7 @@
       <parent link="link_F4_fixed_${suffix}"/>
       <child link="dynamixel_2_${suffix}" />
       <origin xyz="0 0 0" rpy="0 0 0"/>
-      <limit upper="3.14" lower="-3.14" effort="200" velocity="1"/>
+      <limit upper="3.14" lower="-3.14" effort="10000000" velocity="20"/>
       <axis xyz="0 1 0" />
       <dynamics damping="0.07" friction="0.0"/>
     </joint>
@@ -450,7 +451,7 @@
       <parent link="link_gripper1_${suffix}"/>
       <child link="link_gripper2_${suffix}" />
       <origin xyz="0.01265148 0.00103883 0.00134042" rpy="0 0 0"/>
-      <limit upper="3.14" lower="-3.14" effort="20" velocity="1"/>
+      <limit upper="3.14" lower="-3.14" effort="10000000" velocity="20"/>
       <axis xyz="0 1 0" />
       <dynamics damping="0.07" friction="0.0"/>
       <!--dynamics damping="0.4" friction="0.04"/-->

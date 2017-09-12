@@ -62,10 +62,10 @@ class MergeControllerOutputs:
             self.ros_rate.sleep()
 
             # Compute motor velocities, + configuration
-            mot1 = self.mot_vel_ref - self.vpc_pitch_command
-            mot2 = self.mot_vel_ref + self.vpc_roll_command
-            mot3 = self.mot_vel_ref + self.vpc_pitch_command
-            mot4 = self.mot_vel_ref - self.vpc_roll_command
+            mot1 = self.mot_vel_ref - self.vpc_pitch_command + self.yaw_command
+            mot2 = self.mot_vel_ref + self.vpc_roll_command - self.yaw_command
+            mot3 = self.mot_vel_ref + self.vpc_pitch_command + self.yaw_command
+            mot4 = self.mot_vel_ref - self.vpc_roll_command - self.yaw_command
 
             mot_speed_msg = Actuators()
             mot_speed_msg.header.stamp = rospy.Time.now()

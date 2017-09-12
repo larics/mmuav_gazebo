@@ -16,6 +16,7 @@ from rosgraph_msgs.msg import Clock
 import DualManipulatorPassiveJointKinematics as ArmsKinematics
 import copy
 import simple_filters
+import time
 
 class AttitudeControl:
     '''
@@ -72,31 +73,31 @@ class AttitudeControl:
         ##################################################################
         # Add your PID params here
 
-        self.pid_roll.set_kp(1.3)
+        self.pid_roll.set_kp(2.0)
         self.pid_roll.set_ki(0)
         self.pid_roll.set_kd(0)
 
-        self.pid_roll_rate.set_kp(0.03)
+        self.pid_roll_rate.set_kp(0.1)
         self.pid_roll_rate.set_ki(0.0)
         self.pid_roll_rate.set_kd(0)
         self.pid_roll_rate.set_lim_high(0.04)
         self.pid_roll_rate.set_lim_low(-0.04)
 
-        self.pid_pitch.set_kp(1.3)
+        self.pid_pitch.set_kp(2.0)
         self.pid_pitch.set_ki(0)
         self.pid_pitch.set_kd(0)
 
-        self.pid_pitch_rate.set_kp(0.03)
+        self.pid_pitch_rate.set_kp(0.1)
         self.pid_pitch_rate.set_ki(0)
         self.pid_pitch_rate.set_kd(0)
         self.pid_pitch_rate.set_lim_high(0.04)
         self.pid_pitch_rate.set_lim_low(-0.04)
 
-        self.pid_yaw.set_kp(1.0)
-        self.pid_yaw.set_ki(0)
+        self.pid_yaw.set_kp(2.5)
+        self.pid_yaw.set_ki(1)
         self.pid_yaw.set_kd(0.1)
 
-        self.pid_yaw_rate.set_kp(200.0)
+        self.pid_yaw_rate.set_kp(30.0)
         self.pid_yaw_rate.set_ki(0)
         self.pid_yaw_rate.set_kd(0)
 
@@ -177,9 +178,9 @@ class AttitudeControl:
 
             # Ramp or filter
             self.euler_sp_filt.x = simple_filters.ramp(self.euler_sp_old.x, 
-                self.euler_sp.x, self.Ts, 0.1)
+                self.euler_sp.x, self.Ts, 1.0)
             self.euler_sp_filt.y = simple_filters.ramp(self.euler_sp_old.y, 
-                self.euler_sp.y, self.Ts, 0.1)
+                self.euler_sp.y, self.Ts, 1.0)
             self.euler_sp_old = copy.deepcopy(self.euler_sp_filt)
 
             clock_now = self.clock
@@ -223,8 +224,10 @@ class AttitudeControl:
             L3 = 0.08
             arms_pos = [-roll_rate_output, -pitch_rate_output]
             #print arms_pos
+            t0 = time.time()
             q = ArmsKinematics.ik_both_arms(self.q_right, 
                 self.q_left, arms_pos, L1, L2, L3)
+            #print time.time() - t0
             self.q_right = copy.deepcopy(q[0])
             self.q_left = copy.deepcopy(q[1])
             q_left = self.q_left
@@ -291,12 +294,12 @@ class AttitudeControl:
             self.euler_rate_mv_old = copy.deepcopy(self.euler_rate_mv)
 
         # Filtering angular velocities
-        #self.euler_rate_mv.x = simple_filters.filterPT1(self.euler_rate_mv_old.x, 
-        #    self.euler_rate_mv.x, self.rate_mv_filt_T, self.Ts, self.rate_mv_filt_K)
-        #self.euler_rate_mv.y = simple_filters.filterPT1(self.euler_rate_mv_old.y, 
-        #    self.euler_rate_mv.y, self.rate_mv_filt_T, self.Ts, self.rate_mv_filt_K)
-        #self.euler_rate_mv.z = simple_filters.filterPT1(self.euler_rate_mv_old.z, 
-        #    self.euler_rate_mv.z, self.rate_mv_filt_T, self.Ts, self.rate_mv_filt_K)
+        self.euler_rate_mv.x = simple_filters.filterPT1(self.euler_rate_mv_old.x, 
+            self.euler_rate_mv.x, self.rate_mv_filt_T, self.Ts, self.rate_mv_filt_K)
+        self.euler_rate_mv.y = simple_filters.filterPT1(self.euler_rate_mv_old.y, 
+            self.euler_rate_mv.y, self.rate_mv_filt_T, self.Ts, self.rate_mv_filt_K)
+        self.euler_rate_mv.z = simple_filters.filterPT1(self.euler_rate_mv_old.z, 
+            self.euler_rate_mv.z, self.rate_mv_filt_T, self.Ts, self.rate_mv_filt_K)
 
         # Set old to current
         self.euler_rate_mv_old = copy.deepcopy(self.euler_rate_mv)

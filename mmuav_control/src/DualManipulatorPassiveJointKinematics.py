@@ -74,19 +74,24 @@ def ik_both_arms(q01_list, q02_list, goal, L1, L2, L3):
     #We want to use the null space of the arms to find the closes solution of inverse kinematics
     DQ_min = np.infty
     #Passive joint at the endeffector can rotate +/-30 degrees 
-    N=90
+    N=9
     PHI=100.0
     for phi in range(-N,N):
-        phi=phi*np.pi/180
+        phi=(phi*10.0)*np.pi/180
         #Find the goal position for the arms
         #We are searching for a circle around the goal, where the arm can reach, keeping in mind the angle N
         #goal = [0,0]
         goal1 = ((goal[0]+L1+L2-L3*np.cos(phi)),-(goal[1]+L3*np.sin(phi)),0)
         q01=(q01_list[0], q01_list[1], 0.0)#Arm A
+        #t0 = time.time()
         q1=ik_2R_MMUAV_closest(q01,goal1,DH,L1,L2)
+        #t1 = time.time()
         q02=(q02_list[0], q02_list[1], 0.0)#Arm B
         goal2 = (-goal[0]+L1+L2-L3*np.cos(phi),(goal[1]-L3*np.sin(phi)),0)
+        #t2 = time.time()
         q2=ik_2R_MMUAV_closest(q02,goal2,DH,L1,L2)
+        #t3 = time.time()
+        #print "Left: ", t1-t0, "Right: ", t3-t2
         DQ=(q1[0]-q01[0])**2+(q1[1]-q01[1])**2+(q1[2]-q01[2])**2+(q2[0]-q02[0])**2+(q2[1]-q02[1])**2+(q2[2]-q02[2])**2
         #print(DQ)
         #Find minimal distance in Q space

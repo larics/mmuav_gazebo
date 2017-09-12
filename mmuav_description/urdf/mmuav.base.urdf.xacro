@@ -16,11 +16,12 @@
   <xacro:property name="radius_rotor" value="0.1524" /> <!-- [m] -->
   <xacro:property name="motor_constant" value="8.54858e-06" /> <!-- [kg*m/s^2] -->
   <xacro:property name="moment_constant" value="0.016" /> <!-- [m] -->
-  <xacro:property name="time_constant" value="0.0125" /> <!-- [s] -->
+  <xacro:property name="time_constant_up" value="0.0125" /> <!-- [s] -->
+  <xacro:property name="time_constant_down" value="0.025" /> <!-- [s] -->
   <xacro:property name="max_rot_velocity" value="1475" /> <!-- [rad/s] -->
 
   <!--xacro:property name="rotor_drag_coefficient" value="8.06428e-05" /-->
-  <xacro:property name="rotor_drag_coefficient" value="8.06428e-06" />
+  <xacro:property name="rotor_drag_coefficient" value="8.06428e-05" />
   <xacro:property name="rolling_moment_coefficient" value="0.000001" />
 
   <xacro:property name="imu_mass" value="0.02"/>
@@ -115,7 +116,8 @@
     parent="base_link"
     mass_rotor="${mass_rotor}"
     radius_rotor="${radius_rotor}"
-    time_constant="${time_constant}"
+    time_constant_up="${time_constant_up}"
+    time_constant_down="${time_constant_down}"
     max_rot_velocity="${max_rot_velocity}"
     motor_number="0"
     rotor_drag_coefficient="${rotor_drag_coefficient}"
@@ -134,7 +136,8 @@
     parent="base_link"
     mass_rotor="${mass_rotor}"
     radius_rotor="${radius_rotor}"
-    time_constant="${time_constant}"
+    time_constant_up="${time_constant_up}"
+    time_constant_down="${time_constant_down}"
     max_rot_velocity="${max_rot_velocity}"
     motor_number="1"
     rotor_drag_coefficient="${rotor_drag_coefficient}"
@@ -147,13 +150,14 @@
   <xacro:vertical_rotor
     robot_namespace="$(arg name)"
     suffix="back_left"
-    direction="ccw"
+    direction="cw"
     motor_constant="${motor_constant}"
     moment_constant="${moment_constant}"
     parent="base_link"
     mass_rotor="${mass_rotor}"
     radius_rotor="${radius_rotor}"
-    time_constant="${time_constant}"
+    time_constant_up="${time_constant_up}"
+    time_constant_down="${time_constant_down}"
     max_rot_velocity="${max_rot_velocity}"
     motor_number="2"
     rotor_drag_coefficient="${rotor_drag_coefficient}"
@@ -166,13 +170,14 @@
   <xacro:vertical_rotor
     robot_namespace="$(arg name)"
     suffix="back_right"
-    direction="cw"
+    direction="ccw"
     motor_constant="${motor_constant}"
     moment_constant="${moment_constant}"
     parent="base_link"
     mass_rotor="${mass_rotor}"
     radius_rotor="${radius_rotor}"
-    time_constant="${time_constant}"
+    time_constant_up="${time_constant_up}"
+    time_constant_down="${time_constant_down}"
     max_rot_velocity="${max_rot_velocity}"
     motor_number="3"
     rotor_drag_coefficient="${rotor_drag_coefficient}"
