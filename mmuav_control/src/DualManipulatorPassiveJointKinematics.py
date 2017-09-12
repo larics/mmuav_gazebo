@@ -66,6 +66,7 @@ def ik_both_arms(q01_list, q02_list, goal, L1, L2, L3):
     DH = np.matrix('0.0 0.0 0.0 1.0 1.0;0.0 0.0 0.0 1.0 1.0')
     DH[0,3] = L1
     DH[1,3] = L2
+    L3 = 0.08
 
     q01 = [q01_list[0], q01_list[1], q01_list[2]]
     q02 = [q02_list[0], q02_list[1], q02_list[2]]
@@ -74,10 +75,11 @@ def ik_both_arms(q01_list, q02_list, goal, L1, L2, L3):
     #We want to use the null space of the arms to find the closes solution of inverse kinematics
     DQ_min = np.infty
     #Passive joint at the endeffector can rotate +/-30 degrees 
-    N=9
+    N=90
     PHI=100.0
-    for phi in range(-N,N):
-        phi=(phi*10.0)*np.pi/180
+    # -64, -34
+    for phi in range(-65,-33,3):
+        phi=(phi*1)*np.pi/180
         #Find the goal position for the arms
         #We are searching for a circle around the goal, where the arm can reach, keeping in mind the angle N
         #goal = [0,0]
@@ -112,6 +114,7 @@ def ik_both_arms(q01_list, q02_list, goal, L1, L2, L3):
 
     # Put phi in q1 and q2
     #print Q1    
+    #print PHI*180.0/np.pi
     return [Q1, Q2]
 
 

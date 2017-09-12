@@ -45,8 +45,8 @@ class ArmsControlGUI():
 		self.window.ArmsWSpinBox.valueChanged.connect(self.ArmsWSpinBoxCallback)
 		self.window.ArmsL3SpinBox.valueChanged.connect(self.ArmsL3SpinBoxCallback)
 
-		self.armsQRight = [-1.0+1.57, -2.0+1.57, -1.2]
-		self.armsQLeft = [2.0-1.57, -2.0+1.57, -1.2]
+		self.armsQRight = [-0.6769896+1.57, -2.4846+1.57, -1.117]
+		self.armsQLeft = [2.463-1.57, -2.4846+1.57, -1.117]
 		self.L3 = 0.05
 
 		self.armsPosition = [0, 0] # x,y
@@ -134,9 +134,10 @@ class ArmsControlGUI():
 		tempV3.x = -arms_pos[1]
 		tempV3.y = arms_pos[0]
 		self.ReferencePub.publish(tempV3)
-
+		t0 = time.time()
 		q = arms_kinematics_screw.ik_both_arms(self.armsQRight, self.armsQLeft, 
 			arms_pos, L1, L2, L3)
+		print "ik time: ", time.time() - t0
 		self.armsQRight = copy.deepcopy(q[0])
 		self.armsQLeft = copy.deepcopy(q[1])
 		#print q
