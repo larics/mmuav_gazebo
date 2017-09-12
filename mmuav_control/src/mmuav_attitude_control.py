@@ -46,6 +46,8 @@ class AttitudeControl:
         self.config_start = False           # flag indicates if the config callback is called for the first time
         self.euler_mv = Vector3()           # measured euler angles
         self.euler_sp = Vector3(0, 0, 0)    # euler angles referent values
+        self.euler_sp_old = Vector3(0, 0, 0)
+        self.euler_sp_filt = Vector3(0, 0, 0)
 
         self.w_sp = 0                       # referent value for motor velocity - it should be the output of height controller
 
@@ -173,6 +175,13 @@ class AttitudeControl:
             #self.ros_rate.sleep()
             rospy.sleep(1.0/float(self.rate))
 
+            # Ramp or filter
+            self.euler_sp_filt.x = simple_filters.ramp(self.euler_sp_old.x, 
+                self.euler_sp.x, self.Ts, 0.1)
+            self.euler_sp_filt.y = simple_filters.ramp(self.euler_sp_old.y, 
+                self.euler_sp.y, self.Ts, 0.1)
+            self.euler_sp_old = copy.deepcopy(self.euler_sp_filt)
+
             clock_now = self.clock
             dt_clk = (clock_now.clock - clock_old.clock).to_sec()
 
@@ -186,12 +195,12 @@ class AttitudeControl:
                 #print self.count, ' - ',  dt_clk
 
             # Roll
-            roll_rate_sv = self.pid_roll.compute(self.euler_sp.x, self.euler_mv.x, dt_clk)
+            roll_rate_sv = self.pid_roll.compute(self.euler_sp_filt.x, self.euler_mv.x, dt_clk)
             # roll rate pid compute
             roll_rate_output = self.pid_roll_rate.compute(roll_rate_sv, self.euler_rate_mv.x, dt_clk)
 
             # Pitch
-            pitch_rate_sv = self.pid_pitch.compute(self.euler_sp.y, self.euler_mv.y, dt_clk)
+            pitch_rate_sv = self.pid_pitch.compute(self.euler_sp_filt.y, self.euler_mv.y, dt_clk)
             # pitch rate pid compute
             pitch_rate_output = self.pid_pitch_rate.compute(pitch_rate_sv, self.euler_rate_mv.y, dt_clk)
 

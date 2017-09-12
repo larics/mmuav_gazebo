@@ -15,3 +15,17 @@ def filterPT1(previous_output, current_value, T, Ts, K):
     b = K*Ts / (T + Ts)
 
     return (a*previous_output + b*current_value)
+
+def signum(a):
+    if a > 0.0:
+        return 1.0
+    elif a < 0.0:
+        return -1.0
+    else:
+        return 0
+
+def ramp(previous_output, setpoint, Ts, K):
+    delta = setpoint - previous_output
+    if abs(delta) < K*Ts:
+        return setpoint
+    return K * Ts * signum(delta) + previous_output
