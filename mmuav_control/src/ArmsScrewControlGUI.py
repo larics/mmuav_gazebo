@@ -64,6 +64,7 @@ class ArmsControlGUI():
 			Float64, queue_size=1)
 		self.JointLeft3Pub = rospy.Publisher("/mmuav/joint3_left_controller/command", 
 			Float64, queue_size=1)
+		self.ReferencePub = rospy.Publisher("/mmuav/arms_reference", Vector3, queue_size=1)
 		# Sleep to initialize publishers and publish initial pose
 		time.sleep(2.0)
 		self.PublishData()
@@ -129,6 +130,10 @@ class ArmsControlGUI():
 		#arms_pos = [self.armsPosition[0]*cos(pi/4) - self.armsPosition[1]*sin(pi/4), \
 		#	self.armsPosition[0]*sin(pi/4) + self.armsPosition[1]*cos(pi/4)]
 		arms_pos = [self.armsPosition[1], -self.armsPosition[0]]
+		tempV3 = Vector3()
+		tempV3.x = -arms_pos[1]
+		tempV3.y = arms_pos[0]
+		self.ReferencePub.publish(tempV3)
 
 		q = arms_kinematics_screw.ik_both_arms(self.armsQRight, self.armsQLeft, 
 			arms_pos, L1, L2, L3)
