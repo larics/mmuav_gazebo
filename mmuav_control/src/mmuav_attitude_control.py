@@ -93,9 +93,9 @@ class AttitudeControl:
         self.pid_pitch_rate.set_lim_high(0.04)
         self.pid_pitch_rate.set_lim_low(-0.04)
 
-        self.pid_yaw.set_kp(2.5)
-        self.pid_yaw.set_ki(1)
-        self.pid_yaw.set_kd(0.1)
+        self.pid_yaw.set_kp(10)
+        self.pid_yaw.set_ki(0)
+        self.pid_yaw.set_kd(6)
 
         self.pid_yaw_rate.set_kp(30.0)
         self.pid_yaw_rate.set_ki(0)
@@ -103,13 +103,13 @@ class AttitudeControl:
 
         # VPC pids, initially 0 so vpc is inactive
         self.pid_vpc_roll.set_kp(0)
-        self.pid_vpc_roll.set_ki(0)
+        self.pid_vpc_roll.set_ki(800)
         self.pid_vpc_roll.set_kd(0)
         self.pid_vpc_roll.set_lim_high(200)
         self.pid_vpc_roll.set_lim_low(-200)
 
         self.pid_vpc_pitch.set_kp(0)
-        self.pid_vpc_pitch.set_ki(0)
+        self.pid_vpc_pitch.set_ki(800)
         self.pid_vpc_pitch.set_kd(0)
         self.pid_vpc_pitch.set_lim_high(200)
         self.pid_vpc_pitch.set_lim_low(-200)
@@ -177,11 +177,13 @@ class AttitudeControl:
             rospy.sleep(1.0/float(self.rate))
 
             # Ramp or filter
-            self.euler_sp_filt.x = simple_filters.ramp(self.euler_sp_old.x, 
-                self.euler_sp.x, self.Ts, 1.0)
-            self.euler_sp_filt.y = simple_filters.ramp(self.euler_sp_old.y, 
-                self.euler_sp.y, self.Ts, 1.0)
-            self.euler_sp_old = copy.deepcopy(self.euler_sp_filt)
+            #self.euler_sp_filt.x = simple_filters.ramp(self.euler_sp_old.x, 
+            #    self.euler_sp.x, self.Ts, 1.0)
+            #self.euler_sp_filt.y = simple_filters.ramp(self.euler_sp_old.y, 
+            #    self.euler_sp.y, self.Ts, 1.0)
+            #self.euler_sp_old = copy.deepcopy(self.euler_sp_filt)
+            self.euler_sp_filt.x = self.euler_sp.x
+            self.euler_sp_filt.y = self.euler_sp.y
 
             clock_now = self.clock
             dt_clk = (clock_now.clock - clock_old.clock).to_sec()
