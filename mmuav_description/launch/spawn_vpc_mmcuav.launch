@@ -10,7 +10,8 @@
   <arg name="enable_ground_truth" default="true"/>
   <arg name="log_file" default="mmcuav_log"/>
   <arg name="exclude_floor_link_from_collision_check" default="ground_plane::link"/>
-  <arg name="model" value="$(find mmuav_description)/urdf/mmcuav.gazebo.xacro" />
+  <arg name="model_type" default="mmcuav" />
+  <arg name="model" value="$(find mmuav_description)/urdf/$(arg model_type).gazebo.xacro" />
 
   <!-- send the robot XML to param server -->
   <param name="/$(arg name)/robot_description" command="

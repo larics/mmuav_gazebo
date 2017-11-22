@@ -13,6 +13,8 @@
   <arg name="enable_ground_truth" default="true"/>
   <arg name="log_file" default="vpc_mmcuav"/>
 
+  <arg name="model_type" default="mmcuav" />
+
 
   <!-- Launch gazebo -->
   <include file="$(find gazebo_ros)/launch/empty_world.launch">
@@ -24,7 +26,9 @@
     <arg name="headless" value="$(arg headless)"/>
   </include>
 
-  <include file="$(find mmuav_description)/launch/spawn_vpc_mmcuav.launch" />
+  <include file="$(find mmuav_description)/launch/spawn_vpc_mmcuav.launch">
+    <arg name="model_type" value="$(arg model_type)" />
+  </include>
   
    <!-- Start control -->
   <include file="$(find mmuav_control)/launch/vpc_mmcuav_control.launch"/>
