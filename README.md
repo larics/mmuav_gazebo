@@ -9,6 +9,7 @@ Package ```mmuav_arducopter_bridge``` is used for controlling the UAV in real wo
 - [Basic usage](#BasicUsage)
   * [Running the simulation](#Running)
     * [Mmuav](#Mmuav)
+    * [VpcMmc UAV](#MMCUAV)
 
 ## <a name="Installation"></a> Installation
 Before you start some packages are required. You can install them with:
@@ -47,3 +48,22 @@ After running the command above, the UAV will hover at 1m height. You can contro
 - ``` /mmuav/odometry ``` -> Provides position, orientation, linear velocities and angular velocities of the UAV
 - ``` /mmuav/pid_*``` -> All topics starting with ```pid_``` are publishing controller status
 - ``` /mmuav/camera1/image_raw ``` -> Raw image from camera attached below the UAV used for visualizing dual arm manipulator motion
+
+#### <a name="VPCMMCUAV"></a> VpcMmc UAV
+
+To run simulation for UAV with moving mass controller launch:
+
+```roslaunch mmuav_gazebo vpc_mmcuav_attitude_height.launch ```
+
+After running the command above, the UAV will hover at 1m height. You can control the UAV through several topics:
+
+**Subscriptions:**
+
+- ``` /mmuav/euler_ref``` -> Desired euler angle reference here to move the UAV.
+- ``` /mmuav/vel_ref``` -> Desired height of the UAV.
+
+**Published topics:**
+
+- ``` /mmuav/imu``` -> Imu data from the UAV
+- ``` /mmuav/odometry ``` -> Provides position, orientation, linear velocities and angular velocities of the UAV
+- ``` /mmuav/pid_*``` -> All topics starting with ```pid_``` are publishing controller status
