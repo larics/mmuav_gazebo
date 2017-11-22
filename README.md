@@ -55,6 +55,10 @@ To run simulation for UAV with moving mass controller launch:
 
 ```roslaunch mmuav_gazebo vpc_mmcuav_attitude_height.launch ```
 
+Alternatively, one can run simulation with a **rope** attached to the UAV:
+
+```roslaunch mmuav_gazebo vpc_mmcuav_attitude_height.launch model_type:=mmcuav_rope```
+
 After running the command above, the UAV will hover at 1m height. You can control the UAV through several topics:
 
 **Subscriptions:**
