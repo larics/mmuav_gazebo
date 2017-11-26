@@ -1,0 +1,25 @@
+<?xml version="1.0" ?>
+
+<launch>
+  <arg name="namespace" default="vpc_mmcuav"/>
+  <arg name="rate" default="100"/>
+
+  <group ns="$(arg namespace)">
+    <!-- Attitude control -->
+    <node name="vpc_mmc_attitude_control" pkg="mmuav_control" type="vpc_mmc_attitude_control.py">
+      <param name="rate" value="(arg rate)"/>
+    </node>
+
+    <!-- Height control -->
+    <node name="vpc_mmc_height_control" pkg="mmuav_control" type="vpc_mmc_position_ctl.py" output="screen">
+      <param name="rate" value="(arg rate)"/>
+    </node>
+
+    <!-- Merge height and attitude control node -->
+    <node name="vpc_mmc_controller_outputs_to_motor_velocities" pkg="mmuav_control" type="vpc_mmc_controller_outputs_to_motor_velocities.py">
+      <param name="rate" value="(arg rate)"/>
+    </node>
+
+  </group>
+
+</launch>
