@@ -26,11 +26,11 @@ class SquareTrajectory():
             self.waypointArray.waypoints.append(copy.deepcopy(self.tempPose))
 
         
-        self.waypointArray.waypoints[0].position = copy.deepcopy(Point(0.0,0.0,1))
-        self.waypointArray.waypoints[1].position = copy.deepcopy(Point(1.0,0.0,1))
-        self.waypointArray.waypoints[2].position = copy.deepcopy(Point(1.0,1.0,1))
-        self.waypointArray.waypoints[3].position = copy.deepcopy(Point(0.0,1.0,1))
-        self.waypointArray.waypoints[4].position = copy.deepcopy(Point(0.0,0.0,1))
+        self.waypointArray.waypoints[0].position = copy.deepcopy(Point(0.0,0.0,2))
+        self.waypointArray.waypoints[1].position = copy.deepcopy(Point(1.0,0.0,2))
+        self.waypointArray.waypoints[2].position = copy.deepcopy(Point(1.0,1.0,2))
+        self.waypointArray.waypoints[3].position = copy.deepcopy(Point(0.0,1.0,2))
+        self.waypointArray.waypoints[4].position = copy.deepcopy(Point(0.0,0.0,2))
         #self.waypointArray.waypoints[5].position = copy.deepcopy(Point(0,-0.3,1))
         #self.waypointArray.waypoints[6].position = copy.deepcopy(Point(-0.6,-0.3,1))
         #self.waypointArray.waypoints[7].position = copy.deepcopy(Point(-0.6,-0.9,1))
