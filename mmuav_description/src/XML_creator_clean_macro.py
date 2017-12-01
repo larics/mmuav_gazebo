@@ -180,7 +180,8 @@ def joint_generator(n, xml_parent, rope_list, base_list):
         etree.SubElement(imaginary_inertiaPsi[i], "mass", value="${mass_link}")
         etree.SubElement(imaginary_inertiaPsi[i], "inertia", ixx="${inertia_link}", iyy="${inertia_link}",
                       izz="${inertia_link}", ixy="0.0", ixz="0.0", iyz="0.0")
-
+        dmp = (n-i)*0.1/n+0.1
+        dmp_text = str(dmp)     
         if i == 0:
 
             joints.append(etree.SubElement(robot,"joint", name="{0}_to_{1}".format(base_list[i],rope_Psi[i]),type="revolute"))
@@ -317,7 +318,7 @@ if __name__ == '__main__':
 #        mass_link= mass_rope * 0.1
 
         inertia_rope1=(1/12.0)*mass_rope*body_len**2+(1/4.0)*mass_rope*width_1**2
-        inertia_rope2=(1/2)*mass_rope*width_1**2
+        inertia_rope2=(1/2.0)*mass_rope*width_1**2
         #inertia_rope1 = 0.01
         #inertia_rope2 = 0.02
 

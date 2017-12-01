@@ -58,7 +58,7 @@ class PositionControl:
         self.pid_vy = PID()
 
         # Z controller
-        self.z_sp = 1.0                 # z-position set point
+        self.z_sp = 2.0                 # z-position set point
         self.z_ref_filt = 0             # z ref filtered
         self.z_mv = 0                   # z-position measured value
         self.pid_z = PID()              # pid instance for z control
@@ -71,28 +71,28 @@ class PositionControl:
         #########################################################
 
         # Add parameters for x controller
-        self.pid_x.set_kp(0.05)# 0.05
+        self.pid_x.set_kp(0.65)# 0.05
         self.pid_x.set_ki(0.0)
-        self.pid_x.set_kd(0.07) # 0.07
+        self.pid_x.set_kd(0.03) # 0.07
         self.pid_x.set_lim_high(500)      # max vertical ascent speed
         self.pid_x.set_lim_low(-500)      # max vertical descent speed
 
         # Add parameters for vx controller
-        self.pid_vx.set_kp(1.0) # 1.0
+        self.pid_vx.set_kp(0.11) # 1.0
         self.pid_vx.set_ki(0.0)
         self.pid_vx.set_kd(0)
         self.pid_vx.set_lim_high(500)   # max velocity of a motor
         self.pid_vx.set_lim_low(-500)   # min velocity of a motor
 
         # Add parameters for y controller
-        self.pid_y.set_kp(0.05)
+        self.pid_y.set_kp(0.65)
         self.pid_y.set_ki(0.0) #0.05
-        self.pid_y.set_kd(0.07) #0.03
+        self.pid_y.set_kd(0.03) #0.03
         self.pid_y.set_lim_high(500)      # max vertical ascent speed
         self.pid_y.set_lim_low(-500)      # max vertical descent speed
 
         # Add parameters for vy controller
-        self.pid_vy.set_kp(1.0)
+        self.pid_vy.set_kp(0.11)
         self.pid_vy.set_ki(0.0)
         self.pid_vy.set_kd(0)
         self.pid_vy.set_lim_high(500)   # max velocity of a motor
@@ -119,7 +119,7 @@ class PositionControl:
         self.t_old = 0
 
         rospy.Subscriber('pose', PoseStamped, self.pose_cb)
-        rospy.Subscriber('velocity', Odometry, self.vel_cb)
+        rospy.Subscriber('odometry', Odometry, self.vel_cb)
         rospy.Subscriber('vel_ref', Vector3, self.vel_ref_cb)
         rospy.Subscriber('pos_ref', Vector3, self.pos_ref_cb)
         self.pub_pid_x = rospy.Publisher('pid_x', PIDController, queue_size=1)
@@ -180,7 +180,7 @@ class PositionControl:
             temp_euler_ref.x = self.pid_vy.compute(vy_ref, self.vy_mv, dt)
 
             #                              (m_uav + m_arms)/(C*4)
-            self.mot_speed_hover = math.sqrt(9.81*(2.083+0.208*4)/(8.54858e-06*4.0))
+            self.mot_speed_hover = math.sqrt(9.81*(2.083+0.208*4+0.8)/(8.54858e-06*4.0))
             # prefilter for reference
             #a = 0.1
             #self.z_ref_filt = (1-a) * self.z_ref_filt  + a * self.z_sp
