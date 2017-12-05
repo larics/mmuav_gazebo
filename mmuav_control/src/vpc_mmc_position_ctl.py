@@ -58,7 +58,7 @@ class PositionControl:
         self.pid_vy = PID()
 
         # Z controller
-        self.z_sp = 2.0                 # z-position set point
+        self.z_sp = 2.1                 # z-position set point
         self.z_ref_filt = 0             # z ref filtered
         self.z_mv = 0                   # z-position measured value
         self.pid_z = PID()              # pid instance for z control
@@ -180,7 +180,7 @@ class PositionControl:
             temp_euler_ref.x = self.pid_vy.compute(vy_ref, self.vy_mv, dt)
 
             #                              (m_uav + m_arms)/(C*4)
-            self.mot_speed_hover = math.sqrt(9.81*(2.083+0.208*4+0.8)/(8.54858e-06*4.0))
+            self.mot_speed_hover = math.sqrt(9.81*(2.083+0.208*4+0.6)/(8.54858e-06*4.0))
             # prefilter for reference
             #a = 0.1
             #self.z_ref_filt = (1-a) * self.z_ref_filt  + a * self.z_sp

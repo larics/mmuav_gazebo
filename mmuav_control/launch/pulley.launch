@@ -3,21 +3,21 @@
 <launch>
   <arg name="id_fast" default="12"/>
   <arg name="id_slow" default="15"/>
-  <arg name="dt1" default="0.5"/>
-  <arg name="v1" default="0"/>
-  <arg name="dt2" default="0.5"/>
-  <arg name="v2" default="0"/>
-  <arg name="dt3" default="0.5"/>
+  <arg name="dt1" default="65.0"/>
+  <arg name="v1" default="1200"/>
+  <arg name="dt2" default="25.0"/>
+  <arg name="v2" default="1300"/>
+  <arg name="dt3" default="20"/>
 
     <!-- Pulley control -->
-    <node name="pulley_reference" pkg="mmuav_control" type="pulley_reference.py">
-      <param name="id_fast" value="(arg id_fast)"/>
-      <param name="id_slow" value="(arg id_slow)"/>
-      <param name="dt1" value="(arg dt1)"/>
-      <param name="v1" value="(arg v1)"/>
-      <param name="dt2" value="(arg dt2)"/>
-      <param name="v2" value="(arg v2)"/>
-      <param name="dt3" value="(arg dt3)"/>
+    <node name="pulley_reference" pkg="mmuav_control" type="pulley_reference.py" output="screen">
+      <param name="id_fast" value="$(arg id_fast)"/>
+      <param name="id_slow" value="$(arg id_slow)"/>
+      <param name="dt1" value="$(arg dt1)"/>
+      <param name="v1" value="$(arg v1)"/>
+      <param name="dt2" value="$(arg dt2)"/>
+      <param name="v2" value="$(arg v2)"/>
+      <param name="dt3" value="$(arg dt3)"/>
     </node>
 
 </launch>

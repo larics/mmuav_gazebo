@@ -1,6 +1,6 @@
 <?xml version='1.0' encoding='utf-8'?>
 <robot xmlns:xacro="http://www.ros.org/wiki/xacro" name="myrobot">
-  <xacro:macro name="robot_macro" params="base_link:='base_link' radius:=0.1001 effort_joint:=1000 small:=0.005 body_len:=0.0333333333333 load_inertia:=3.2e-07 velocity_joint:=300 damping1:=0.5 large:=100 inertia_link:=0.0015 mass_link:=0.005 inertia_rope2:=0.0 friction:=0.02 load_mass:=0.5 inertia_rope1:=1.55478395062e-07 box_param1:=0.25 spawn_point:=365.0 box_param:=0.0 mass_rope:=0.00166666666667 width_1:=0.00166666666667 k1:=10.0 k2:=100.0">
+  <xacro:macro name="robot_macro" params="base_link:='base_link' radius:=0.1001 effort_joint:=1000 small:=0.005 body_len:=0.0333333333333 load_inertia:=3.2e-07 velocity_joint:=300 damping1:=0.5 large:=100 inertia_link:=0.0015 mass_link:=0.01 inertia_rope2:=0.0 friction:=0.02 load_mass:=0.5 inertia_rope1:=1.55478395062e-07 box_param1:=0.25 spawn_point:=365.0 box_param:=0.0 mass_rope:=0.00166666666667 width_1:=0.00166666666667 k1:=1.0 k2:=1.0">
     <link name="rope_1">
       <visual>
         <geometry>
@@ -203,12 +203,12 @@
         </geometry>
         <origin rpy="0.0 0.0 0.0" xyz="0 0 ${-radius}"/>
       </visual>
-      <!--collision>
+      <collision>
         <geometry>
           <sphere radius="${radius}"/>
         </geometry>
         <origin rpy="0.0 0.0 0.0" xyz="0 0 ${-radius}"/>
-      </collision-->
+      </collision>
       <inertial>
         <mass value="${load_mass}"/>
         <inertia ixx="${load_inertia}" ixy="0.0" ixz="0.0" iyy="${load_inertia}" iyz="0.0" izz="${load_inertia}"/>
@@ -233,21 +233,21 @@
       <origin rpy="0.0 0.0 0.0" xyz="0 0 ${-box_param/2}"/>
       <axis xyz="0 0 1"/>
       <dynamics damping="${damping1}" friction="0"/>
-      <limit effort="${effort_joint}" lower="${-pi/2}" upper="${pi/2}" velocity="${velocity_joint}"/>
+      <limit effort="${effort_joint}" lower="${-k1*pi/2}" upper="${k1*pi/2}" velocity="${velocity_joint}"/>
     </joint>
     <joint name="rope1Psi_to_rope1Theta" type="revolute">
       <parent link="rope1Psi"/>
       <child link="rope1Theta"/>
       <axis xyz="0 1 0"/>
       <dynamics damping="${damping1}" friction="0"/>
-      <limit effort="${effort_joint}" lower="${-pi/2}" upper="${pi/2}" velocity="${velocity_joint}"/>
+      <limit effort="${effort_joint}" lower="${-k1*pi/2}" upper="${k1*pi/2}" velocity="${velocity_joint}"/>
     </joint>
     <joint name="rope1Theta_to_rope_1" type="revolute">
       <parent link="rope1Theta"/>
       <child link="rope_1"/>
       <axis xyz="1 0 0"/>
       <dynamics damping="${damping1}" friction="0"/>
-      <limit effort="${effort_joint}" lower="${-pi/16}" upper="${pi/16}" velocity="${velocity_joint}"/>
+      <limit effort="${effort_joint}" lower="${-k2*pi/16}" upper="${k2*pi/16}" velocity="${velocity_joint}"/>
     </joint>
     <link name="rope2Theta">
       <inertial>
@@ -743,21 +743,21 @@
       <origin rpy="0.0 0.0 0.0" xyz="0 0 ${-body_len}"/>
       <axis xyz="0 0 1"/>
       <dynamics damping="${damping1}" friction="${friction}"/>
-      <limit effort="${effort_joint}" lower="${-pi/2}" upper="${pi/2}" velocity="${velocity_joint}"/>
+      <limit effort="${effort_joint}" lower="${-k1*pi/2}" upper="${k1*pi/2}" velocity="${velocity_joint}"/>
     </joint>
     <joint name="rope16Psi_to_rope16Theta" type="revolute">
       <parent link="rope16Psi"/>
       <child link="rope16Theta"/>
       <axis xyz="0 1 0"/>
       <dynamics damping="${damping1}" friction="${friction}"/>
-      <limit effort="${effort_joint}" lower="${-pi/2}" upper="${pi/2}" velocity="${velocity_joint}"/>
+      <limit effort="${effort_joint}" lower="${-k1*pi/2}" upper="${k1*pi/2}" velocity="${velocity_joint}"/>
     </joint>
     <joint name="rope16Theta_to_load" type="revolute">
       <parent link="rope16Theta"/>
       <child link="load"/>
       <axis xyz="1 0 0"/>
       <dynamics damping="${damping1}" friction="${friction}"/>
-      <limit effort="${effort_joint}" lower="${-pi/16}" upper="${pi/16}" velocity="${velocity_joint}"/>
+      <limit effort="${effort_joint}" lower="${-k2*pi/16}" upper="${k2*pi/16}" velocity="${velocity_joint}"/>
     </joint>
     <gazebo reference="rope_1">
       <material>Gazebo/Blue</material>

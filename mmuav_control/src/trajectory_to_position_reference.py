@@ -22,7 +22,7 @@ class TrajectoryToPositionReference():
     def trajectory_callback(self, msg):
         trajectory = msg
 
-        print "Trajectory received"
+        print "Trajectory received, length:", len(trajectory.points)
         rate = rospy.Rate(100)
         position_ref = Vector3()
         for i in range(len(trajectory.points)):

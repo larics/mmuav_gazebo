@@ -314,11 +314,11 @@ if __name__ == '__main__':
         mass_rope = 0.1 #ukloniti ovisnost o broju clanaka
         mass_link=0.01
 
-        mass_rope = 0.05 * length / n
-#        mass_link= mass_rope * 0.1
+        mass_rope = 0.33 * 0.05 * length / n
+        mass_link= mass_rope
 
         inertia_rope1=(1/12.0)*mass_rope*body_len**2+(1/4.0)*mass_rope*width_1**2
-        inertia_rope2=(1/2.0)*mass_rope*width_1**2
+        inertia_rope2=0.0*(1/2.0)*mass_rope*width_1**2
         #inertia_rope1 = 0.01
         #inertia_rope2 = 0.02
 

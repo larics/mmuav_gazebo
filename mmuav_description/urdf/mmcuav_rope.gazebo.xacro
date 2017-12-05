@@ -93,4 +93,17 @@
     <origin xyz="-0.0 0.0 0" rpy="0.0 0.0 0.0" />
   </xacro:odometry_plugin_macro>
 
+  <!-- Add a wind gust starting at 40s and lasting for 2s. -->
+  <xacro:wind_plugin_macro
+    namespace="$(arg name)"
+    xyz_offset="0 0 0"
+    wind_direction="1 0 0"
+    wind_force_mean="0"
+    wind_gust_direction="1 0 0"
+    wind_gust_duration="12"
+    wind_gust_start="10"
+    wind_gust_force_mean="1"
+    affect_link="load">
+  </xacro:wind_plugin_macro>
+
 </robot>
