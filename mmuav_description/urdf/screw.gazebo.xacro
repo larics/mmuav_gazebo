@@ -1,0 +1,34 @@
+<?xml version="1.0"?>
+
+<robot name="screw" xmlns:xacro="http://ros.org/wiki/xacro">
+  <!--
+  It seems that the xacro:property does not allow to use substitution args. Therefore, instead xacro parameter ${namespace}, subsitution argument is used $(arg name). This is 
+  <xacro:property name="namespace" value="$(arg name)" />
+  -->
+
+  <gazebo>
+    <plugin name="gazebo_ros_control" filename="libgazebo_ros_control.so">
+      <robotNamespace>/screw</robotNamespace>
+      <robotParam>/screw/robot_description </robotParam>
+      <robotSimType>gazebo_ros_control/DefaultRobotHWSim</robotSimType>
+    </plugin>
+  </gazebo>
+
+  <xacro:property name="enable_bag_plugin" value="false" />
+  <xacro:property name="bag_file" value="force_sensor.bag" />
+
+  <!-- Instantiate mmuav "mechanics" -->
+  <xacro:include filename="$(find mmuav_description)/urdf/screw.base.urdf.xacro" />
+  <xacro:include filename="$(find rotors_description)/urdf/component_snippets.xacro" />
+
+  <gazebo reference="link_screw">
+    <gravity>true</gravity>
+    <self_collide>false</self_collide>
+  </gazebo>
+
+
+  <gazebo reference="base_link">
+    <dampingFactor>0.0002</dampingFactor>
+  </gazebo>
+
+</robot>

@@ -126,10 +126,10 @@
     <transmission name="transmission_${trans_number}">
       <type>transmission_interface/SimpleTransmission</type>
       <joint name="${joint_name}">
-        <hardwareInterface>hardware_interface/EffortJointInterface</hardwareInterface>
+         <hardwareInterface>hardware_interface/EffortJointInterface</hardwareInterface>
       </joint>
       <actuator name="motor_${trans_number}">
-        <hardwareInterface>hardware_interface/EffortActuatorInterface</hardwareInterface>
+        <hardwareInterface>hardware_interface/EffortJointInterface</hardwareInterface>
         <mechanicalReduction>1</mechanicalReduction>
       </actuator>
     </transmission>
@@ -252,17 +252,38 @@
   </xacro:macro>
 
   <xacro:macro name="manipulator"
-  params="link_length link_width link_mass link_mesh_file parent suffix *axis *origin">
+  params="parent suffix *axis *origin">
     <!--_____________________________________________________________-->
-    <!--LINK1 Dynamixel-->
+    <!--LINK1 manipulator2uav-->
     <!--_____________________________________________________________-->
-    <link name='dynamixel_1_${suffix}'>
+    <link name='link_manipulator2uav_${suffix}'>
       
       <inertial>
-        <mass value="0.055" />
-        <origin xyz="0.01261097 0 0.00120978" rpy="0 0 0"/>
+        <mass value="0.022" />
+        <origin rpy="0 0 0" xyz="0 -0.03190 0.00346"/>
         <inertia
-          ixx="0.00000885" ixy="0" ixz="-0.00000024"
+          ixx="0.00001" ixy="0" ixz="0.0"
+          iyx="0" iyy="0.00001" iyz="0"
+          izx="0.0" izy="0" izz="0.00001"/>
+      </inertial>
+            
+      <visual>
+        <origin xyz="0 0 0" rpy="0 0 0" />
+        <geometry>
+          <mesh filename="package://mmuav_description/meshes/manipulator2uav.dae"
+            scale="1 1 1" />
+        </geometry>
+      </visual>
+    </link>
+    <!--_____________________________________________________________-->
+    <!--LINK1.2 dynamixel1-->
+    <!--_____________________________________________________________-->
+    <link name='link_dynamixel1_${suffix}'>
+      <inertial>
+        <mass value="0.055" />
+        <origin rpy="0 0 0" xyz="0.01261097 0 0.00120978"/>
+        <inertia
+          ixx="0.00000885" ixy="0" ixz="0.00000024"
           iyx="0" iyy="0.00001597" iyz="0"
           izx="-0.00000024" izy="0" izz="0.00001335"/>
       </inertial>
@@ -274,29 +295,18 @@
             scale="1 1 1" />
         </geometry>
       </visual>
-      
-      <!--collision name='collision'>
-        <origin xyz="0.01261097 0 0.00120978" rpy="0 0 0"/>
-        <geometry>
-          <mesh filename="package://mmuav_description/meshes/AX12.dae"
-            scale="1 1 1" />
-           <box size="0.05 0.041 0.032" scale="0.01 0.01 0.01"/>
-        </geometry>
-      </collision-->
     </link>
-
     <!--_____________________________________________________________-->
-    <!--LINK1 F3-->
+    <!--LINK2 F3-->
     <!--_____________________________________________________________-->
-    <link name='link_F3_fixed_${suffix}'>
-      
+    <link name='link_F3_${suffix}'>
       <inertial>
-        <mass value="0.00323" />
-        <origin xyz="0.00000191 0.00240389 0" rpy="0 0 0"/>
+        <mass value="0.003" />
+        <origin rpy="0 0 0" xyz="0.00000191 0.00240389 0"/>
         <inertia
-          ixx="0.00000047" ixy="0" ixz="0.0"
-          iyx="0" iyy="0.00000065" iyz="0"
-          izx="0.0" izy="0" izz="0.00000020"/>
+          ixx="0.00000044" ixy="0" ixz="0.0"
+          iyx="0" iyy="0.00000061" iyz="0"
+          izx="0.0" izy="0" izz="0.00000019"/>
       </inertial>
             
       <visual>
@@ -307,19 +317,17 @@
         </geometry>
       </visual>
     </link>
-
     <!--_____________________________________________________________-->
-    <!--LINK1 F4-->
+    <!--LINK2 F4-->
     <!--_____________________________________________________________-->
-    <link name='link_F4_fixed_${suffix}'>
-      
+    <link name='link_F4_${suffix}'>
       <inertial>
-        <mass value="0.01" />
-        <origin xyz="0 -0.03040000 -0.00860000" rpy="0 0 0"/>
+        <mass value="0.014" />
+        <origin rpy="0 0 0" xyz="0 -0.0304 -0.0086"/>
         <inertia
-          ixx="0.00000845" ixy="0" ixz="0.0"
-          iyx="0" iyy="0.00000180" iyz="-0.00000279"
-          izx="0.0" izy="-0.00000279" izz="0.00000750"/>
+          ixx="0.00001183" ixy="0" ixz="0.0"
+          iyx="0" iyy="0.00000252" iyz="-0.00000390"
+          izx="0.0" izy="-0.00000390" izz="0.00001050"/>
       </inertial>
             
       <visual>
@@ -330,17 +338,15 @@
         </geometry>
       </visual>
     </link>
-
     <!--_____________________________________________________________-->
-    <!--LINK2 Dynamixel-->
+    <!--LINK2 dynamixel2-->
     <!--_____________________________________________________________-->
-    <link name='dynamixel_2_${suffix}'>
-      
+    <link name='link_dynamixel2_${suffix}'>
       <inertial>
         <mass value="0.055" />
-        <origin xyz="0.01261097 0 0.00120978" rpy="0 0 0"/>
+        <origin rpy="0 0 0" xyz="0.01261097 0 0.00120978"/>
         <inertia
-          ixx="0.00000885" ixy="0" ixz="-0.00000024"
+          ixx="0.00000885" ixy="0" ixz="0.00000024"
           iyx="0" iyy="0.00001597" iyz="0"
           izx="-0.00000024" izy="0" izz="0.00001335"/>
       </inertial>
@@ -352,29 +358,18 @@
             scale="1 1 1" />
         </geometry>
       </visual>
-
-      <!-- collision name='collision'>
-        <origin xyz="0.01261097 0 0.00120978" rpy="0 0 0"/>
-        <geometry>
-          <mesh filename="package://mmuav_description/meshes/AX12.dae"
-            scale="1 1 1" />
-           <box size="0.05 0.041 0.032" scale="0.01 0.01 0.01"/>
-        </geometry>
-      </collision-->
     </link>
-
     <!--_____________________________________________________________-->
-    <!--GRIPPER PART1-->
+    <!--LINK2 gripper 1-->
     <!--_____________________________________________________________-->
     <link name='link_gripper1_${suffix}'>
-      
       <inertial>
-        <mass value="0.0109" />
-        <origin xyz="0.00028510 0.00103830 0.00134070" rpy="0 0 0"/>
+        <mass value="0.010" />
+        <origin rpy="0 0 0" xyz="0.00028510 0.00103830 0.00134070"/>
         <inertia
-          ixx="0.00000124" ixy="0" ixz="0.0"
-          iyx="0" iyy="0.00000170" iyz="0"
-          izx="0.0" izy="0" izz="0.00000137"/>
+          ixx="0.00000114" ixy="0" ixz="0.0"
+          iyx="0" iyy="0.00000156" iyz="0"
+          izx="0.0" izy="0" izz="0.00000125"/>
       </inertial>
             
       <visual>
@@ -385,94 +380,263 @@
         </geometry>
       </visual>
     </link>
-
     <!--_____________________________________________________________-->
-    <!--GRIPPER PART2-->
+    <!--LINK3 gripper 2-->
     <!--_____________________________________________________________-->
     <link name='link_gripper2_${suffix}'>
-      
       <inertial>
-        <mass value="0.25" />
-        <!-- origin xyz="0.02116183 0 0" rpy="1.57079632679 0 0"/ -->
-        <origin xyz="0.04 0 0" rpy="0 0 0"/>
-        <!--inertia
-          ixx="0.00000124"
-          iyy="0.00000161"
-          izz="0.00000270"
-          ixy="0.0" ixz="0.0" iyz="0.0" / -->
+        <mass value="0.015" />
+        <origin rpy="0 0 0" xyz="0.005537 0.00103806 0.00134058"/>
         <inertia
-          ixx="0.00015"
-          iyy="0.00015"
-          izz="0.00015"
-          ixy="0.0" ixz="0.0" iyz="0.0" />
+          ixx="0.00000281" ixy="0" ixz="0.0"
+          iyx="0" iyy="0.00000248" iyz="0"
+          izx="0.0" izy="0" izz="0.00000391"/>
       </inertial>
             
       <visual>
-        <!-- origin xyz="0.02047 -0.00104 -0.00134" rpy="0 0 0" / -->
-        <origin xyz="0.08 0.0 0.0" rpy="0 0 0" />
+        <origin xyz="0.02047 -0.00104 0.00135" rpy="0 0 0" />
         <geometry>
-          <!--mesh filename="package://mmuav_description/meshes/gripper_part2.dae"
-            scale="0.1 0.1 0.1" / -->
-           <sphere radius="0.015"/>
+          <mesh filename="package://mmuav_description/meshes/gripper_part2.dae"
+            scale="1 1 1" />
+        </geometry>
+      </visual>
+    </link>
+    
+
+    <!--_____________________________________________________________-->
+    <!--JOINT1 FIXED manipulator2uav-->
+    <!--_____________________________________________________________-->
+    <joint name="joint_manipulator2uav_${suffix}" type="fixed">
+        <xacro:insert_block name="origin"/>
+        <parent link="${parent}"/>
+        <child link="link_manipulator2uav_${suffix}"/>
+    </joint>
+    <!--_____________________________________________________________-->
+    <!--JOINT1 CONTINOUS dynamixel1-->
+    <!--_____________________________________________________________-->
+    <joint name="joint_dynamixel1_${suffix}" type="revolute">
+      <parent link="link_manipulator2uav_${suffix}"/>
+      <child link="link_dynamixel1_${suffix}"/>
+      <origin xyz="0 0 0" rpy="${PI} 0 0" />
+      <limit upper="6" lower="-6" effort="1.5" velocity="6.2"/>
+      <axis xyz="0 0 1" />
+    </joint>
+    <!--_____________________________________________________________-->
+    <!--JOINT2 FIXED F3-->
+    <!--_____________________________________________________________-->
+    <joint name="joint_F3_${suffix}" type="fixed">
+        <origin xyz="0.04150716806 0 0" rpy="0 0 ${PI/2}" />
+        <parent link="link_dynamixel1_${suffix}"/>
+        <child link="link_F3_${suffix}"/>
+    </joint>
+    <!--_____________________________________________________________-->
+    <!--JOINT2 FIXED F4-->
+    <!--_____________________________________________________________-->
+    <joint name="joint_F4_${suffix}" type="fixed">
+        <origin xyz="0 -0.05249560744 0" rpy="0 0 ${PI}" />
+        <parent link="link_F3_${suffix}"/>
+        <child link="link_F4_${suffix}"/>
+    </joint>
+    <!--_____________________________________________________________-->
+    <!--JOINT2 CONTINOUS dynamixel2-->
+    <!--_____________________________________________________________-->
+    <joint name="joint_dynamixel2_${suffix}" type="revolute">
+      <parent link="link_F4_${suffix}"/>
+      <child link="link_dynamixel2_${suffix}"/>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <limit upper="6" lower="-6" effort="1.5" velocity="6.2"/>
+      <axis xyz="0 0 1" />
+    </joint>
+    <!--_____________________________________________________________-->
+    <!--JOINT2 FIXED gripper part1-->
+    <!--_____________________________________________________________-->
+    <joint name="joint_gripper1_${suffix}" type="fixed">
+        <origin xyz="0.04842 -0.00104 -0.00134" rpy="0 0 0" />
+        <parent link="link_dynamixel2_${suffix}"/>
+        <child link="link_gripper1_${suffix}"/>
+    </joint>
+    <!--_____________________________________________________________-->
+    <!--JOINT3 CONTINOUS gripper-->
+    <!--_____________________________________________________________-->
+    <joint name="joint_gripper2_${suffix}" type="revolute">
+      <parent link="link_gripper1_${suffix}"/>
+      <child link="link_gripper2_${suffix}"/>
+      <origin xyz="0.01265 0.00104 -0.00134" rpy="0 0 ${PI}" />
+      <limit upper="3.14" lower="3.14" effort="1.5" velocity="6.2"/>
+      <axis xyz="0 0 1" />
+    </joint>
+    
+
+  </xacro:macro>
+
+  <xacro:macro name="force_sensor" 
+    params="*origin">
+
+    <link name="world"></link>
+
+    <!--_____________________________________________________________-->
+    <!--LINK1 force sensor stand-->
+    <!--_____________________________________________________________-->
+    <link name='link_force_sensor_stand'>
+      
+      <inertial>
+        <mass value="2.0" />
+        <origin rpy="0 0 0" xyz="0.38508257 0.46818651 1.04028639"/>
+        <inertia
+          ixx="0.23434322" ixy="0" ixz="0.0"
+          iyx="0" iyy="0.01547123" iyz="0"
+          izx="0.0" izy="0" izz="0.23434322"/>
+      </inertial>
+            
+      <visual>
+        <origin xyz="0 0 0" rpy="0 0 0" />
+        <geometry>
+          <mesh filename="package://mmuav_description/meshes/forcesensor_stand.dae"
+            scale="1 1 1" />
         </geometry>
       </visual>
 
-      <!--collision name='collision'>
-        <origin xyz="0.02047 -0.00104 -0.00134" rpy="0 0 0"/>
+      <collision name='collision'>
+        <origin xyz="0 0 0" rpy="0 0 0"/>
         <geometry>
-          <mesh filename="package://mmuav_description/meshes/gripper_part2.dae"
-            scale="0.1 0.1 0.1" />
-           <box size="0.05 0.041 0.032"/>
+          <mesh filename="package://mmuav_description/meshes/forcesensor_stand.dae"
+            scale="1 1 1" />
         </geometry>
-      </collision-->
+      </collision>
     </link>
+    <!--_____________________________________________________________-->
+    <!--LINK2 force sensor mount bottom-->
+    <!--_____________________________________________________________-->
+    <link name='link_force_sensor_bottom_mount'>
+      
+      <inertial>
+        <mass value="0.05" />
+        <origin rpy="0 0 0" xyz="0.0 0.00206111 0.0"/>
+        <inertia
+          ixx="0.00002139" ixy="0" ixz="0.0"
+          iyx="0" iyy="0.00004241" iyz="0"
+          izx="0.0" izy="0" izz="0.00002139"/>
+      </inertial>
+            
+      <visual>
+        <origin xyz="0 0 0" rpy="0 0 0" />
+        <geometry>
+          <mesh filename="package://mmuav_description/meshes/forcesensor_mount_bottom.dae"
+            scale="1 1 1" />
+        </geometry>
+      </visual>
 
-    <joint name="joint_q1_${suffix}" type="continuous">
-      <parent link="${parent}"/>
-      <child link="dynamixel_1_${suffix}" />
-      <xacro:insert_block name="origin"/>
-      <limit upper="3.14" lower="-3.14" effort="10000000" velocity="20"/>
-      <xacro:insert_block name="axis"/>
-      <dynamics damping="0.07" friction="0.0"/>
+      <collision name='collision'>
+        <origin xyz="0 0 0" rpy="0 0 0"/>
+        <geometry>
+          <mesh filename="package://mmuav_description/meshes/forcesensor_mount_bottom.dae"
+            scale="1 1 1" />
+        </geometry>
+      </collision>
+    </link>
+    <!--_____________________________________________________________-->
+    <!--LINK2 force sensor mount top-->
+    <!--_____________________________________________________________-->
+    <link name='link_force_sensor_top_mount'>
+      
+      <inertial>
+        <mass value="0.080" />
+        <origin rpy="0 0 0" xyz="0.01903151 0.01661061 0.02154592"/>
+        <inertia
+          ixx="0.00059994" ixy="0" ixz="0.0"
+          iyx="0" iyy="0.00059994" iyz="0"
+          izx="0.0" izy="0" izz="0.00119615"/>
+      </inertial>
+            
+      <visual>
+        <origin xyz="0 0 0" rpy="0 0 0" />
+        <geometry>
+          <mesh filename="package://mmuav_description/meshes/forcesensor_mount_top.dae"
+            scale="1 1 1" />
+        </geometry>
+      </visual>
+
+      <collision name='collision'>
+        <origin xyz="0 0 0" rpy="0 0 0"/>
+        <geometry>
+          <mesh filename="package://mmuav_description/meshes/forcesensor_mount_top.dae"
+            scale="1 1 1" />
+        </geometry>
+      </collision>
+    </link>
+    <!--_____________________________________________________________-->
+    <!--JOINT1 FIXED force_sensor_stand-->
+    <!--_____________________________________________________________-->
+    <joint name="joint_force_sensor_stand" type="fixed">
+        <xacro:insert_block name="origin"/>
+        <parent link="world"/>
+        <child link="link_force_sensor_stand"/>
     </joint>
-
-    <joint name="Dynamixel1ToF3_${suffix}" type="fixed">
-        <origin xyz="0.0415 0 0" rpy="0 -1.57079633 0"/>
-        <parent link="dynamixel_1_${suffix}"/>
-        <child link="link_F3_fixed_${suffix}"/>
+    <!--_____________________________________________________________-->
+    <!--JOINT2 FIXED joint_force_sensor_mount_bottom-->
+    <!--_____________________________________________________________-->
+    <joint name="joint_force_sensor_mount_bottom" type="fixed">
+        <origin xyz="0 1.003 0" rpy="${PI} 0 0" />
+        <parent link="link_force_sensor_stand"/>
+        <child link="link_force_sensor_bottom_mount"/>
     </joint>
-
-    <joint name="F3ToF4_${suffix}" type="fixed">
-        <origin xyz="0 0 -0.0525" rpy="0 3.14159265359 0"/>
-        <parent link="link_F3_fixed_${suffix}"/>
-        <child link="link_F4_fixed_${suffix}"/>
+    <!--_____________________________________________________________-->
+    <!--JOINT2 FIXED force_sensor_mount_top-->
+    <!--_____________________________________________________________-->
+    <joint name="joint_force_sensor_mount_top" type="revolute">
+        <origin xyz="-0.01903 -0.05153 0.01661" rpy="${-PI/2} 0 0" />
+        <parent link="link_force_sensor_bottom_mount"/>
+        <child link="link_force_sensor_top_mount"/>
+        <axis xyz="0 0 1" />
+        <limit effort="0" velocity="0" lower="0" upper="0" />
     </joint>
+  </xacro:macro>
 
-    <joint name="joint_q2_${suffix}" type="continuous">
-      <parent link="link_F4_fixed_${suffix}"/>
-      <child link="dynamixel_2_${suffix}" />
-      <origin xyz="0 0 0" rpy="0 0 0"/>
-      <limit upper="3.14" lower="-3.14" effort="10000000" velocity="20"/>
-      <axis xyz="0 1 0" />
-      <dynamics damping="0.07" friction="0.0"/>
+<xacro:macro name="screw" 
+    params="*origin">
+
+    <link name="base_link"></link>
+
+    <!--_____________________________________________________________-->
+    <!--LINK1 force sensor stand-->
+    <!--_____________________________________________________________-->
+    <link name='link_screw'>
+      
+      <inertial>
+        <mass value="0.5" />
+        <origin rpy="0 0 0" xyz="0.02100388 0.01819119 0.05027511"/>
+        <inertia
+          ixx="0.00020051" ixy="0" ixz="-0.00000019"
+          iyx="0" iyy="0.00020054" iyz="0.00000001"
+          izx="-0.00000019" izy="0.00000001" izz="0.00006377"/>
+      </inertial>
+            
+      <visual>
+        <origin xyz="0 0 0" rpy="0 0 0" />
+        <geometry>
+          <mesh filename="package://mmuav_description/meshes/screw.dae"
+            scale="1 1 1" />
+        </geometry>
+      </visual>
+
+      <collision name='collision'>
+        <origin xyz="0 0 0" rpy="0 0 0"/>
+        <geometry>
+          <mesh filename="package://mmuav_description/meshes/screw.dae"
+            scale="1 1 1" />
+        </geometry>
+      </collision>
+    </link>
+    
+    <!--_____________________________________________________________-->
+    <!--JOINT1 FIXED force_sensor_stand-->
+    <!--_____________________________________________________________-->
+    <joint name="joint_screw" type="fixed">
+        <xacro:insert_block name="origin"/>
+        <parent link="base_link"/>
+        <child link="link_screw"/>
     </joint>
-
-    <joint name="Dynamixel2ToGripper_${suffix}" type="fixed">
-        <origin xyz="0.04842 -0.00104 0.00134" rpy="0 0 0"/>
-        <parent link="dynamixel_2_${suffix}"/>
-        <child link="link_gripper1_${suffix}"/>
-    </joint>
-
-    <joint name="joint_q3_passive_${suffix}" type="continuous">
-      <parent link="link_gripper1_${suffix}"/>
-      <child link="link_gripper2_${suffix}" />
-      <origin xyz="0.01265148 0.00103883 0.00134042" rpy="0 0 0"/>
-      <limit upper="3.14" lower="-3.14" effort="10000000" velocity="20"/>
-      <axis xyz="0 1 0" />
-      <dynamics damping="0.07" friction="0.0"/>
-      <!--dynamics damping="0.4" friction="0.04"/-->
-    </joint>
-
+   
   </xacro:macro>
 
   <!-- Definition of movable mass macro -->

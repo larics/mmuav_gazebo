@@ -1,0 +1,14 @@
+<?xml version="1.0"?>
+
+
+<robot name="force_sensor" xmlns:xacro="http://ros.org/wiki/xacro">
+  <xacro:property name="PI" value="3.14" />
+
+  <!-- Included URDF Files -->
+  <xacro:include filename="$(find mmuav_description)/urdf/multirotor_base.urdf.xacro" />
+  
+  <xacro:force_sensor>
+    <origin xyz="0 0 0.02" rpy="${PI/2} 0 0"/>
+  </xacro:force_sensor>
+
+</robot>

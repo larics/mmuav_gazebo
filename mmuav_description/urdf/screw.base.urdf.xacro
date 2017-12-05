@@ -1,0 +1,14 @@
+<?xml version="1.0"?>
+
+
+<robot name="screw" xmlns:xacro="http://ros.org/wiki/xacro">
+  <xacro:property name="PI" value="3.14" />
+
+  <!-- Included URDF Files -->
+  <xacro:include filename="$(find mmuav_description)/urdf/multirotor_base.urdf.xacro" />
+  
+  <xacro:screw>
+    <origin xyz="0 0 0" rpy="0 0 0"/>
+  </xacro:screw>
+
+</robot>

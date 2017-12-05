@@ -5,14 +5,14 @@
       <author>Blender User</author>
       <authoring_tool>Blender 2.78.0 commit date:2017-02-24, commit time:14:33, hash:e92f235283</authoring_tool>
     </contributor>
-    <created>2017-08-21T13:34:18</created>
-    <modified>2017-08-21T13:34:18</modified>
+    <created>2017-12-01T11:09:55</created>
+    <modified>2017-12-01T11:09:55</modified>
     <unit name="meter" meter="1"/>
     <up_axis>Z_UP</up_axis>
   </asset>
   <library_images/>
   <library_effects>
-    <effect id="__001-effect">
+    <effect id="_-effect">
       <profile_COMMON>
         <technique sid="common">
           <phong>
@@ -43,8 +43,8 @@
     </effect>
   </library_effects>
   <library_materials>
-    <material id="__001-material" name="__001">
-      <instance_effect url="#__001-effect"/>
+    <material id="_-material" name="_">
+      <instance_effect url="#_-effect"/>
     </material>
   </library_materials>
   <library_geometries>
@@ -82,7 +82,7 @@
         <vertices id="mesh_1_F3-mesh-vertices">
           <input semantic="POSITION" source="#mesh_1_F3-mesh-positions"/>
         </vertices>
-        <polylist material="__001-material" count="3056">
+        <polylist material="_-material" count="3056">
           <input semantic="VERTEX" source="#mesh_1_F3-mesh-vertices" offset="0"/>
           <input semantic="NORMAL" source="#mesh_1_F3-mesh-normals" offset="1"/>
           <input semantic="TEXCOORD" source="#mesh_1_F3-mesh-map-0" offset="2" set="0"/>
@@ -96,11 +96,11 @@
   <library_visual_scenes>
     <visual_scene id="Scene" name="Scene">
       <node id="mesh_1_F3" name="mesh_1_F3" type="NODE">
-        <matrix sid="transform">1 0 0 0 0 -1.62921e-7 -1 0 0 1 -1.62921e-7 0 0 0 0 1</matrix>
+        <matrix sid="transform">1 0 0 0 0 1 0 0 0 0 1 0 0 0 0 1</matrix>
         <instance_geometry url="#mesh_1_F3-mesh" name="mesh_1_F3">
           <bind_material>
             <technique_common>
-              <instance_material symbol="__001-material" target="#__001-material"/>
+              <instance_material symbol="_-material" target="#_-material"/>
             </technique_common>
           </bind_material>
         </instance_geometry>

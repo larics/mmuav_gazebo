@@ -1,0 +1,63 @@
+<?xml version="1.0"?>
+
+<robot name="force_sensor" xmlns:xacro="http://ros.org/wiki/xacro">
+  <!--
+  It seems that the xacro:property does not allow to use substitution args. Therefore, instead xacro parameter ${namespace}, subsitution argument is used $(arg name). This is 
+  <xacro:property name="namespace" value="$(arg name)" />
+  -->
+
+  <gazebo>
+    <plugin name="gazebo_ros_control" filename="libgazebo_ros_control.so">
+      <robotNamespace>/force_sensor</robotNamespace>
+      <robotParam>/force_sensor/robot_description </robotParam>
+      <robotSimType>gazebo_ros_control/DefaultRobotHWSim</robotSimType>
+    </plugin>
+  </gazebo>
+
+  <xacro:property name="enable_bag_plugin" value="false" />
+  <xacro:property name="bag_file" value="force_sensor.bag" />
+
+  <!-- Instantiate mmuav "mechanics" -->
+  <xacro:include filename="$(find mmuav_description)/urdf/force_sensor.base.urdf.xacro" />
+  <xacro:include filename="$(find rotors_description)/urdf/component_snippets.xacro" />
+
+  <gazebo reference="link_force_sensor_bottom_mount">
+    <gravity>true</gravity>
+    <self_collide>false</self_collide>
+  </gazebo>
+
+  <gazebo reference="link_force_sensor_stand">
+    <gravity>true</gravity>
+    <self_collide>false</self_collide>
+  </gazebo>
+
+  <gazebo reference="link_force_sensor_top_mount">
+    <gravity>true</gravity>
+    <self_collide>false</self_collide>
+  </gazebo>
+
+  <!-- Enable the Joint Feedback -->
+  <gazebo reference="joint_force_sensor_mount_top">
+    <provideFeedback>true</provideFeedback>
+  </gazebo>
+
+  <!-- The ft_sensor plugin  -->
+  <gazebo>
+    <plugin name="ft_sensor" filename="libgazebo_ros_ft_sensor.so">
+      <updateRate>100.0</updateRate>
+      <robotNamespace>$(arg name)</robotNamespace>
+      <topicName>ft_sensor_topic</topicName> 
+      <jointName>joint_force_sensor_mount_top</jointName>
+      <noise>
+        <type>gaussian</type>
+        <mean>0.0</mean>
+        <stddev>0.0001</stddev> <!-- change this to simulate noise --> 
+      </noise>
+    </plugin>
+  </gazebo>
+
+  <gazebo reference="world">
+    <dampingFactor>0.0002</dampingFactor>
+  </gazebo>
+
+</robot>

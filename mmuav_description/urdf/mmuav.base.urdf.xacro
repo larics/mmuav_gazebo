@@ -4,7 +4,7 @@
 <robot name="mmuav" xmlns:xacro="http://ros.org/wiki/xacro">
   <!-- Properties -->
   <xacro:property name="rotor_velocity_slowdown_sim" value="10" />
-  <xacro:property name="body_mesh_file" value="3DR_ArducopterArms.dae" />
+  <xacro:property name="body_mesh_file" value="3DR_ArducopterExtendedLegs.dae" />
   <xacro:property name="mass" value="2.5" />  <!-- [kg] -->
 
   <xacro:property name="body_width" value="0.471" /> <!-- [m] -->
@@ -30,12 +30,6 @@
   <xacro:property name="sin45" value="0.7071" />
   <xacro:property name="cos45" value="0.7071" />
   <xacro:property name="PI" value="3.14" />
-
-    <!-- Manipulator properties-->
-  <xacro:property name="link_length" value="0.5" />
-  <xacro:property name="link_mass" value="0.1"/>
-  <xacro:property name="link_width" value="0.05" />
-  <xacro:property name="link_mesh_file" value="AX12.dae" />
 
   <!-- Property Blocks -->
   <xacro:property name="body_inertia">
@@ -91,7 +85,7 @@
       dim_x = "0.8"
       dim_y = "0.1"
       dim_z = "0.05">
-      <origin xyz="0 -0.325 -0.1" rpy="0 0 0" />
+      <origin xyz="0 -0.325 -0.075" rpy="0 0 0" />
       <xacro:insert_block name="land_gear_inertia"/>
   </xacro:landing_gear>
 
@@ -102,7 +96,7 @@
       dim_x = "0.8"
       dim_y = "0.1"
       dim_z = "0.05">
-      <origin xyz="0 0.325 -0.1" rpy="0 0 0" />
+      <origin xyz="0 0.325 -0.075" rpy="0 0 0" />
       <xacro:insert_block name="land_gear_inertia"/>
   </xacro:landing_gear>
 
@@ -189,64 +183,53 @@
 
    <!-- Adding left manipulator -->
   <xacro:manipulator
-    link_length="${link_length}"
-    link_width="${link_width}"
-    link_mass="${link_mass}"
-    link_mesh_file="${link_mesh_file}"
     parent="base_link"
     suffix="left">
     <axis xyz="0 1 0" />
-    <!-- origin xyz="${-0.11188*sin45} ${0.11206*cos45} -0.07349" rpy="-1.57079632679 0 0"/ -->
-    <origin xyz="0 0.158342 -0.07349" rpy="-1.57079632679 0 0"/>
+    <origin xyz="0 -0.1583424671 -0.07349" rpy="0 ${PI} 0"/>
   </xacro:manipulator>
 
      <!-- Adding right manipulator -->
   <xacro:manipulator
-    link_length="${link_length}"
-    link_width="${link_width}"
-    link_mass="${link_mass}"
-    link_mesh_file="${link_mesh_file}"
     parent="base_link"
     suffix="right">
     <axis xyz="0 1 0" />
-    <!--origin xyz="${0.11205**sin45} ${-0.11188*cos45} -0.07349" rpy="-1.57079632679 0 0"/ -->
-    <origin xyz="0 -0.158342 -0.07349" rpy="-1.57079632679 0 0"/>
+    <origin xyz="0 0.1583424671 -0.07349" rpy="0 ${PI} ${PI}"/>
   </xacro:manipulator>
 
-  <!-- Add transmission for joints--> 
+  <!-- Add transmission for joints-->     
   <xacro:transmisija 
     trans_number="0" 
-    joint_name="joint_q1_left">
+    joint_name="joint_dynamixel1_left">
   </xacro:transmisija>    
 
   <xacro:transmisija 
-    trans_number="3"
-    joint_name="joint_q1_right">
+    trans_number="1"
+    joint_name="joint_dynamixel2_left">
   </xacro:transmisija>
 
   <xacro:transmisija 
-    trans_number="1"
-    joint_name="joint_q2_left">
+    trans_number="2"
+    joint_name="joint_dynamixel1_right">
+  </xacro:transmisija>
+
+  <xacro:transmisija 
+    trans_number="3"
+    joint_name="joint_dynamixel2_right">
   </xacro:transmisija>
 
   <xacro:transmisija 
     trans_number="4"
-    joint_name="joint_q2_right">
+    joint_name="joint_gripper2_right">
   </xacro:transmisija>
 
   <xacro:transmisija 
-    trans_number="5" 
-    joint_name="joint_q3_passive_left">
-  </xacro:transmisija >
-
-
-  <xacro:transmisija 
-    trans_number="6"
-    joint_name="joint_q3_passive_right">
+    trans_number="5"
+    joint_name="joint_gripper2_left">
   </xacro:transmisija>
 
   <!-- Camera properties -->
-  <xacro:property name="camera_link" value="0.05" />
+  <!--xacro:property name="camera_link" value="0.05" />
   <xacro:property name="camera_inertia">
     <inertia
     ixx="1e-8"
@@ -262,6 +245,6 @@
     parent="base_link">
     <origin xyz="0 0 -0.5" rpy="0 ${-PI/2} 0"/>
     <xacro:insert_block name="camera_inertia"/>
-  </xacro:cam>
+  </xacro:cam-->
 
 </robot>

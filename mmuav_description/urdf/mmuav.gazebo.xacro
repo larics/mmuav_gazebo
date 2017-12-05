@@ -89,7 +89,7 @@
   </gazebo-->
 
     <!-- Mount first generic pose sensor-->
-  <xacro:odometry_plugin_macro
+  <!--xacro:odometry_plugin_macro
     namespace="$(arg name)"
     odometry_sensor_suffix="2"
     child_frame_id="base"
@@ -115,8 +115,8 @@
     enable_odometry_map="false"
     odometry_map=""
     image_scale="0.1">
-    <inertia ixx="0.00001" ixy="0.0" ixz="0.0" iyy="0.00001" iyz="0.0" izz="0.00001" /> <!-- [kg m^2] [kg m^2] [kg m^2] [kg m^2] [kg m^2] [kg m^2] -->
-    <origin xyz="-0.0 0.0 0" rpy="0.0 0.0 0.0" />
+    <inertia ixx="0.00001" ixy="0.0" ixz="0.0" iyy="0.00001" iyz="0.0" izz="0.00001" /--> <!-- [kg m^2] [kg m^2] [kg m^2] [kg m^2] [kg m^2] [kg m^2] -->
+    <!--origin xyz="-0.0 0.0 0" rpy="0.0 0.0 0.0" />
   </xacro:odometry_plugin_macro>
 
   <xacro:odometry_plugin_macro
@@ -145,10 +145,95 @@
     enable_odometry_map="false"
     odometry_map=""
     image_scale="0.1">
-    <inertia ixx="0.00001" ixy="0.0" ixz="0.0" iyy="0.00001" iyz="0.0" izz="0.00001" /> <!-- [kg m^2] [kg m^2] [kg m^2] [kg m^2] [kg m^2] [kg m^2] -->
-    <origin xyz="-0.0 0.0 0" rpy="0.0 0.0 0.0" />
-  </xacro:odometry_plugin_macro>
+    <inertia ixx="0.00001" ixy="0.0" ixz="0.0" iyy="0.00001" iyz="0.0" izz="0.00001" /--> <!-- [kg m^2] [kg m^2] [kg m^2] [kg m^2] [kg m^2] [kg m^2] -->
+    <!--origin xyz="-0.0 0.0 0" rpy="0.0 0.0 0.0" />
+  </xacro:odometry_plugin_macro-->
 
+  <gazebo reference="link_manipulator2uav_left">
+    <gravity>true</gravity>
+    <self_collide>false</self_collide>
+  </gazebo>
+
+  <gazebo reference="link_manipulator2uav_right">
+    <gravity>true</gravity>
+    <self_collide>false</self_collide>
+  </gazebo> 
+
+  <gazebo reference="link_dynamixel1_left">
+    <gravity>true</gravity>
+    <self_collide>false</self_collide>
+  </gazebo> 
+
+  <gazebo reference="link_dynamixel1_right">
+    <gravity>true</gravity>
+    <self_collide>false</self_collide>
+  </gazebo>
+
+  <gazebo reference="link_F3_left">
+    <gravity>true</gravity>
+    <self_collide>false</self_collide>
+  </gazebo> 
+
+  <gazebo reference="link_F3_right">
+    <gravity>true</gravity>
+    <self_collide>false</self_collide>
+  </gazebo>
+
+  <gazebo reference="link_F4_left">
+    <gravity>true</gravity>
+    <self_collide>false</self_collide>
+  </gazebo> 
+
+  <gazebo reference="link_F4_right">
+    <gravity>true</gravity>
+    <self_collide>false</self_collide>
+  </gazebo>
+
+  <gazebo reference="link_dynamixel2_left">
+    <gravity>true</gravity>
+    <self_collide>false</self_collide>
+  </gazebo> 
+
+  <gazebo reference="link_dynamixel2_right">
+    <gravity>true</gravity>
+    <self_collide>false</self_collide>
+  </gazebo>
+
+  <gazebo reference="link_gripper1_left">
+    <gravity>true</gravity>
+    <self_collide>false</self_collide>
+  </gazebo> 
+
+  <gazebo reference="link_gripper1_right">
+    <gravity>true</gravity>
+    <self_collide>false</self_collide>
+  </gazebo>
+
+  <gazebo reference="link_gripper2_left">
+    <gravity>true</gravity>
+    <self_collide>false</self_collide>
+  </gazebo> 
+
+  <gazebo reference="link_gripper2_right">
+    <gravity>true</gravity>
+    <self_collide>false</self_collide>
+  </gazebo>
+
+  <gazebo reference="base_link_inertia">
+    <gravity>true</gravity>
+    <self_collide>false</self_collide>
+  </gazebo>
+
+  <gazebo reference="land_gear_1">
+    <gravity>true</gravity>
+    <self_collide>false</self_collide>
+  </gazebo> 
+
+  <gazebo reference="land_gear_2">
+    <gravity>true</gravity>
+    <self_collide>false</self_collide>
+  </gazebo> 
+ 
   <gazebo reference="base_link">
     <dampingFactor>0.0002</dampingFactor>
   </gazebo>
