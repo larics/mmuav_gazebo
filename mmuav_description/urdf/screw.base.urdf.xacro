@@ -8,7 +8,7 @@
   <xacro:include filename="$(find mmuav_description)/urdf/multirotor_base.urdf.xacro" />
   
   <xacro:screw>
-    <origin xyz="0 0 0" rpy="0 0 0"/>
+    <origin xyz="0 0 0.1" rpy="0 ${PI} 0"/>
   </xacro:screw>
 
 </robot>
