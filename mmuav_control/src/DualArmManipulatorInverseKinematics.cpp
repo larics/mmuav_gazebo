@@ -25,3 +25,17 @@ void DualArmManipulatorInverseKinematics::LoadParameters(std::string file)
 
 	isInit = true;
 }
+
+void DualArmManipulatorInverseKinematics::ik_calculate(float x, float y, float rot_z)
+{
+	double t1, t2, w1, w2, w6;
+	double q1, q2, q3;
+
+	w1 = x;
+	w2 = y;
+	w6 = rot_z;
+
+	t1 = w1 - dhParams_.a[2]*cos(w6);
+	t2 = w2 - dhParams_.a[2]*sin(w6);
+
+}
