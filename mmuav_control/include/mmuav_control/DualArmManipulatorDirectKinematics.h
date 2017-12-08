@@ -1,11 +1,10 @@
 #ifndef DUALARMMANIPULATORDIRECTKINEMATICS_H
 #define DUALARMMANIPULATORDIRECTKINEMATICS_H
 
-#include "ros/ros.h"
 #include <math.h>
 #include "yaml-cpp/yaml.h"
-#include <ros/package.h>
 #include <eigen3/Eigen/Eigen>
+#include <iostream>
 
 typedef struct
 {

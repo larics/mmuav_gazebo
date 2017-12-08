@@ -38,11 +38,14 @@ include_directories(
   ${catkin_INCLUDE_DIRS}
 )
 
-add_library(DualArmManipulatorInverseKinematics src/DualArmManipulatorInverseKinematics.cpp)
-target_link_libraries(DualArmManipulatorInverseKinematics ${catkin_LIBRARIES} yaml-cpp)
-
 add_library(DualArmManipulatorDirectKinematics src/DualArmManipulatorDirectKinematics.cpp)
 target_link_libraries(DualArmManipulatorDirectKinematics ${catkin_LIBRARIES} yaml-cpp)
+
+add_library(DualArmManipulatorInverseKinematics src/DualArmManipulatorInverseKinematics.cpp)
+target_link_libraries(DualArmManipulatorInverseKinematics DualArmManipulatorDirectKinematics ${catkin_LIBRARIES} yaml-cpp)
+
+add_executable(dual_arm_manipulator_inverse_kinematics_node src/dual_arm_manipulator_inverse_kinematics_node.cpp)
+target_link_libraries(dual_arm_manipulator_inverse_kinematics_node DualArmManipulatorDirectKinematics DualArmManipulatorInverseKinematics ${catkin_LIBRARIES} yaml-cpp)
 
 
 #install(DIRECTORY config
