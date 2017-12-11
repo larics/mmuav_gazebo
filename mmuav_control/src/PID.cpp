@@ -19,7 +19,7 @@ PID::PID()
     ud = 0;                                              // D part
     u = 0;                                               // total control value
     lim_high = std::numeric_limits<float>::max();       // control value upper limit
-    lim_low = std::numeric_limits<float>::min();        // control value lower limit
+    lim_low = -std::numeric_limits<float>::max();        // control value lower limit
 
     // init referent control value (set-value)
     ref = 0;

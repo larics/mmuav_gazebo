@@ -5,17 +5,17 @@
     Class implements MAV attitude control (roll, pitch, yaw). Two PIDs in cascade are
     used for each degree of freedom.
     Subscribes to:
-        /morus/imu                - used to extract attitude and attitude rate of the vehicle
-        /morus/mot_vel_ref        - used to receive referent motor velocity from the height controller
-        /morus/euler_ref          - used to set the attitude referent (useful for testing controllers)
+        imu                - used to extract attitude and attitude rate of the vehicle
+        mot_vel_ref        - used to receive referent motor velocity from the height controller
+        euler_ref          - used to set the attitude referent (useful for testing controllers)
     Publishes:
-        /morus/attitude_command   - referent motor velocities sent to each motor controller
-        /morus/pid_roll           - publishes PID-roll data - referent value, measured value, P, I, D and total component (useful for tuning params)
-        /morus/pid_roll_rate      - publishes PID-roll_rate data - referent value, measured value, P, I, D and total component (useful for tuning params)
-        /morus/pid_pitch          - publishes PID-pitch data - referent value, measured value, P, I, D and total component (useful for tuning params)
-        /morus/pid_pitch_rate     - publishes PID-pitch_rate data - referent value, measured value, P, I, D and total component (useful for tuning params)
-        /morus/pid_yaw            - publishes PID-yaw data - referent value, measured value, P, I, D and total component (useful for tuning params)
-        /morus/pid_yaw_rate       - publishes PID-yaw_rate data - referent value, measured value, P, I, D and total component (useful for tuning params)
+        attitude_command   - referent motor velocities sent to each motor controller
+        pid_roll           - publishes PID-roll data - referent value, measured value, P, I, D and total component (useful for tuning params)
+        pid_roll_rate      - publishes PID-roll_rate data - referent value, measured value, P, I, D and total component (useful for tuning params)
+        pid_pitch          - publishes PID-pitch data - referent value, measured value, P, I, D and total component (useful for tuning params)
+        pid_pitch_rate     - publishes PID-pitch_rate data - referent value, measured value, P, I, D and total component (useful for tuning params)
+        pid_yaw            - publishes PID-yaw data - referent value, measured value, P, I, D and total component (useful for tuning params)
+        pid_yaw_rate       - publishes PID-yaw_rate data - referent value, measured value, P, I, D and total component (useful for tuning params)
 
     Dynamic reconfigure is used to set controllers param online.
 */
@@ -33,33 +33,35 @@ AttitudeControl::AttitudeControl(int rate)
     ////////////////////////////////////////////////////////////////*/
     //  Add your PID params here
 
-    pid_roll_.set_kp(0.5);
-    pid_roll_.set_ki(0.1);
+    pid_roll_.set_kp(14.0);
+    pid_roll_.set_ki(1.0);
     pid_roll_.set_kd(0.0);
 
-    pid_roll_rate_.set_kp(20.0);
-    pid_roll_rate_.set_ki(20.0);
-    pid_roll_rate_.set_kd(2);
+    pid_roll_rate_.set_kp(200.0);
+    pid_roll_rate_.set_ki(80.0);
+    pid_roll_rate_.set_kd(0.1);
     pid_roll_rate_.set_lim_high(1475);
     pid_roll_rate_.set_lim_low(-1475);
 
-    pid_pitch_.set_kp(0.5);
-    pid_pitch_.set_ki(0.1);
-    pid_pitch_.set_kd(0);
+    pid_pitch_.set_kp(14.0);
+    pid_pitch_.set_ki(1.0);
+    pid_pitch_.set_kd(0.0);
 
-    pid_pitch_rate_.set_kp(20.0);
-    pid_pitch_rate_.set_ki(20.0);
-    pid_pitch_rate_.set_kd(2);
+    pid_pitch_rate_.set_kp(200.0);
+    pid_pitch_rate_.set_ki(80.0);
+    pid_pitch_rate_.set_kd(0.1);
     pid_pitch_rate_.set_lim_high(1475);
     pid_pitch_rate_.set_lim_low(-1475);
 
-    pid_yaw_.set_kp(1);
-    pid_yaw_.set_ki(0.001);
-    pid_yaw_.set_kd(0.1);
+    pid_yaw_.set_kp(8.0);
+    pid_yaw_.set_ki(1.0);
+    pid_yaw_.set_kd(0.0);
 
-    pid_yaw_rate_.set_kp(200);
-    pid_yaw_rate_.set_ki(0);
-    pid_yaw_rate_.set_kd(0);
+    pid_yaw_rate_.set_kp(100.0);
+    pid_yaw_rate_.set_ki(20.0);
+    pid_yaw_rate_.set_kd(0.0);
+    pid_yaw_rate_.set_lim_high(1475);
+    pid_yaw_rate_.set_lim_low(-1475);
 
     /*//////////////////////////////////////////////////////////////////
     //////////////////////////////////////////////////////////////////*/

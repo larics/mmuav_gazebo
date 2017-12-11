@@ -12,6 +12,8 @@
     joint1_right_controller
     joint2_left_controller
     joint2_right_controller
+    joint3_left_controller
+    joint3_right_controller
     ">
     <remap from="/robot_description" to="$(arg namespace)/robot_description"/>
   </node>

@@ -443,7 +443,7 @@
       <parent link="link_F4_${suffix}"/>
       <child link="link_dynamixel2_${suffix}"/>
       <origin xyz="0 0 0" rpy="0 0 ${-PI/2}" />
-      <limit upper="6" lower="-6" effort="1.5" velocity="1"/>
+      <limit upper="6" lower="-6" effort="0.3" velocity="0.1"/>
       <axis xyz="0 0 1" />
     </joint>
     <!--_____________________________________________________________-->
@@ -460,8 +460,8 @@
     <joint name="joint_gripper2_${suffix}" type="revolute">
       <parent link="link_gripper1_${suffix}"/>
       <child link="link_gripper2_${suffix}"/>
-      <origin xyz="0.01265 0.00104 -0.00134" rpy="0 0 0" />
-      <limit upper="0" lower="0" effort="1.5" velocity="1"/>
+      <origin xyz="0.01265 0.00104 -0.00134" rpy="0 0 ${PI}" />
+      <limit upper="6" lower="-6" effort="0.05" velocity="0.01"/>
       <axis xyz="0 0 1" />
     </joint>
 

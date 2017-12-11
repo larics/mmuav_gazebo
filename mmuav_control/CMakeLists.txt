@@ -27,6 +27,7 @@ generate_dynamic_reconfigure_options(
     config/VpcMmcuavZCtlParams.cfg
     config/VpcMmcuavPositionCtlParams.cfg
     config/VpcMmcuavAttitudeCtlParams.cfg
+    config/UavPositionCtlParams.cfg
     )
     
 catkin_package(
@@ -53,6 +54,9 @@ target_link_libraries(dual_arm_manipulator_inverse_kinematics_node DualArmManipu
 
 add_executable(uav_attitude_control src/uav_attitude_control.cpp)
 target_link_libraries(uav_attitude_control pid ${catkin_LIBRARIES})
+
+add_executable(uav_position_control src/uav_position_control.cpp)
+target_link_libraries(uav_position_control pid ${catkin_LIBRARIES})
 
 
 #install(DIRECTORY config
