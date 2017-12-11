@@ -12,8 +12,6 @@ void DualArmManipulatorInverseKinematics::LoadParameters(std::string file)
 
 	theta = config["theta"].as<std::vector<double> >();
 	a = config["a"].as<std::vector<double> >();
-	left_arm_origin = config["origin"]["left_arm"].as<std::vector<double> >();
-	right_arm_origin = config["origin"]["right_arm"].as<std::vector<double> >();
 
 	for (int i=0; i<3; i++)
 	{

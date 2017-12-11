@@ -116,7 +116,7 @@ class AttitudeControl:
         self.pub_pid_pitch_rate = rospy.Publisher('pid_pitch_rate', PIDController, queue_size=1)
         self.pub_pid_yaw = rospy.Publisher('pid_yaw', PIDController, queue_size=1)
         self.pub_pid_yaw_rate = rospy.Publisher('pid_yaw_rate', PIDController, queue_size=1)
-        self.cfg_server = Server(MmuavAttitudeCtlParamsConfig, self.cfg_callback)
+        self.cfg_server = Server(UavAttitudeCtlParamsConfig, self.cfg_callback)
 
     def run(self):
         '''

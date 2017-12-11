@@ -8,6 +8,7 @@ find_package(catkin REQUIRED COMPONENTS
     rospack
     std_msgs
     dynamic_reconfigure
+    mmuav_msgs
 )
 
 find_package(cmake_modules REQUIRED)
@@ -30,13 +31,16 @@ generate_dynamic_reconfigure_options(
     
 catkin_package(
    INCLUDE_DIRS include
-   CATKIN_DEPENDS roscpp rospy roslib rospack
+   CATKIN_DEPENDS roscpp rospy roslib rospack mmuav_msgs
 )
 
 include_directories(
   include
   ${catkin_INCLUDE_DIRS}
 )
+
+add_library(pid src/PID.cpp)
+target_link_libraries(pid ${catkin_LIBRARIES})
 
 add_library(DualArmManipulatorDirectKinematics src/DualArmManipulatorDirectKinematics.cpp)
 target_link_libraries(DualArmManipulatorDirectKinematics ${catkin_LIBRARIES} yaml-cpp)
@@ -46,6 +50,9 @@ target_link_libraries(DualArmManipulatorInverseKinematics DualArmManipulatorDire
 
 add_executable(dual_arm_manipulator_inverse_kinematics_node src/dual_arm_manipulator_inverse_kinematics_node.cpp)
 target_link_libraries(dual_arm_manipulator_inverse_kinematics_node DualArmManipulatorDirectKinematics DualArmManipulatorInverseKinematics ${catkin_LIBRARIES} yaml-cpp)
+
+add_executable(uav_attitude_control src/uav_attitude_control.cpp)
+target_link_libraries(uav_attitude_control pid ${catkin_LIBRARIES})
 
 
 #install(DIRECTORY config

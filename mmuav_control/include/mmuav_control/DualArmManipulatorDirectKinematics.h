@@ -19,13 +19,11 @@ class DualArmManipulatorDirectKinematics
 {
 	public:
 		DualArmManipulatorDirectKinematics(void);
-		void dk_calculate(float q1, float q2, float q3);
+		Eigen::Matrix4d dk_calculate(float q1, float q2, float q3);
 		void LoadParameters(std::string file);
 
 	private:
 		DH_Parameters_TypeDef dhParams_;
-		Eigen::Matrix4d T13, T01, Torigin_right, Torigin_left;
-
 		bool isInit;
 };
 
