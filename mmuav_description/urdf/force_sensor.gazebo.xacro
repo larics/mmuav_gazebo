@@ -39,6 +39,8 @@
   <!-- Enable the Joint Feedback -->
   <gazebo reference="joint_force_sensor_mount_top">
     <provideFeedback>true</provideFeedback>
+    <kp>1.0e+9</kp>
+    <kd>5.0e+5</kd>
   </gazebo>
 
   <!-- The ft_sensor plugin  -->
@@ -55,6 +57,12 @@
       </noise>
     </plugin>
   </gazebo>
+
+  <!--gazebo reference="link_force_sensor_top_mount">
+    <provideFeedback>true</provideFeedback>
+    <kp>1.0e+9</kp>
+    <kd>5.0e+5</kd>
+  </gazebo-->
 
   <gazebo reference="world">
     <dampingFactor>0.0002</dampingFactor>

@@ -400,6 +400,14 @@
             scale="1 1 1" />
         </geometry>
       </visual>
+
+      <!--collision>
+        <origin xyz="0.02047 -0.00104 0.00135" rpy="0 0 0" />
+        <geometry>
+          <mesh filename="package://mmuav_description/meshes/gripper_part2.dae"
+            scale="1 1 1" />
+        </geometry>
+      </collision-->
     </link>
 
     <!--_____________________________________________________________-->
@@ -581,7 +589,7 @@
     <!--_____________________________________________________________-->
     <!--JOINT2 FIXED force_sensor_mount_top-->
     <!--_____________________________________________________________-->
-    <joint name="joint_force_sensor_mount_top" type="revolute">
+    <joint name="joint_force_sensor_mount_top" type="prismatic">
         <origin xyz="-0.01903 -0.05153 0.01661" rpy="${-PI/2} 0 0" />
         <parent link="link_force_sensor_bottom_mount"/>
         <child link="link_force_sensor_top_mount"/>

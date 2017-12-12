@@ -1,4 +1,4 @@
-#include <mmuav_control/dual_arm_manipulator_inverse_kinematics_node.h>
+#include <mmuav_control/dual_arm_manipulator_control.h>
 
 
 DualArmManipulatorControl::DualArmManipulatorControl()
@@ -47,10 +47,10 @@ void DualArmManipulatorControl::LoadParameters(std::string file)
 {
 	YAML::Node config = YAML::LoadFile(file);
 	std::vector<double> theta, a, left_arm_origin, right_arm_origin;
+	DH_Parameters_TypeDef dhParams;
 
-	manipulator_direct.LoadParameters(file);
-	manipulator_inverse.LoadParameters(file);
-
+	theta = config["theta"].as<std::vector<double> >();
+	a = config["a"].as<std::vector<double> >();
 	left_arm_origin = config["origin"]["left_arm"].as<std::vector<double> >();
 	right_arm_origin = config["origin"]["right_arm"].as<std::vector<double> >();
 
@@ -63,9 +63,20 @@ void DualArmManipulatorControl::LoadParameters(std::string file)
 					 -sin(right_arm_origin[4]),                           cos(right_arm_origin[4])*sin(right_arm_origin[3]),                                      									     cos(right_arm_origin[4])*cos(right_arm_origin[3]),                   													       right_arm_origin[2],
 					  0,                                                  0,                                                																	         0,                           																							       1;
 	
+	for (int i=0; i<3; i++)
+	{
+		dhParams.theta[i] = theta[i];
+		dhParams.alpha[i] = 0;
+		dhParams.d[i] = 0;
+		dhParams.a[i] = a[i];
+	}
+	dhParams.a[2] = 0;
 	
 	Torigin_right_inv_ = Torigin_right_.inverse();
 	Torigin_left_inv_ = Torigin_left_.inverse();
+
+	manipulator_direct.LoadParameters(file);
+	manipulator_inverse.setDHparams(dhParams);
 
 }
 

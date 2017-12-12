@@ -24,6 +24,12 @@ void DualArmManipulatorInverseKinematics::LoadParameters(std::string file)
 	isInit = true;
 }
 
+void DualArmManipulatorInverseKinematics::setDHparams(DH_Parameters_TypeDef dhParams)
+{
+	dhParams_ = dhParams;
+	isInit = true;
+}
+
 void DualArmManipulatorInverseKinematics::ik_calculate(float x, float y, float rot_z, float *q1, float *q2, float *q3)
 {
 	if (isInit)

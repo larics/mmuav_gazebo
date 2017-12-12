@@ -123,12 +123,12 @@
     namespace="$(arg name)"
     odometry_sensor_suffix="3"
     child_frame_id="base"
-    parent_link="link_gripper2_right"
-    pose_topic="link_gripper2_right/pose"
-    pose_with_covariance_topic="link_gripper2_right/pose_with_covariance"
-    position_topic="link_gripper2_right/position"
-    transform_topic="link_gripper2_right/transform"
-    odometry_topic="link_gripper2_right/odometry"
+    parent_link="link_gripper1_left"
+    pose_topic="link_gripper1_left/pose"
+    pose_with_covariance_topic="link_gripper1_left/pose_with_covariance"
+    position_topic="link_gripper1_left/position"
+    transform_topic="link_gripper1_left/transform"
+    odometry_topic="link_gripper1_left/odometry"
     parent_frame_id="base_link"
     mass_odometry_sensor="0.01"
     measurement_divisor="10"
@@ -146,7 +146,7 @@
     odometry_map=""
     image_scale="0.1">
     <inertia ixx="0.00001" ixy="0.0" ixz="0.0" iyy="0.00001" iyz="0.0" izz="0.00001" /> <!-- [kg m^2] [kg m^2] [kg m^2] [kg m^2] [kg m^2] [kg m^2] -->
-    <origin xyz="0.04903524 0.0 0" rpy="0.0 0.0 0.0" />
+    <origin xyz="0.01265 0.00104 -0.00134" rpy="0.0 0.0 0.0" />
   </xacro:odometry_plugin_macro>
 
   <gazebo reference="link_manipulator2uav_left">
