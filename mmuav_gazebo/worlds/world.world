@@ -28,7 +28,7 @@
         </solver>
         <constraints>
           <!--cfm>0</cfm-->   <!--infinitely hard plane-->
-          <cfm>0.2</cfm> <!--fixing incontinuities then in contact with the plane-->
+          <cfm>0.02</cfm> <!--fixing incontinuities then in contact with the plane-->
           <erp>0.2</erp>
           <contact_max_correcting_vel>100</contact_max_correcting_vel>
           <contact_surface_layer>0.001</contact_surface_layer>

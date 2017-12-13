@@ -39,14 +39,12 @@
   <!-- Enable the Joint Feedback -->
   <gazebo reference="joint_force_sensor_mount_top">
     <provideFeedback>true</provideFeedback>
-    <kp>1.0e+9</kp>
-    <kd>5.0e+5</kd>
   </gazebo>
 
   <!-- The ft_sensor plugin  -->
   <gazebo>
     <plugin name="ft_sensor" filename="libgazebo_ros_ft_sensor.so">
-      <updateRate>100.0</updateRate>
+      <updateRate>30.0</updateRate>
       <robotNamespace>$(arg name)</robotNamespace>
       <topicName>ft_sensor_topic</topicName> 
       <jointName>joint_force_sensor_mount_top</jointName>
@@ -57,12 +55,6 @@
       </noise>
     </plugin>
   </gazebo>
-
-  <!--gazebo reference="link_force_sensor_top_mount">
-    <provideFeedback>true</provideFeedback>
-    <kp>1.0e+9</kp>
-    <kd>5.0e+5</kd>
-  </gazebo-->
 
   <gazebo reference="world">
     <dampingFactor>0.0002</dampingFactor>

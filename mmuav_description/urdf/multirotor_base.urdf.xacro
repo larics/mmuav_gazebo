@@ -122,7 +122,7 @@
   </xacro:macro>
 
   <!-- We add a <transmission> block for every joint that we wish to actuate. -->
-  <xacro:macro name="transmisija" params="trans_number joint_name">
+  <xacro:macro name="transmisija" params="trans_number mechanical_reduction joint_name">
     <transmission name="transmission_${trans_number}">
       <type>transmission_interface/SimpleTransmission</type>
       <joint name="${joint_name}">
@@ -130,7 +130,7 @@
       </joint>
       <actuator name="motor_${trans_number}">
         <hardwareInterface>hardware_interface/EffortJointInterface</hardwareInterface>
-        <mechanicalReduction>1</mechanicalReduction>
+        <mechanicalReduction>${mechanical_reduction}</mechanicalReduction>
       </actuator>
     </transmission>
   </xacro:macro>
@@ -487,7 +487,7 @@
       
       <inertial>
         <mass value="2.0" />
-        <origin rpy="0 0 0" xyz="0.38508257 0.46818651 1.04028639"/>
+        <origin rpy="0 0 0" xyz="0 0.46818651 0"/>
         <inertia
           ixx="0.23434322" ixy="0" ixz="0.0"
           iyx="0" iyy="0.01547123" iyz="0"
@@ -547,15 +547,17 @@
       
       <inertial>
         <mass value="0.080" />
-        <origin rpy="0 0 0" xyz="0.01903151 0.01661061 0.02154592"/>
+        <origin rpy="0 0 0" xyz="0 0 -0.02998408"/>
         <inertia
           ixx="0.00059994" ixy="0" ixz="0.0"
           iyx="0" iyy="0.00059994" iyz="0"
           izx="0.0" izy="0" izz="0.00119615"/>
       </inertial>
+
+      <!--0.01903151 0.01661061 0.02154592-->
             
       <visual>
-        <origin xyz="0 0 0" rpy="0 0 0" />
+        <origin xyz="-0.01903 -0.01661 -0.05153" rpy="0 0 0" />
         <geometry>
           <mesh filename="package://mmuav_description/meshes/forcesensor_mount_top.dae"
             scale="1 1 1" />
@@ -563,7 +565,7 @@
       </visual>
 
       <collision name='collision'>
-        <origin xyz="0 0 0" rpy="0 0 0"/>
+        <origin xyz="-0.01903 -0.01661 -0.05153" rpy="0 0 0"/>
         <geometry>
           <mesh filename="package://mmuav_description/meshes/forcesensor_mount_top.dae"
             scale="1 1 1" />
@@ -590,7 +592,7 @@
     <!--JOINT2 FIXED force_sensor_mount_top-->
     <!--_____________________________________________________________-->
     <joint name="joint_force_sensor_mount_top" type="prismatic">
-        <origin xyz="-0.01903 -0.05153 0.01661" rpy="${-PI/2} 0 0" />
+        <origin xyz="0 0 0" rpy="${-PI/2} 0 0" />
         <parent link="link_force_sensor_bottom_mount"/>
         <child link="link_force_sensor_top_mount"/>
         <axis xyz="0 0 1" />

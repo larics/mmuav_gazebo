@@ -199,32 +199,38 @@
 
   <!-- Add transmission for joints-->     
   <xacro:transmisija 
-    trans_number="0" 
+    trans_number="0"
+    mechanical_reduction = "250"
     joint_name="joint_dynamixel1_left">
   </xacro:transmisija>    
 
   <xacro:transmisija 
     trans_number="1"
+    mechanical_reduction = "250"
     joint_name="joint_dynamixel2_left">
   </xacro:transmisija>
 
   <xacro:transmisija 
     trans_number="2"
+    mechanical_reduction = "250"
     joint_name="joint_dynamixel1_right">
   </xacro:transmisija>
 
   <xacro:transmisija 
     trans_number="3"
+    mechanical_reduction = "250"
     joint_name="joint_dynamixel2_right">
   </xacro:transmisija>
 
   <xacro:transmisija 
     trans_number="4"
+    mechanical_reduction = "250"
     joint_name="joint_gripper2_right">
   </xacro:transmisija>
 
   <xacro:transmisija 
     trans_number="5"
+    mechanical_reduction = "250"
     joint_name="joint_gripper2_left">
   </xacro:transmisija>
 
