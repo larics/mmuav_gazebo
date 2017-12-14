@@ -56,10 +56,6 @@
     </plugin>
   </gazebo>
 
-  <gazebo>
-    <plugin name="contact_sensor" filename="libcontact.so"/>
-  </gazebo>
-
   <gazebo reference="world">
     <dampingFactor>0.0002</dampingFactor>
   </gazebo>
