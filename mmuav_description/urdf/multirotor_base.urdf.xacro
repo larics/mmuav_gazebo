@@ -216,8 +216,8 @@
         <camera name="head">
           <horizontal_fov>1.3962634</horizontal_fov>
           <image>
-            <width>800</width>
-            <height>800</height>
+            <width>1920</width>
+            <height>1080</height>
             <format>R8G8B8</format>
           </image>
           <clip>
@@ -234,7 +234,7 @@
         <plugin name="camera_controller" filename="libgazebo_ros_camera.so">
           <alwaysOn>true</alwaysOn>
           <updateRate>0.0</updateRate>
-          <cameraName>morus/camera1</cameraName>
+          <cameraName>mmuav/camera1</cameraName>
           <imageTopicName>image_raw</imageTopicName>
           <cameraInfoTopicName>camera_info</cameraInfoTopicName>
           <frameName>camera_box</frameName>

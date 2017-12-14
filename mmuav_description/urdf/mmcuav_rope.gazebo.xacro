@@ -93,17 +93,127 @@
     <origin xyz="-0.0 0.0 0" rpy="0.0 0.0 0.0" />
   </xacro:odometry_plugin_macro>
 
+  <!-- Mount load generic pose sensor-->
+  <xacro:odometry_plugin_macro
+    namespace="$(arg name)"
+    odometry_sensor_suffix="2"
+    child_frame_id="base"
+    parent_link="load"
+    pose_topic="load_pose"
+    pose_with_covariance_topic="load_pose_with_covariance"
+    position_topic="load_position"
+    transform_topic="load_transform"
+    odometry_topic="load_odometry"
+    parent_frame_id="world"
+    mass_odometry_sensor="0.01"
+    measurement_divisor="10"
+    measurement_delay="10"
+    unknown_delay="0.0"
+    noise_normal_position="0.0 0.0 0.0"
+    noise_normal_quaternion="0.0 0.0 0.0"
+    noise_normal_linear_velocity="0 0 0"
+    noise_normal_angular_velocity="0 0 0"
+    noise_uniform_position="0 0 0"
+    noise_uniform_quaternion="0 0 0"
+    noise_uniform_linear_velocity="0 0 0"
+    noise_uniform_angular_velocity="0 0 0"
+    enable_odometry_map="false"
+    odometry_map=""
+    image_scale="0.1">
+    <inertia ixx="1e-8" ixy="0.0" ixz="0.0" iyy="1e-8" iyz="0.0" izz="1e-8" /> <!-- [kg m^2] [kg m^2] [kg m^2] [kg m^2] [kg m^2] [kg m^2] -->
+    <origin xyz="-0.0 0.0 0" rpy="0.0 0.0 0.0" />
+  </xacro:odometry_plugin_macro>
+
   <!-- Add a wind gust starting at 40s and lasting for 2s. -->
   <xacro:wind_plugin_macro
     namespace="$(arg name)"
     xyz_offset="0 0 0"
     wind_direction="1 0 0"
     wind_force_mean="0"
-    wind_gust_direction="1 0 0"
-    wind_gust_duration="12"
-    wind_gust_start="10"
-    wind_gust_force_mean="1"
+    wind_gust_direction="0.7926 0 0.6097"
+    wind_gust_duration="0.01"
+    wind_gust_start="20"
+    wind_gust_force_mean="200.0"
+    wind_gust_force_variance="0"
     affect_link="load">
   </xacro:wind_plugin_macro>
+
+  <!--xacro:wind_plugin_macro
+    namespace="$(arg name)"
+    xyz_offset="0 0 0"
+    wind_direction="1 0 0"
+    wind_force_mean="0"
+    wind_gust_direction="0.7926 0 0.6097"
+    wind_gust_duration="0.01"
+    wind_gust_start="70"
+    wind_gust_force_mean="100.0"
+    wind_gust_force_variance="0"
+    affect_link="load">
+  </xacro:wind_plugin_macro>
+
+  <xacro:wind_plugin_macro
+    namespace="$(arg name)"
+    xyz_offset="0 0 0"
+    wind_direction="1 0 0"
+    wind_force_mean="0"
+    wind_gust_direction="0.7926 0 0.6097"
+    wind_gust_duration="0.01"
+    wind_gust_start="130"
+    wind_gust_force_mean="150.0"
+    wind_gust_force_variance="0"
+    affect_link="load">
+  </xacro:wind_plugin_macro>
+
+  <xacro:wind_plugin_macro
+    namespace="$(arg name)"
+    xyz_offset="0 0 0"
+    wind_direction="1 0 0"
+    wind_force_mean="0"
+    wind_gust_direction="0.7926 0 0.6097"
+    wind_gust_duration="0.01"
+    wind_gust_start="310"
+    wind_gust_force_mean="175.0"
+    wind_gust_force_variance="0"
+    affect_link="load">
+  </xacro:wind_plugin_macro>
+
+  <xacro:wind_plugin_macro
+    namespace="$(arg name)"
+    xyz_offset="0 0 0"
+    wind_direction="1 0 0"
+    wind_force_mean="0"
+    wind_gust_direction="0.7926 0 0.6097"
+    wind_gust_duration="0.01"
+    wind_gust_start="170"
+    wind_gust_force_mean="200.0"
+    wind_gust_force_variance="0"
+    affect_link="load">
+  </xacro:wind_plugin_macro>
+
+  <xacro:wind_plugin_macro
+    namespace="$(arg name)"
+    xyz_offset="0 0 0"
+    wind_direction="1 0 0"
+    wind_force_mean="0"
+    wind_gust_direction="0.7926 0 0.6097"
+    wind_gust_duration="0.01"
+    wind_gust_start="210"
+    wind_gust_force_mean="225.0"
+    wind_gust_force_variance="0"
+    affect_link="load">
+  </xacro:wind_plugin_macro>
+
+  <xacro:wind_plugin_macro
+    namespace="$(arg name)"
+    xyz_offset="0 0 0"
+    wind_direction="1 0 0"
+    wind_force_mean="0"
+    wind_gust_direction="0.7926 0 0.6097"
+    wind_gust_duration="0.01"
+    wind_gust_start="250"
+    wind_gust_force_mean="300.0"
+    wind_gust_force_variance="0"
+    affect_link="load">
+  </xacro:wind_plugin_macro-->
 
 </robot>

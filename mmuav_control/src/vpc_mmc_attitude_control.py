@@ -7,7 +7,7 @@ from pid import PID
 from geometry_msgs.msg import Vector3, Vector3Stamped, PoseWithCovarianceStamped
 from sensor_msgs.msg import Imu
 from nav_msgs.msg import Odometry
-from std_msgs.msg import Float64, Float64MultiArray
+from std_msgs.msg import Float64, Float64MultiArray, Empty
 from mmuav_msgs.msg import PIDController
 from dynamic_reconfigure.server import Server
 from mmuav_control.cfg import VpcMmcuavAttitudeCtlParamsConfig
@@ -103,16 +103,16 @@ class AttitudeControl:
 
         # VPC pids
         self.pid_vpc_roll.set_kp(0)
-        self.pid_vpc_roll.set_ki(1.0)
+        self.pid_vpc_roll.set_ki(50.0)
         self.pid_vpc_roll.set_kd(0)
-        self.pid_vpc_roll.set_lim_high(200)
-        self.pid_vpc_roll.set_lim_low(-200)
+        self.pid_vpc_roll.set_lim_high(400)
+        self.pid_vpc_roll.set_lim_low(-400)
 
         self.pid_vpc_pitch.set_kp(0)
-        self.pid_vpc_pitch.set_ki(0.0)
+        self.pid_vpc_pitch.set_ki(50.0)
         self.pid_vpc_pitch.set_kd(0)
-        self.pid_vpc_pitch.set_lim_high(200)
-        self.pid_vpc_pitch.set_lim_low(-200)
+        self.pid_vpc_pitch.set_lim_high(400)
+        self.pid_vpc_pitch.set_lim_low(-400)
 
         # Filter parameters
         self.rate_mv_filt_K = 1.0
@@ -141,6 +141,7 @@ class AttitudeControl:
         rospy.Subscriber('mot_vel_ref', Float64, self.mot_vel_ref_cb)
         rospy.Subscriber('euler_ref', Vector3, self.euler_ref_cb)
         rospy.Subscriber('/clock', Clock, self.clock_cb)
+        rospy.Subscriber('reset_controllers', Empty, self.reset_controllers_cb)
 
         #self.pub_mass0 = rospy.Publisher('movable_mass_0_position_controller/command', Float64, queue_size=1)
         #self.pub_mass1 = rospy.Publisher('movable_mass_1_position_controller/command', Float64, queue_size=1)
@@ -180,6 +181,9 @@ class AttitudeControl:
 
         while not rospy.is_shutdown():
             #self.ros_rate.sleep()
+            while (not self.start_flag) and (not rospy.is_shutdown()):
+                print "Waiting for the first measurement."
+                rospy.sleep(0.5)
             rospy.sleep(1.0/float(self.rate))
 
             self.euler_sp_filt.x = simple_filters.filterPT1(self.euler_sp_old.x, 
@@ -265,6 +269,18 @@ class AttitudeControl:
         :param msg: Type Float32
         '''
         self.w_sp = msg.data
+
+    def reset_controllers_cb(self, msg):
+        self.start_flag = False
+        self.pid_pitch.reset()
+        self.pid_pitch_rate.reset()
+        self.pid_roll.reset()
+        self.pid_roll_rate.reset()
+        self.pid_yaw.reset()
+        self.pid_yaw_rate.reset()
+        self.pid_vpc_pitch.reset()
+        self.pid_vpc_roll.reset()
+        rospy.Subscriber('imu', Imu, self.ahrs_cb)
 
     def ahrs_cb(self, msg):
         '''

@@ -6,7 +6,7 @@ import rospy, math
 from pid import PID
 from geometry_msgs.msg import Vector3, PoseWithCovarianceStamped, PoseStamped, TwistStamped
 from nav_msgs.msg import Odometry
-from std_msgs.msg import Float64
+from std_msgs.msg import Float64, Empty
 from dynamic_reconfigure.server import Server
 from mmuav_control.cfg import VpcMmcuavPositionCtlParamsConfig
 from mmuav_msgs.msg import PIDController
@@ -58,7 +58,7 @@ class PositionControl:
         self.pid_vy = PID()
 
         # Z controller
-        self.z_sp = 2.1                 # z-position set point
+        self.z_sp = 2.0                 # z-position set point
         self.z_ref_filt = 0             # z ref filtered
         self.z_mv = 0                   # z-position measured value
         self.pid_z = PID()              # pid instance for z control
@@ -78,7 +78,7 @@ class PositionControl:
         self.pid_x.set_lim_low(-500)      # max vertical descent speed
 
         # Add parameters for vx controller
-        self.pid_vx.set_kp(0.11) # 1.0
+        self.pid_vx.set_kp(0.11) # 0.11
         self.pid_vx.set_ki(0.0)
         self.pid_vx.set_kd(0)
         self.pid_vx.set_lim_high(500)   # max velocity of a motor
@@ -92,7 +92,7 @@ class PositionControl:
         self.pid_y.set_lim_low(-500)      # max vertical descent speed
 
         # Add parameters for vy controller
-        self.pid_vy.set_kp(0.11)
+        self.pid_vy.set_kp(0.11) # 0.11
         self.pid_vy.set_ki(0.0)
         self.pid_vy.set_kd(0)
         self.pid_vy.set_lim_high(500)   # max velocity of a motor
@@ -100,7 +100,7 @@ class PositionControl:
 
         # Add parameters for z controller
         self.pid_z.set_kp(100)
-        self.pid_z.set_ki(1)
+        self.pid_z.set_ki(10)
         self.pid_z.set_kd(100)
         self.pid_z.set_lim_high(500)      # max vertical ascent speed
         self.pid_z.set_lim_low(-500)      # max vertical descent speed
@@ -122,6 +122,7 @@ class PositionControl:
         rospy.Subscriber('odometry', Odometry, self.vel_cb)
         rospy.Subscriber('vel_ref', Vector3, self.vel_ref_cb)
         rospy.Subscriber('pos_ref', Vector3, self.pos_ref_cb)
+        rospy.Subscriber('reset_controllers', Empty, self.reset_controllers_cb)
         self.pub_pid_x = rospy.Publisher('pid_x', PIDController, queue_size=1)
         self.pub_pid_vx = rospy.Publisher('pid_vx', PIDController, queue_size=1)
         self.pub_pid_y = rospy.Publisher('pid_y', PIDController, queue_size=1)
@@ -151,6 +152,11 @@ class PositionControl:
         #self.t_old = datetime.now()
 
         while not rospy.is_shutdown():
+
+            while not self.start_flag and not rospy.is_shutdown():
+                print 'Waiting for pose measurements.'
+                rospy.sleep(0.5)
+
             rospy.sleep(1.0/float(self.rate))
 
             ########################################################
@@ -208,6 +214,18 @@ class PositionControl:
             self.pub_pid_vy.publish(self.pid_vy.create_msg())
             self.pub_pid_z.publish(self.pid_z.create_msg())
             self.pub_pid_vz.publish(self.pid_vz.create_msg())
+
+    def reset_controllers_cb(self, msg):
+        self.start_flag = False
+        self.pid_x.reset()
+        self.pid_vx.reset()
+        self.pid_y.reset()
+        self.pid_vy.reset()
+        self.pid_z.reset()
+        self.pid_z.ui_old = 22.0
+        self.pid_vz.reset()
+        rospy.Subscriber('odometry', Odometry, self.vel_cb)
+        rospy.Subscriber('pose', PoseStamped, self.pose_cb)
 
     def pose_cb(self, msg):
         '''
