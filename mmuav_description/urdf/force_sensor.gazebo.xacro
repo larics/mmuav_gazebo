@@ -44,7 +44,7 @@
   <!-- The ft_sensor plugin  -->
   <gazebo>
     <plugin name="ft_sensor" filename="libgazebo_ros_ft_sensor.so">
-      <updateRate>30.0</updateRate>
+      <updateRate>1000.0</updateRate>
       <robotNamespace>$(arg name)</robotNamespace>
       <topicName>ft_sensor_topic</topicName> 
       <jointName>joint_force_sensor_mount_top</jointName>
@@ -54,6 +54,10 @@
         <stddev>0.0001</stddev> <!-- change this to simulate noise --> 
       </noise>
     </plugin>
+  </gazebo>
+
+  <gazebo>
+    <plugin name="contact_sensor" filename="libcontact.so"/>
   </gazebo>
 
   <gazebo reference="world">
