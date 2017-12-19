@@ -43,7 +43,7 @@ PositionControl::PositionControl(int rate)
     ////////////////////////////////////////////////////////////////*/
     //  Add your PID params here
 
-    pid_x_.set_kp(2.0);
+    pid_x_.set_kp(1.0);
     pid_x_.set_ki(0.0);
     pid_x_.set_kd(0.0);
 
@@ -53,7 +53,7 @@ PositionControl::PositionControl(int rate)
     pid_vx_.set_lim_high(0.524);
     pid_vx_.set_lim_low(-0.524);
 
-    pid_y_.set_kp(2.0);
+    pid_y_.set_kp(1.0);
     pid_y_.set_ki(0.0);
     pid_y_.set_kd(0.0);
 
@@ -63,12 +63,12 @@ PositionControl::PositionControl(int rate)
     pid_vy_.set_lim_high(0.524);
     pid_vy_.set_lim_low(-0.524);
 
-    pid_z_.set_kp(2.0);
-    pid_z_.set_ki(0.2);
-    pid_z_.set_kd(0.5);
+    pid_z_.set_kp(1.0);
+    pid_z_.set_ki(0.0);
+    pid_z_.set_kd(0.0);
 
-    pid_vz_.set_kp(80.0);
-    pid_vz_.set_ki(6.0);
+    pid_vz_.set_kp(250.0);
+    pid_vz_.set_ki(50.0);
     pid_vz_.set_kd(0.0);
     pid_vz_.set_lim_high(1475);
     pid_vz_.set_lim_low(-1475);

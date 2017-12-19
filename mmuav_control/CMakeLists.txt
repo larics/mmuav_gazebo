@@ -11,6 +11,8 @@ find_package(catkin REQUIRED COMPONENTS
     mmuav_msgs
 )
 
+add_definitions(-std=c++11)
+
 find_package(cmake_modules REQUIRED)
 
 generate_dynamic_reconfigure_options(
@@ -57,6 +59,9 @@ target_link_libraries(uav_attitude_control pid ${catkin_LIBRARIES})
 
 add_executable(uav_position_control src/uav_position_control.cpp)
 target_link_libraries(uav_position_control pid ${catkin_LIBRARIES})
+
+add_executable(uav_force_control src/uav_force_control.cpp)
+target_link_libraries(uav_force_control pid ${catkin_LIBRARIES})
 
 
 #install(DIRECTORY config

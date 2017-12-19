@@ -236,8 +236,8 @@ int DualArmManipulatorControl::joint_criterion_function(float *q1_in, float *q2_
 	distance[0] = 0;
 	distance[1] = 0;
 
-	if (isnan(q1_in[0]) || isnan(q2_in[0]) || isnan(q3_in[0])) return 0;
-	if (isnan(q1_in[1]) || isnan(q2_in[1]) || isnan(q3_in[1])) return 0;
+	if (std::isnan(q1_in[0]) || std::isnan(q2_in[0]) || std::isnan(q3_in[0])) return 0;
+	if (std::isnan(q1_in[1]) || std::isnan(q2_in[1]) || std::isnan(q3_in[1])) return 0;
 
 
 

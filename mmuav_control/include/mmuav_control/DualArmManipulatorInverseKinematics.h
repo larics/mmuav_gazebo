@@ -1,7 +1,7 @@
 #ifndef DUALARMMANIPULATORINVERSEINEMATICS_H
 #define DUALARMMANIPULATORINVERSEINEMATICS_H
 
-#include <math.h>
+#include <cmath>
 #include "yaml-cpp/yaml.h"
 #include <eigen3/Eigen/Eigen>
 #include <mmuav_control/DualArmManipulatorDirectKinematics.h>

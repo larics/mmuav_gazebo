@@ -46,7 +46,7 @@
     <plugin name="ft_sensor" filename="libgazebo_ros_ft_sensor.so">
       <updateRate>1000.0</updateRate>
       <robotNamespace>$(arg name)</robotNamespace>
-      <topicName>ft_sensor_topic</topicName> 
+      <topicName>ft_sensor</topicName> 
       <jointName>joint_force_sensor_mount_top</jointName>
       <noise>
         <type>gaussian</type>

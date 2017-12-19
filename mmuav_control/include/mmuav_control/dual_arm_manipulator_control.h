@@ -4,6 +4,7 @@
 #include <ros/package.h>
 #include <std_msgs/Float64.h>
 #include <control_msgs/JointControllerState.h>
+#include <cmath>
 
 class DualArmManipulatorControl
 {

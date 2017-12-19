@@ -35,7 +35,7 @@ AttitudeControl::AttitudeControl(int rate)
 
     pid_roll_.set_kp(14.0);
     pid_roll_.set_ki(1.0);
-    pid_roll_.set_kd(0.0);
+    pid_roll_.set_kd(0.2);
 
     pid_roll_rate_.set_kp(200.0);
     pid_roll_rate_.set_ki(80.0);
@@ -45,7 +45,7 @@ AttitudeControl::AttitudeControl(int rate)
 
     pid_pitch_.set_kp(14.0);
     pid_pitch_.set_ki(1.0);
-    pid_pitch_.set_kd(0.0);
+    pid_pitch_.set_kd(0.2);
 
     pid_pitch_rate_.set_kp(200.0);
     pid_pitch_rate_.set_ki(80.0);

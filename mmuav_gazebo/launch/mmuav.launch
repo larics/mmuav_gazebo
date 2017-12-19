@@ -15,19 +15,14 @@
   <arg name="enable_ground_truth" default="true"/>
   <arg name="log_file" default="mmuav"/>
 
-  <!--env name="GAZEBO_MODEL_PATH" value="${GAZEBO_MODEL_PATH}:$(find mymav_gazebo)/models"/-->
-  <!--env name="GAZEBO_RESOURCE_PATH" value="${GAZEBO_RESOURCE_PATH}:$(find mymav_gazebo)/models"/-->
   <include file="$(find gazebo_ros)/launch/empty_world.launch">
-    <arg name="world_name" value="$(find mmuav_gazebo)/worlds/$(arg world_name).world"/>
     <arg name="debug" value="$(arg debug)" />
     <arg name="paused" value="$(arg paused)" />
     <arg name="gui" value="$(arg gui)" />
     <arg name="verbose" value="$(arg verbose)"/>
   </include>
 
-  <!--include file="$(find mmuav_description)/launch/spawn_mmuav.launch" /-->
-  
-   <!-- Start control -->
-  <!--include file="$(find mmuav_control)/launch/mmuav_control.launch"/-->
+  <param name="gazebo/cfm" value="0.02" />
+  <param name="gazebo/sor_pgs_w" value="1.0" />
 
 </launch>
