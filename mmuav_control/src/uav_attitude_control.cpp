@@ -53,11 +53,11 @@ AttitudeControl::AttitudeControl(int rate)
     pid_pitch_rate_.set_lim_high(1475);
     pid_pitch_rate_.set_lim_low(-1475);
 
-    pid_yaw_.set_kp(8.0);
-    pid_yaw_.set_ki(1.0);
+    pid_yaw_.set_kp(1.0);
+    pid_yaw_.set_ki(0.0);
     pid_yaw_.set_kd(0.0);
 
-    pid_yaw_rate_.set_kp(100.0);
+    pid_yaw_rate_.set_kp(200.0);
     pid_yaw_rate_.set_ki(20.0);
     pid_yaw_rate_.set_kd(0.0);
     pid_yaw_rate_.set_lim_high(1475);

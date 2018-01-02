@@ -9,11 +9,13 @@
   <arg name="headless" default="false"/>
   <arg name="debug" default="false"/>
   <arg name="world_name" default="world"/>
-   <arg name="verbose" default="false"/>
+  <arg name="verbose" default="false"/>
 
   <arg name="enable_logging" default="true"/>
   <arg name="enable_ground_truth" default="true"/>
   <arg name="log_file" default="mmuav"/>
+
+  <arg name="namespace" default="mmuav"/>
 
   <include file="$(find gazebo_ros)/launch/empty_world.launch">
     <arg name="debug" value="$(arg debug)" />
@@ -22,7 +24,18 @@
     <arg name="verbose" value="$(arg verbose)"/>
   </include>
 
-  <param name="gazebo/cfm" value="0.02" />
-  <param name="gazebo/sor_pgs_w" value="1.0" />
+  <node name="sor_pgs_w" pkg="dynamic_reconfigure" type="dynparam" args="set gazebo sor_pgs_w 1.0"/>
+
+  <include file="$(find mmuav_description)/launch/spawn_mmuav.launch" />
+  <include file="$(find mmuav_description)/launch/spawn_force_sensor.launch" />
+  <include file="$(find mmuav_control)/launch/mmuav_control.launch" />
+
+  <group ns="$(arg namespace)">
+    <node name="dual_arm_manipulator_control_node" pkg="mmuav_control" type="dual_arm_manipulator_control_node"/>
+    <node name="uav_attitude_control" pkg="mmuav_control" type="uav_attitude_control"/>
+    <node name="uav_position_control" pkg="mmuav_control" type="uav_position_control"/>
+    <node name="uav_impedance_control" pkg="mmuav_control" type="uav_impedance_control"/>
+    <node name="controller_outputs_to_motor_velocities" pkg="mmuav_control" type="controller_outputs_to_motor_velocities.py"/>
+  </group>
 
 </launch>

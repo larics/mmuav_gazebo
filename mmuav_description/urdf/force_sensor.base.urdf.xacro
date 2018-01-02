@@ -11,10 +11,4 @@
     <origin xyz="0 0 0.02" rpy="${PI/2} 0 0"/>
   </xacro:force_sensor>
 
-  <!--xacro:transmisija 
-    trans_number="0"
-    mechanical_reduction = "1"
-    joint_name="joint_force_sensor_mount_top">
-  </xacro:transmisija-->
-
 </robot>

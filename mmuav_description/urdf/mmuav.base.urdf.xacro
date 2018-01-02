@@ -78,7 +78,7 @@
     ixy="0.0" ixz="0.0"  iyz="0.0" /> <!-- [kg*m^2] [kg*m^2] [kg*m^2] [kg*m^2] [kg*m^2] [kg*m^2] -->
   </xacro:property>
 
-  <xacro:landing_gear
+  <!--xacro:landing_gear
       parent="base_link"
       gear_num = "1"
       mass = "1e-6"
@@ -98,7 +98,7 @@
       dim_z = "0.05">
       <origin xyz="0 0.325 -0.075" rpy="0 0 0" />
       <xacro:insert_block name="land_gear_inertia"/>
-  </xacro:landing_gear>
+  </xacro:landing_gear-->
 
   <!-- Instantiate rotors -->
   <xacro:vertical_rotor
@@ -238,7 +238,7 @@
     <link name='link_screw'>
       
       <inertial>
-        <mass value="0.5" />
+        <mass value="0.05" />
         <origin rpy="0 0 0" xyz="0.02100388 0.01819119 0.05027511"/>
         <inertia
           ixx="0.00020051" ixy="0" ixz="-0.00000019"
@@ -265,8 +265,8 @@
 
 
     <joint name="joint_screw" type="fixed">
-        <origin xyz="0.023 0.006 0.0385" rpy="${PI} 0 ${PI/6}" />
-        <parent link="link_gripper2_left"/>
+        <origin xyz="-0.03100388 0.00719119 -0.03527511" rpy="${PI} 0 ${PI/6}" />
+        <parent link="base_link"/>
         <child link="link_screw"/>
     </joint>
 

@@ -33,7 +33,7 @@ PositionControl::PositionControl(int rate)
     yaw_sp_ = 0;
     position_sp_.x = 0;
     position_sp_.y = 0;
-    position_sp_.z = 1;
+    position_sp_.z = 0;
 
     orientation_mv_[0] = 0;
     orientation_mv_[1] = 0;
@@ -47,9 +47,9 @@ PositionControl::PositionControl(int rate)
     pid_x_.set_ki(0.0);
     pid_x_.set_kd(0.0);
 
-    pid_vx_.set_kp(0.2);
-    pid_vx_.set_ki(0.01);
-    pid_vx_.set_kd(0.0);
+    pid_vx_.set_kp(0.3);
+    pid_vx_.set_ki(0.015);
+    pid_vx_.set_kd(0.005);
     pid_vx_.set_lim_high(0.524);
     pid_vx_.set_lim_low(-0.524);
 
@@ -57,9 +57,9 @@ PositionControl::PositionControl(int rate)
     pid_y_.set_ki(0.0);
     pid_y_.set_kd(0.0);
 
-    pid_vy_.set_kp(0.2);
-    pid_vy_.set_ki(0.01);
-    pid_vy_.set_kd(0.0);
+    pid_vy_.set_kp(0.3);
+    pid_vy_.set_ki(0.015);
+    pid_vy_.set_kd(0.005);
     pid_vy_.set_lim_high(0.524);
     pid_vy_.set_lim_low(-0.524);
 
@@ -79,8 +79,8 @@ PositionControl::PositionControl(int rate)
     rate_ = rate;
     
     odometry_ros_sub_ = n_.subscribe("odometry", 1, &PositionControl::odometry_cb, this);
-    yaw_ros_sub_ = n_.subscribe("yaw_ref", 1, &PositionControl::yaw_ref_cb, this);
-    position_ref_ros_sub_ = n_.subscribe("position_ref", 1, &PositionControl::position_ref_cb, this);
+    yaw_ros_sub_ = n_.subscribe("position_control/yaw_ref", 1, &PositionControl::yaw_ref_cb, this);
+    position_ref_ros_sub_ = n_.subscribe("position_control/position_ref", 1, &PositionControl::position_ref_cb, this);
     clock_ros_sub_ = n_.subscribe("/clock", 1, &PositionControl::clock_cb, this);
 
     euler_ref_pub_ros_ = n_.advertise<geometry_msgs::Vector3>("euler_ref", 1);

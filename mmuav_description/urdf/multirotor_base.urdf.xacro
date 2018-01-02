@@ -424,7 +424,7 @@
     <joint name="joint_dynamixel1_${suffix}" type="revolute">
       <parent link="link_manipulator2uav_${suffix}"/>
       <child link="link_dynamixel1_${suffix}"/>
-      <origin xyz="0 0 0" rpy="${PI} 0 ${-PI/2}" />
+      <origin xyz="0 0 0" rpy="${PI} 0 ${-PI/2}" /> 
       <limit upper="6" lower="-6" effort="1.5" velocity="1"/>
       <axis xyz="0 0 1" />
     </joint>

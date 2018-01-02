@@ -238,4 +238,12 @@
     <dampingFactor>0.0002</dampingFactor>
   </gazebo>
 
+  <gazebo reference="link_screw">
+    <gravity>true</gravity>
+    <self_collide>true</self_collide>
+    <mu1>0</mu1>
+    <mu2>0</mu2>
+    <fdir1 value = "1 0 0"/>
+  </gazebo>
+
 </robot>
