@@ -21,6 +21,8 @@ ImpedanceControl::ImpedanceControl(int rate, int moving_average_sample_number)
         M_[i] = 0;
         B_[i] = 0;
         K_[i] = 0;
+        em0_[i] = 0;
+        dem0_[i] = 0;
     }
 
 	start_flag_ = false;
@@ -43,6 +45,8 @@ ImpedanceControl::ImpedanceControl(int rate, int moving_average_sample_number)
     torque_x_offset_ = 0.0;
     torque_y_offset_ = 0.0;
     torque_z_offset_ = 0.0;
+
+    mrac_time_ = 0;
 
 }
 
@@ -238,41 +242,41 @@ float ImpedanceControl::getFilteredTorqueZ(void)
 
 void ImpedanceControl::initializeMRACReferenceModel(void)
 {
-    float samplingTime;
-    int i;
-
-    samplingTime = (float)moving_average_sample_number_/(float)rate_;
-
-    for (i = 0; i < 6; i++)
-    {
-        Gem_[i].reset();
-        Gem_[i].setNumerator(1.0, 0.0, 0.0);
-        Gem_[i].setDenominator(omega_[i]*omega_[i], 2*zeta_[i]*omega_[i], 1);
-        Gem_[i].c2d(samplingTime, "zoh");
-    }
-}
-
-void ImpedanceControl::setMRACReferenceModelInitialValues(float *y0, float *x0)
-{
     int i;
 
     for (i = 0; i < 6; i++)
     {
-        Gem_[i].setInitialValues(y0, x0);
+        Yem_[i].init(omega_[i]*omega_[i], 2*zeta_[i]*omega_[i]);
     }
 }
 
-float* ImpedanceControl::getMRACoutput(void)
+float* ImpedanceControl::getMRACoutput(float dt, float *fe)
 {
+    float cond[2];
     float *Xr = (float * )malloc(sizeof(float)*6);
     int i;
 
+    mrac_time_ += dt;
+
     for (i = 0; i < 6; i++)
     {
-        Xr[i] = Gem_[i].getDiscreteOutput(0);
+        cond[0] = em0_[i];
+        cond[1] = dem0_[i];
+        Xr[i] = Yem_[i].dsolve(mrac_time_, cond);
     }
 
     return Xr;
+}
+
+void ImpedanceControl::setMRACReferenceModelInitialConditions(float *em0, float *dem0)
+{
+    for (int i = 0; i < 6; i++)
+    {
+        em0_[i] = em0[i];
+        dem0_[i] = dem0[i];
+    }
+
+    mrac_time_ = 0;
 }
 
 void ImpedanceControl::run()
@@ -349,29 +353,17 @@ void ImpedanceControl::run()
     initializeImpedanceFilterTransferFunction();
     initializeMRACReferenceModel();
 
-    float hh[3], aa[3];
-
-    hh[0] = 2;
-    hh[1] = 200;
-    hh[2] = 0;
-    aa[0] = 0;
-    aa[1] = 0;
-    aa[2] = 0;
-
-    setMRACReferenceModelInitialValues(hh, aa);
-
     while (ros::ok())
     {
         ros::spinOnce();
 
-        dt = (clock_.clock.toSec() - clock_old.clock.toSec());
-        clock_old = clock_;
-
         if ((counter % moving_average_sample_number_) == 0)
         {
+            dt = (clock_.clock.toSec() - clock_old.clock.toSec());
+            clock_old = clock_;
 
         	if (dt > 0.0)
-			{    
+			{ 
                 fe[2] = -(force_torque_ref_.wrench.force.z - getFilteredForceZ()); //ide minus jer je senzor okrenut prema dolje, smanjenjem pozicije povecava se sila
                 fe[3] = -(force_torque_ref_.wrench.torque.y - getFilteredTorqueY()); //ide minus jer je senzor okrenut prema dolje, smanjenjem pozicije povecava se sila
                 fe[4] = -(force_torque_ref_.wrench.torque.x - getFilteredTorqueX()); //ide minus jer je senzor okrenut prema dolje, smanjenjem pozicije povecava se sila
@@ -384,9 +376,9 @@ void ImpedanceControl::run()
                 vector_pose_ref[4] = pose_ref_.pose.position.y;
                 vector_pose_ref[5] = yaw_ref_.data;
 
-                xc = impedanceFilter(fe, vector_pose_ref);
+                xr = getMRACoutput(dt, fe);
 
-                xr = getMRACoutput();
+                xc = impedanceFilter(fe, vector_pose_ref);
 
                 commanded_position_msg.x = xc[3];
                 commanded_position_msg.y = xc[4];
@@ -457,7 +449,7 @@ void ImpedanceControl::LoadImpedanceControlParameters(std::string file)
 
 int main(int argc, char **argv)
 {
-    ros::init(argc, argv, "force_control_node");
+    ros::init(argc, argv, "impedance_control_node");
     ros::NodeHandle private_node_handle_("~");
 
     int rate, impedanceType, masn;
@@ -466,9 +458,9 @@ int main(int argc, char **argv)
     std::string path = ros::package::getPath("mmuav_control");
 
     private_node_handle_.param("rate", rate, int(1000));
-    private_node_handle_.param("moving_average_sample_number", masn, int(20));
+    private_node_handle_.param("moving_average_sample_number", masn, int(10));
     private_node_handle_.param("impedance_control_params_file", impedance_control_config_file, std::string("/config/impedance_control_params.yaml"));
-    private_node_handle_.param("ImpedanceType", impedanceType, int(2));
+    private_node_handle_.param("ImpedanceType", impedanceType, int(1));
 
     ImpedanceControl impedance_control(rate, masn);
 

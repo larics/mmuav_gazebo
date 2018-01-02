@@ -3,10 +3,10 @@
 
 #include <string>
 
-enum PoleType { DOUBLE_REAL, SINGLE_REAL};
-
 class Tf2{
 	private:
+		enum PoleType { DOUBLE_REAL, SINGLE_REAL};
+
 		bool zohTransform(void);
 		float d0_, d1_, d2_;
 		float n0_, n1_, n2_;
@@ -15,7 +15,7 @@ class Tf2{
 		float T_, a_, b_;
 		float x_[3];
 		float y_[3];
-		PoleType poletype_;
+		Tf2::PoleType poletype_;
 		bool numeratorInit_, denominatorInit_;
 
 	public:

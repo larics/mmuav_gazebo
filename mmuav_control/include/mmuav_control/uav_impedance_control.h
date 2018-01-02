@@ -3,6 +3,7 @@
 
 #include "ros/ros.h"
 #include <mmuav_control/Tf2.h>
+#include <mmuav_control/diff2.h>
 #include <rosgraph_msgs/Clock.h>
 #include <geometry_msgs/WrenchStamped.h>
 #include <rosgraph_msgs/Clock.h>
@@ -20,15 +21,15 @@ class ImpedanceControl{
 		void pose_ref_cb(const geometry_msgs::PoseStamped &msg);
 		void force_torque_cb(const geometry_msgs::WrenchStamped &msg);
 		void initializeImpedanceFilterTransferFunction(void);
+		void setMRACReferenceModelInitialConditions(float *em0, float *dem0);
 		void initializeMRACReferenceModel(void);
-		void setMRACReferenceModelInitialValues(float *y0, float *x0);
 		float getFilteredForceZ(void);
 		float getFilteredTorqueX(void);
 		float getFilteredTorqueY(void);
 		float getFilteredTorqueZ(void);
 		bool check_impact(void);
 		float* impedanceFilter(float *e, float *Xr);
-		float* getMRACoutput(void);
+		float* getMRACoutput(float dt, float *fe);
 		void quaternion2euler(float *quaternion, float *euler);
 
 		volatile bool start_flag_, force_sensor_calibration_flag_;
@@ -39,7 +40,8 @@ class ImpedanceControl{
 		float torque_y_meas_[MAX_MOVING_AVARAGE_SAMPLES_NUM];
 		float torque_z_meas_[MAX_MOVING_AVARAGE_SAMPLES_NUM];
 		float M_[6], B_[6], K_[6], omega_[6], zeta_[6];
-		float force_z_offset_;
+		float em0_[6], dem0_[6];
+		float force_z_offset_, mrac_time_;
 		float torque_y_offset_, torque_x_offset_, torque_z_offset_;
 		int rate_, moving_average_sample_number_, targetImpedanceType_;
 
@@ -55,7 +57,8 @@ class ImpedanceControl{
 
 		ros::Publisher force_filtered_pub_, position_commanded_pub_, yaw_commanded_pub_;
 
-		Tf2 Ge_[6], Gxr_[6], Gem_[6];
+		Tf2 Ge_[6], Gxr_[6];
+		diff2 Yem_[6];
 
 	public:
 		ImpedanceControl(int rate, int moving_average_sample_number);

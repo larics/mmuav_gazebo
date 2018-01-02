@@ -31,11 +31,11 @@
   <include file="$(find mmuav_control)/launch/mmuav_control.launch" />
 
   <group ns="$(arg namespace)">
-    <node name="dual_arm_manipulator_control_node" pkg="mmuav_control" type="dual_arm_manipulator_control_node"/>
-    <node name="uav_attitude_control" pkg="mmuav_control" type="uav_attitude_control"/>
-    <node name="uav_position_control" pkg="mmuav_control" type="uav_position_control"/>
-    <node name="uav_impedance_control" pkg="mmuav_control" type="uav_impedance_control"/>
-    <node name="controller_outputs_to_motor_velocities" pkg="mmuav_control" type="controller_outputs_to_motor_velocities.py"/>
+    <node name="dual_arm_manipulator_control_node" pkg="mmuav_control" type="dual_arm_manipulator_control_node" output="screen"/>
+    <node name="uav_attitude_control" pkg="mmuav_control" type="uav_attitude_control" output="screen"/>
+    <node name="uav_position_control" pkg="mmuav_control" type="uav_position_control" output="screen"/>
+    <node name="uav_impedance_control" pkg="mmuav_control" type="uav_impedance_control" output="screen"/>
+    <node name="controller_outputs_to_motor_velocities" pkg="mmuav_control" type="controller_outputs_to_motor_velocities.py" output="screen"/>
   </group>
 
 </launch>

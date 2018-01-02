@@ -51,6 +51,9 @@ target_link_libraries(DualArmManipulatorDirectKinematics ${catkin_LIBRARIES} yam
 add_library(Tf2 src/Tf2.cpp)
 target_link_libraries(Tf2 ${catkin_LIBRARIES})
 
+add_library(diff2 src/diff2.cpp)
+target_link_libraries(diff2 ${catkin_LIBRARIES})
+
 add_library(DualArmManipulatorInverseKinematics src/DualArmManipulatorInverseKinematics.cpp)
 target_link_libraries(DualArmManipulatorInverseKinematics DualArmManipulatorDirectKinematics ${catkin_LIBRARIES} yaml-cpp)
 
@@ -64,7 +67,7 @@ add_executable(uav_position_control src/uav_position_control.cpp)
 target_link_libraries(uav_position_control pid ${catkin_LIBRARIES})
 
 add_executable(uav_impedance_control src/uav_impedance_control.cpp)
-target_link_libraries(uav_impedance_control pid ${catkin_LIBRARIES} Tf2 yaml-cpp)
+target_link_libraries(uav_impedance_control pid ${catkin_LIBRARIES} Tf2 yaml-cpp diff2)
 
 
 #install(DIRECTORY config
