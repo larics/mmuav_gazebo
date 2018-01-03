@@ -14,7 +14,7 @@ class diff2{
 
 	public:
 		diff2(void);
-		float dsolve(float x, float *cond);
+		float* dsolve(float x, float *cond);
 		void init(float a0, float a1);
 
 };

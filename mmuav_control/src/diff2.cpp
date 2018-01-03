@@ -1,4 +1,5 @@
 #include <mmuav_control/diff2.h>
+#include <stdlib.h>
 #include <cmath>
 
 diff2::diff2(void)
@@ -15,9 +16,10 @@ diff2::diff2(void)
 	diff2_init_ = false;
 }
 
-float diff2::dsolve(float x, float *cond)
+float* diff2::dsolve(float x, float *cond)
 {
-	float y, c1, c2;
+	float *y = (float * )malloc(sizeof(float)*2);
+	float c1, c2;
 
 	if (diff2_init_)
 	{
@@ -26,21 +28,24 @@ float diff2::dsolve(float x, float *cond)
 			c1 = cond[0];
 			c2 = (cond[1] - alpha_ * cond[0]) / beta_;
 
-			y = c1 * exp(alpha_ * x) * cos(beta_ * x) + c2 * exp(alpha_ * x) * sin(beta_ * x);
+			y[0] = c1 * exp(alpha_ * x) * cos(beta_ * x) + c2 * exp(alpha_ * x) * sin(beta_ * x);
+			y[1] = c1 * (alpha_ * exp(alpha_ * x) * cos(beta_ * x) - beta_ * exp(alpha_ * x) * sin(beta_ * x)) + c2 * (alpha_ * exp(alpha_ * x) * sin(beta_ * x) + beta_ * exp(alpha_ * x) * cos(beta_ * x));
 		}
 		else if (diff2_type_ == DOUBLE_REAL)
 		{
 			c1 = cond[0];
 			c2 = cond[1] - r1_ * cond[0];
 
-			y = c1 * exp(r1_ * x) + c2 * x *exp(r1_ * x);
+			y[0] = c1 * exp(r1_ * x) + c2 * x * exp(r1_ * x);
+			y[1] = r1_ * c1 * exp(r1_ * x) + c2 * exp(r1_ * x) + r1_ * c2 * x * exp(r1_ * x);
 		}
 		else if (diff2_type_ == SINGLE_REAL)
 		{
 			c1 = (r2_ * cond[0] + cond[1]) / (r2_ - r1_);
 			c2 = (r1_ * cond[0] - cond[1]) / (r1_ - r2_);
 
-			y = c1 * exp(r1_ * x) + c2 * exp(r2_ * x);
+			y[0] = c1 * exp(r1_ * x) + c2 * exp(r2_ * x);
+			y[1] = r1_ * c1 * exp(r1_ * x) + r2_ * c2 * exp(r2_ * x);
 		}
 	}
 

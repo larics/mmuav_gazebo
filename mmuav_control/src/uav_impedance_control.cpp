@@ -46,8 +46,6 @@ ImpedanceControl::ImpedanceControl(int rate, int moving_average_sample_number)
     torque_y_offset_ = 0.0;
     torque_z_offset_ = 0.0;
 
-    mrac_time_ = 0;
-
 }
 
 void ImpedanceControl::setImpedanceFilterMass(float *mass)
@@ -63,6 +61,17 @@ void ImpedanceControl::setImpedanceFilterDamping(float *damping)
 void ImpedanceControl::setImpedanceFilterStiffness(float *stiffness)
 {
     for (int i = 0; i < 6; i++) K_[i] = stiffness[i];
+}
+
+void ImpedanceControl::initializeMRACControl(void)
+{
+    int i;
+
+    for (i == 0; i < 6; i++)
+    {
+        mrac_[i].setType("PA", 0);
+        mrac_[i].initializeReferenceModel(zeta_[i], omega_[i]);
+    }
 }
 
 void ImpedanceControl::initializeImpedanceFilterTransferFunction(void)
@@ -240,45 +249,6 @@ float ImpedanceControl::getFilteredTorqueZ(void)
     return average;
 }
 
-void ImpedanceControl::initializeMRACReferenceModel(void)
-{
-    int i;
-
-    for (i = 0; i < 6; i++)
-    {
-        Yem_[i].init(omega_[i]*omega_[i], 2*zeta_[i]*omega_[i]);
-    }
-}
-
-float* ImpedanceControl::getMRACoutput(float dt, float *fe)
-{
-    float cond[2];
-    float *Xr = (float * )malloc(sizeof(float)*6);
-    int i;
-
-    mrac_time_ += dt;
-
-    for (i = 0; i < 6; i++)
-    {
-        cond[0] = em0_[i];
-        cond[1] = dem0_[i];
-        Xr[i] = Yem_[i].dsolve(mrac_time_, cond);
-    }
-
-    return Xr;
-}
-
-void ImpedanceControl::setMRACReferenceModelInitialConditions(float *em0, float *dem0)
-{
-    for (int i = 0; i < 6; i++)
-    {
-        em0_[i] = em0[i];
-        dem0_[i] = dem0[i];
-    }
-
-    mrac_time_ = 0;
-}
-
 void ImpedanceControl::run()
 {
 	float dt = 0;
@@ -351,7 +321,7 @@ void ImpedanceControl::run()
     clock_old = clock_;
 
     initializeImpedanceFilterTransferFunction();
-    initializeMRACReferenceModel();
+    initializeMRACControl();
 
     while (ros::ok())
     {
@@ -376,7 +346,7 @@ void ImpedanceControl::run()
                 vector_pose_ref[4] = pose_ref_.pose.position.y;
                 vector_pose_ref[5] = yaw_ref_.data;
 
-                xr = getMRACoutput(dt, fe);
+                //xr = getMRACoutput(dt, fe);
 
                 xc = impedanceFilter(fe, vector_pose_ref);
 
