@@ -1,6 +1,5 @@
 #include <mmuav_control/Tf2.h>
 #include <cmath>
-#include <iostream>
 
 Tf2::Tf2(void)
 {
@@ -54,6 +53,7 @@ bool Tf2::setDenominator(float d0, float d1, float d2)
 	if (dc2_ == 0.0)
 	{
 		denominatorInit_ = false;
+		return denominatorInit_;
 	}
 
 	discriminant = dc1_*dc1_ - 4*dc0_*dc2_;

@@ -1,6 +1,7 @@
 #include <mmuav_control/uav_impedance_control.h>
 #include <ros/package.h>
 #include "yaml-cpp/yaml.h"
+#include <mmuav_control/Tf1.h>
 
 ImpedanceControl::ImpedanceControl(int rate, int moving_average_sample_number)
 {
@@ -69,8 +70,7 @@ void ImpedanceControl::initializeMRACControl(void)
 
     for (i == 0; i < 6; i++)
     {
-        mrac_[i].setType("PA", 0);
-        mrac_[i].initializeReferenceModel(zeta_[i], omega_[i]);
+        mraic_[i].initializeReferenceModel(zeta_[i], omega_[i]);
     }
 }
 
@@ -360,7 +360,7 @@ void ImpedanceControl::run()
 
                 filtered_ft_sensor_msg.header.stamp = ros::Time::now();
 				filtered_ft_sensor_msg.wrench.force.z = getFilteredForceZ();
-                filtered_ft_sensor_msg.wrench.force.x = xr[0];
+                filtered_ft_sensor_msg.wrench.force.x = 0;//tf1.getDiscreteOutput(1);
                 filtered_ft_sensor_msg.wrench.torque.x = getFilteredTorqueX();
                 filtered_ft_sensor_msg.wrench.torque.y = getFilteredTorqueY();
                 filtered_ft_sensor_msg.wrench.torque.z = getFilteredTorqueZ();

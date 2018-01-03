@@ -10,7 +10,7 @@
 #include <geometry_msgs/PoseStamped.h>
 #include <geometry_msgs/Vector3.h>
 #include <std_msgs/Float64.h>
-#include <mmuav_control/mrac.h>
+#include <mmuav_control/mraic.h>
 
 #define MAX_MOVING_AVARAGE_SAMPLES_NUM	100
 
@@ -57,7 +57,7 @@ class ImpedanceControl{
 		ros::Publisher force_filtered_pub_, position_commanded_pub_, yaw_commanded_pub_;
 
 		Tf2 Ge_[6], Gxr_[6];
-		mrac mrac_[6];
+		mraic mraic_[6];
 
 	public:
 		ImpedanceControl(int rate, int moving_average_sample_number);

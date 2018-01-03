@@ -16,7 +16,6 @@ class diff2{
 		diff2(void);
 		float* dsolve(float x, float *cond);
 		void init(float a0, float a1);
-
 };
 
 #endif
