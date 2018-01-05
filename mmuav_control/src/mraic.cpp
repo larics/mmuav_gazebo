@@ -1,5 +1,6 @@
 #include <mmuav_control/mraic.h>
 #include <stdlib.h>
+#include <iostream>
 
 mraic::mraic(void)
 {
@@ -13,7 +14,13 @@ mraic::mraic(void)
     wp_ = 0.0;
     wd_ = 0.0;
 
-    N_ = 100.0;
+    kp_ = 0.0;
+    kd_ = 0.0;
+    g_ = 0.0;
+
+    e_[0] = 0.0;
+    e_[1] = 0.0;
+    de_ = 0.0;
 
     samplingTime_ = 1.0;
 
@@ -32,9 +39,19 @@ void mraic::initializeAdaptationLaws(float *a, float *b, float *c, float *sigma,
     samplingTime_ = T;
 
     Gg.reset();
-    Gg.setNumerator(-1.0, -1.0);
+    Gg.setNumerator(a[0], a[1]);
     Gg.setDenominator(0.0, 1.0);
     Gg.c2d(samplingTime_, "zoh");
+
+    Gp.reset();
+    Gp.setNumerator(b[0], b[1]);
+    Gp.setDenominator(0.0, 1.0);
+    Gp.c2d(samplingTime_, "zoh");
+
+    Gd.reset();
+    Gd.setNumerator(c[0], c[1]);
+    Gd.setDenominator(0.0, 1.0);
+    Gd.c2d(samplingTime_, "zoh");
 }
 
 void mraic::setReferenceModelInitialConditions(float ym0, float dym0)
@@ -43,9 +60,13 @@ void mraic::setReferenceModelInitialConditions(float ym0, float dym0)
     dym0_ = dym0;
 }
 
-void mraic::referenceModelReset(void)
+void mraic::setImpact(bool impact)
 {
-	time_ = 0.0;
+    if (impact)
+    {
+        time_ = 0.0;
+        setReferenceModelInitialConditions(e_[0], de_);
+    }
 }
 
 void mraic::setAdaptiveParameterInitialValues(float g0, float kp0, float kd0)
@@ -61,34 +82,29 @@ void mraic::setWeightingFactors(float wp, float wd)
     wd_ = wd;
 }
 
-/*float mraic::qt(float* e)
+float mraic::calculateAdaptiveProportionalGainKp(float q, float e, float de)
 {
-    float q;
+    float kp, p;
 
-    q = wp_ * e[0] + wd_ * e[1];
+    p = q * e;
 
-    return q;
-}*/
-
-float mraic::getAdaptiveProportionalGainKp()
-{
-    float kp;
-
-    kp = kp0_ + Gp.getDiscreteOutput(0);
+    kp = kp0_ + Gp.getDiscreteOutput(p);
 
     return kp;
 }
 
-float mraic::getAdaptiveDerivativeGainKp()
+float mraic::calculateAdaptiveDerivativeGainKd(float q, float e, float de)
 {
-    float kd;
+    float kd, d;
 
-    kd = kd0_ + Gd.getDiscreteOutput(0);
+    d = q * de;
+    
+    kd = kd0_ + Gd.getDiscreteOutput(d);
 
     return kd;
 }
 
-float mraic::getReferencePositionSignal(float q)
+float mraic::calculateReferencePositionSignal(float q)
 {
     float g;
 
@@ -97,19 +113,47 @@ float mraic::getReferencePositionSignal(float q)
     return g;
 }
 
+float mraic::getAdaptiveProportionalGainKp(void)
+{
+    return kp_;
+}
+
+float mraic::getAdaptiveDerivativeGainKd(void)
+{
+    return kd_;
+}
+
+float mraic::getReferencePositionSignal(void)
+{
+    return g_;
+}
+
 
 float mraic::compute(float dt, float e)
 {
     float cond[2], u = 0.0;
+    float q;
     float *ym;
 
     if (reference_model_init_)
     {
+        e_[1] = e_[0];
+        e_[0] = e;
+
     	time_ += dt;
+
+        de_ = (e_[0] - e_[1]) / dt;
 
     	cond[0] = ym0_;
         cond[1] = dym0_;
         ym = Ym_.dsolve(time_, cond);
+
+        q = wp_ * (e - ym[0]) + wd_ * (de_ - ym[1]);
+        kp_ = calculateAdaptiveProportionalGainKp(q, e_[0], de_);
+        kd_ = calculateAdaptiveDerivativeGainKd(q, e_[0], de_);
+        g_ = calculateReferencePositionSignal(q);
+
+        u = g_ + kp_ * e_[0] + kd_ * de_;
     }
 
     free(ym);

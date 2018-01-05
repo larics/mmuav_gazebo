@@ -28,6 +28,7 @@ class ImpedanceControl{
 		float getFilteredTorqueZ(void);
 		bool check_impact(void);
 		float* impedanceFilter(float *e, float *Xr);
+		float* modelReferenceAdaptiveImpedanceControl(float dt, float *e, float *g0);
 		void quaternion2euler(float *quaternion, float *euler);
 		void initializeMRACControl(void);
 
@@ -38,8 +39,9 @@ class ImpedanceControl{
 		float torque_x_meas_[MAX_MOVING_AVARAGE_SAMPLES_NUM];
 		float torque_y_meas_[MAX_MOVING_AVARAGE_SAMPLES_NUM];
 		float torque_z_meas_[MAX_MOVING_AVARAGE_SAMPLES_NUM];
-		float M_[6], B_[6], K_[6], omega_[6], zeta_[6];
-		float em0_[6], dem0_[6];
+		float M_[6], B_[6], K_[6], omega_[6], zeta_[6], kd0_[6], sigma3_[6];
+		float em0_[6], dem0_[6], wp_[6], wd_[6], fe_[6], kp0_[6], sigma2_[6];
+		float a1_[6], b1_[6], c1_[6], a2_[6], b2_[6], c2_[6], sigma1_[6];
 		float force_z_offset_, mrac_time_;
 		float torque_y_offset_, torque_x_offset_, torque_z_offset_;
 		int rate_, moving_average_sample_number_, targetImpedanceType_;
