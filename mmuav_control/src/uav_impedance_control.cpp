@@ -385,9 +385,9 @@ void ImpedanceControl::run()
 
         	if (dt > 0.0)
 			{
-                fe_[2] = -(force_torque_ref_.wrench.force.z - getFilteredForceZ()); //ide minus jer je senzor okrenut prema dolje, smanjenjem pozicije povecava se sila
-                fe_[3] = -(force_torque_ref_.wrench.torque.y - getFilteredTorqueY()); //ide minus jer je senzor okrenut prema dolje, smanjenjem pozicije povecava se sila
-                fe_[4] = -(force_torque_ref_.wrench.torque.x - getFilteredTorqueX()); //ide minus jer je senzor okrenut prema dolje, smanjenjem pozicije povecava se sila
+                fe_[2] = -(force_torque_ref_.wrench.force.z - getFilteredForceZ()); //ide -e iz razloga jer je force senzor rotiran s obzirom na koordinatni letjlice
+                fe_[3] = -(force_torque_ref_.wrench.torque.y - getFilteredTorqueY());
+                fe_[4] = -(force_torque_ref_.wrench.torque.x - getFilteredTorqueX());
                 fe_[5] = -(force_torque_ref_.wrench.torque.z - getFilteredTorqueZ());
 
                 vector_pose_ref[0] = pose_ref_.pose.position.x;
@@ -398,7 +398,7 @@ void ImpedanceControl::run()
                 vector_pose_ref[5] = yaw_ref_.data;
 
                 xr = modelReferenceAdaptiveImpedanceControl(dt, fe_, vector_pose_ref);
-                vector_pose_ref[2] = xr[2];
+                //vector_pose_ref[2] = xr[2];
                 xc = impedanceFilter(fe_, vector_pose_ref);
 
                 commanded_position_msg.x = xc[3];
@@ -413,7 +413,7 @@ void ImpedanceControl::run()
 				filtered_ft_sensor_msg.wrench.force.z = getFilteredForceZ();
                 filtered_ft_sensor_msg.wrench.force.y = xr[2];//mraic_[2].compute(dt, fe[2]);
                 filtered_ft_sensor_msg.wrench.force.x = mraic_[2].getAdaptiveProportionalGainKp();//tf1.getDiscreteOutput(1);
-                filtered_ft_sensor_msg.wrench.torque.x = getFilteredTorqueX();
+                filtered_ft_sensor_msg.wrench.torque.x = mraic_[2].getAdaptiveDerivativeGainKd();//getFilteredTorqueX();
                 filtered_ft_sensor_msg.wrench.torque.y = getFilteredTorqueY();
                 filtered_ft_sensor_msg.wrench.torque.z = getFilteredTorqueZ();
 				force_filtered_pub_.publish(filtered_ft_sensor_msg);

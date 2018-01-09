@@ -44,12 +44,12 @@ void mraic::initializeAdaptationLaws(float *a, float *b, float *c, float *sigma,
     Gg.c2d(samplingTime_, "zoh");
 
     Gp.reset();
-    Gp.setNumerator(b[0], b[1]);
+    Gp.setNumerator(-b[0], -b[1]);
     Gp.setDenominator(0.0, 1.0);
     Gp.c2d(samplingTime_, "zoh");
 
     Gd.reset();
-    Gd.setNumerator(c[0], c[1]);
+    Gd.setNumerator(-c[0], -c[1]);
     Gd.setDenominator(0.0, 1.0);
     Gd.c2d(samplingTime_, "zoh");
 }
@@ -148,7 +148,7 @@ float mraic::compute(float dt, float e)
         cond[1] = dym0_;
         ym = Ym_.dsolve(time_, cond);
 
-        q = wp_ * (e - ym[0]) + wd_ * (de_ - ym[1]);
+        q = wp_ * (ym[0] - e) + wd_ * (ym[1] - de_);
         kp_ = calculateAdaptiveProportionalGainKp(q, e_[0], de_);
         kd_ = calculateAdaptiveDerivativeGainKd(q, e_[0], de_);
         g_ = calculateReferencePositionSignal(q);
