@@ -10,6 +10,8 @@ ImpedanceControl::ImpedanceControl(int rate, int moving_average_sample_number)
     for (i = 0; i < MAX_MOVING_AVARAGE_SAMPLES_NUM; i++)
     {
         force_z_meas_[i] = 0;
+        force_x_meas_[i] = 0;
+        force_y_meas_[i] = 0;
         torque_x_meas_[i] = 0;
         torque_y_meas_[i] = 0;
         torque_z_meas_[i] = 0;
@@ -53,13 +55,18 @@ ImpedanceControl::ImpedanceControl(int rate, int moving_average_sample_number)
 	clock_ros_sub_ = n_.subscribe("/clock", 1, &ImpedanceControl::clock_cb, this);
 
 	force_filtered_pub_ = n_.advertise<geometry_msgs::WrenchStamped>("/force_sensor/filtered_ft_sensor", 1);
-    position_commanded_pub_ = n_.advertise<geometry_msgs::Vector3>("position_control/position_ref", 1);
+    position_commanded_pub_ = n_.advertise<geometry_msgs::Vector3Stamped>("position_control/position_ref", 1);
     yaw_commanded_pub_ = n_.advertise<std_msgs::Float64>("position_control/yaw_ref", 1);
 
     force_z_offset_ = 0.0;
+    force_x_offset_ = 0.0;
+    force_y_offset_ = 0.0;
     torque_x_offset_ = 0.0;
     torque_y_offset_ = 0.0;
     torque_z_offset_ = 0.0;
+
+    impact_flag_ = false;
+    collision_ = false;
 
 }
 
@@ -174,12 +181,15 @@ float* ImpedanceControl::impedanceFilter(float *e, float *Xr)
 float* ImpedanceControl::modelReferenceAdaptiveImpedanceControl(float dt, float *e, float *g0)
 {
     float *Xr = (float * )malloc(sizeof(float)*6);
+    bool impact = false;
     int i;
+
+    impact = check_impact();
 
     for (i = 0; i < 6; i++)
     {
         mraic_[i].setAdaptiveParameterInitialValues(g0[i], kp0_[i], kd0_[i]);
-        mraic_[i].setImpact(check_impact());
+        mraic_[i].setImpact(impact);
         Xr[i] = mraic_[i].compute(dt, e[i]);
     }
 
@@ -199,12 +209,16 @@ void ImpedanceControl::force_measurement_cb(const geometry_msgs::WrenchStamped &
 	for (int i=0; i<(moving_average_sample_number_-1); i++)
 	{
         force_z_meas_[i] = force_z_meas_[i+1];
+        force_x_meas_[i] = force_x_meas_[i+1];
+        force_y_meas_[i] = force_y_meas_[i+1];
         torque_x_meas_[i] = torque_x_meas_[i+1];
         torque_y_meas_[i] = torque_y_meas_[i+1];
         torque_z_meas_[i] = torque_z_meas_[i+1];
     }
 
 	force_z_meas_[moving_average_sample_number_-1] = msg.wrench.force.z;
+    force_x_meas_[moving_average_sample_number_-1] = msg.wrench.force.x;
+    force_y_meas_[moving_average_sample_number_-1] = msg.wrench.force.y;
     torque_x_meas_[moving_average_sample_number_-1] = msg.wrench.torque.x;
     torque_y_meas_[moving_average_sample_number_-1] = msg.wrench.torque.y;
     torque_z_meas_[moving_average_sample_number_-1] = msg.wrench.torque.z;
@@ -231,14 +245,55 @@ void ImpedanceControl::force_torque_cb(const geometry_msgs::WrenchStamped &msg)
     force_torque_ref_ = msg;
 }
 
+bool ImpedanceControl::check_collision(void)
+{
+    bool collision;
+
+    if (getFilteredForceZ() > 0.05) collision = true;
+    else collision = false;
+
+    return collision;
+}
+
 bool ImpedanceControl::check_impact(void)
 {
-	return false;
+    if (!collision_ && check_collision()) impact_flag_ = true;
+    else impact_flag_ = false;
+
+    collision_ = check_collision();
+
+	return impact_flag_;
 }
 
 void ImpedanceControl::clock_cb(const rosgraph_msgs::Clock &msg)
 {
     clock_ = msg;
+}
+
+float ImpedanceControl::getFilteredForceX(void)
+{
+    float sum = 0;
+    float average;
+
+    for (int i = 0; i<moving_average_sample_number_; i++)
+        sum += force_x_meas_[i];
+
+    average = sum/moving_average_sample_number_ - force_x_offset_;
+
+    return average;
+}
+
+float ImpedanceControl::getFilteredForceY(void)
+{
+    float sum = 0;
+    float average;
+
+    for (int i = 0; i<moving_average_sample_number_; i++)
+        sum += force_y_meas_[i];
+
+    average = sum/moving_average_sample_number_ - force_y_offset_;
+
+    return average;
 }
 
 float ImpedanceControl::getFilteredForceZ(void)
@@ -301,13 +356,15 @@ void ImpedanceControl::run()
 
 	rosgraph_msgs::Clock clock_old;
 	geometry_msgs::WrenchStamped filtered_ft_sensor_msg;
-    geometry_msgs::Vector3 commanded_position_msg;
+    geometry_msgs::Vector3Stamped commanded_position_msg;
     std_msgs::Float64 commanded_yaw_msg;
 
 	int counter = 1;
     int calibration_counter = 0;
     int force_sensor_init_counter = 0;
     float force_z_sum = 0;
+    float force_x_sum = 0;
+    float force_y_sum = 0;
     float torque_x_sum = 0;
     float torque_y_sum = 0;
     float torque_z_sum = 0;
@@ -342,6 +399,8 @@ void ImpedanceControl::run()
             if (force_sensor_init_counter > 100)
             {
                 force_z_sum += getFilteredForceZ();
+                force_x_sum += getFilteredForceX();
+                force_y_sum += getFilteredForceY();
                 torque_x_sum += getFilteredTorqueX();
                 torque_y_sum += getFilteredTorqueY();
                 torque_z_sum += getFilteredTorqueZ();
@@ -353,6 +412,8 @@ void ImpedanceControl::run()
         if (calibration_counter >= 500)
         {
             force_z_offset_ = force_z_sum / calibration_counter;
+            force_x_offset_ = force_x_sum / calibration_counter;
+            force_y_offset_ = force_y_sum / calibration_counter;
             torque_x_offset_ = torque_x_sum / calibration_counter;
             torque_y_offset_ = torque_y_sum / calibration_counter;
             torque_z_offset_ = torque_z_sum / calibration_counter;
@@ -367,7 +428,6 @@ void ImpedanceControl::run()
     counter = 1;
 
     ROS_INFO("Starting impedance control.");
-    std::cout<<force_z_offset_<<std::endl;
 
     clock_old = clock_;
 
@@ -398,12 +458,13 @@ void ImpedanceControl::run()
                 vector_pose_ref[5] = yaw_ref_.data;
 
                 xr = modelReferenceAdaptiveImpedanceControl(dt, fe_, vector_pose_ref);
-                //vector_pose_ref[2] = xr[2];
-                xc = impedanceFilter(fe_, vector_pose_ref);
 
-                commanded_position_msg.x = xc[3];
-                commanded_position_msg.y = xc[4];
-                commanded_position_msg.z = xc[2];
+                xc = impedanceFilter(fe_, xr);
+
+                commanded_position_msg.header.stamp = ros::Time::now();
+                commanded_position_msg.vector.x = xc[3];
+                commanded_position_msg.vector.y = xc[4];
+                commanded_position_msg.vector.z = xc[2];
                 position_commanded_pub_.publish(commanded_position_msg);
 
                 commanded_yaw_msg.data = xc[5];
@@ -411,9 +472,9 @@ void ImpedanceControl::run()
 
                 filtered_ft_sensor_msg.header.stamp = ros::Time::now();
 				filtered_ft_sensor_msg.wrench.force.z = getFilteredForceZ();
-                filtered_ft_sensor_msg.wrench.force.y = xr[2];//mraic_[2].compute(dt, fe[2]);
-                filtered_ft_sensor_msg.wrench.force.x = mraic_[2].getAdaptiveProportionalGainKp();//tf1.getDiscreteOutput(1);
-                filtered_ft_sensor_msg.wrench.torque.x = mraic_[2].getAdaptiveDerivativeGainKd();//getFilteredTorqueX();
+                filtered_ft_sensor_msg.wrench.force.y = getFilteredForceY();
+                filtered_ft_sensor_msg.wrench.force.x = getFilteredForceX();
+                filtered_ft_sensor_msg.wrench.torque.x = getFilteredTorqueX();
                 filtered_ft_sensor_msg.wrench.torque.y = getFilteredTorqueY();
                 filtered_ft_sensor_msg.wrench.torque.z = getFilteredTorqueZ();
 				force_filtered_pub_.publish(filtered_ft_sensor_msg);

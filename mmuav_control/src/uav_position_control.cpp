@@ -31,9 +31,9 @@ PositionControl::PositionControl(int rate)
     config_start_ = false;                              // flag indicates if the config callback is called for the first time
 
     yaw_sp_ = 0;
-    position_sp_.x = 0;
-    position_sp_.y = 0;
-    position_sp_.z = 0;
+    position_sp_.vector.x = 0;
+    position_sp_.vector.y = 0;
+    position_sp_.vector.z = 0;
 
     orientation_mv_[0] = 0;
     orientation_mv_[1] = 0;
@@ -144,21 +144,21 @@ void PositionControl::run()
         if (dt > 0.0)
         {    
             // Roll
-            vx_sv = pid_x_.compute(position_sp_.x, position_mv_.x, dt);
+            vx_sv = pid_x_.compute(position_sp_.vector.x, position_mv_.vector.x, dt);
             // roll rate pid compute
-            vx_output = pid_vx_.compute(vx_sv, velocity_mv_.x, dt);
+            vx_output = pid_vx_.compute(vx_sv, velocity_mv_.vector.x, dt);
 
             // Pitch
-            vy_sv = pid_y_.compute(position_sp_.y, position_mv_.y, dt);
+            vy_sv = pid_y_.compute(position_sp_.vector.y, position_mv_.vector.y, dt);
             // pitch rate pid compute
-            vy_output = pid_vy_.compute(vy_sv, velocity_mv_.y, dt);
+            vy_output = pid_vy_.compute(vy_sv, velocity_mv_.vector.y, dt);
            
             // Yaw
-            vz_sv = pid_z_.compute(position_sp_.z, position_mv_.z, dt);
+            vz_sv = pid_z_.compute(position_sp_.vector.z, position_mv_.vector.z, dt);
             // yaw rate pid compute
 
             mot_speed_hover = sqrt(9.81*(3)/(8.54858e-06*4.0));
-            vz_output = mot_speed_hover + pid_vz_.compute(vz_sv, velocity_mv_.z, dt);
+            vz_output = mot_speed_hover + pid_vz_.compute(vz_sv, velocity_mv_.vector.z, dt);
 
             // Publish attitude
             euler_ref.x = -(cos(orientation_mv_[2])*vy_output - sin(orientation_mv_[2])*vx_output);
@@ -206,13 +206,13 @@ void PositionControl::odometry_cb(const nav_msgs::Odometry &msg)
 
     if (!start_flag_) start_flag_ = true;
 
-    position_mv_.x = msg.pose.pose.position.x;
-    position_mv_.y = msg.pose.pose.position.y;
-    position_mv_.z = msg.pose.pose.position.z;
+    position_mv_.vector.x = msg.pose.pose.position.x;
+    position_mv_.vector.y = msg.pose.pose.position.y;
+    position_mv_.vector.z = msg.pose.pose.position.z;
 
-    velocity_mv_.x = msg.twist.twist.linear.x;
-    velocity_mv_.y = msg.twist.twist.linear.y;
-    velocity_mv_.z = msg.twist.twist.linear.z;
+    velocity_mv_.vector.x = msg.twist.twist.linear.x;
+    velocity_mv_.vector.y = msg.twist.twist.linear.y;
+    velocity_mv_.vector.z = msg.twist.twist.linear.z;
 
     q[0] = msg.pose.pose.orientation.w;
     q[1] = msg.pose.pose.orientation.x;
@@ -237,7 +237,7 @@ void PositionControl::quaternion2euler(float *quaternion, float *euler)
     quaternion[3] * quaternion[3]));
 }
 
-void PositionControl::position_ref_cb(const geometry_msgs::Vector3 &msg)
+void PositionControl::position_ref_cb(const geometry_msgs::Vector3Stamped &msg)
 {
     /*
     Euler ref values callback.

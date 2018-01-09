@@ -8,7 +8,7 @@
 #include <geometry_msgs/WrenchStamped.h>
 #include <rosgraph_msgs/Clock.h>
 #include <geometry_msgs/PoseStamped.h>
-#include <geometry_msgs/Vector3.h>
+#include <geometry_msgs/Vector3Stamped.h>
 #include <std_msgs/Float64.h>
 #include <mmuav_control/mraic.h>
 
@@ -23,9 +23,12 @@ class ImpedanceControl{
 		void force_torque_cb(const geometry_msgs::WrenchStamped &msg);
 		void initializeImpedanceFilterTransferFunction(void);
 		float getFilteredForceZ(void);
+		float getFilteredForceX(void);
+		float getFilteredForceY(void);
 		float getFilteredTorqueX(void);
 		float getFilteredTorqueY(void);
 		float getFilteredTorqueZ(void);
+		bool check_collision(void);
 		bool check_impact(void);
 		float* impedanceFilter(float *e, float *Xr);
 		float* modelReferenceAdaptiveImpedanceControl(float dt, float *e, float *g0);
@@ -33,6 +36,7 @@ class ImpedanceControl{
 		void initializeMRACControl(void);
 
 		volatile bool start_flag_, force_sensor_calibration_flag_;
+		bool impact_flag_, collision_;
 		float force_x_meas_[MAX_MOVING_AVARAGE_SAMPLES_NUM];
 		float force_z_meas_[MAX_MOVING_AVARAGE_SAMPLES_NUM];
 		float force_y_meas_[MAX_MOVING_AVARAGE_SAMPLES_NUM];
@@ -42,7 +46,7 @@ class ImpedanceControl{
 		float M_[6], B_[6], K_[6], omega_[6], zeta_[6], kd0_[6], sigma3_[6];
 		float em0_[6], dem0_[6], wp_[6], wd_[6], fe_[6], kp0_[6], sigma2_[6];
 		float a1_[6], b1_[6], c1_[6], a2_[6], b2_[6], c2_[6], sigma1_[6];
-		float force_z_offset_, mrac_time_;
+		float force_z_offset_, force_y_offset_, force_x_offset_, mrac_time_;
 		float torque_y_offset_, torque_x_offset_, torque_z_offset_;
 		int rate_, moving_average_sample_number_, targetImpedanceType_;
 

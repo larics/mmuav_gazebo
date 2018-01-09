@@ -3,7 +3,6 @@
 
 #include <mmuav_control/PID.h>
 #include <rosgraph_msgs/Clock.h>
-#include <geometry_msgs/Vector3.h>
 #include <std_msgs/Float64.h>
 #include <geometry_msgs/Vector3Stamped.h>
 #include <nav_msgs/Odometry.h>
@@ -19,7 +18,7 @@ class PositionControl
 	private:
 		void clock_cb(const rosgraph_msgs::Clock &msg);
 		void odometry_cb(const nav_msgs::Odometry &msg);
-		void position_ref_cb(const geometry_msgs::Vector3 &msg);
+		void position_ref_cb(const geometry_msgs::Vector3Stamped &msg);
 		void configCallback(mmuav_control::UavPositionCtlParamsConfig &config, uint32_t level);
 		void yaw_ref_cb(const std_msgs::Float64 &msg);
 		void quaternion2euler(float *quaternion, float *euler);
@@ -29,7 +28,7 @@ class PositionControl
 		float orientation_mv_[3];
 		int rate_;
 
-		geometry_msgs::Vector3 position_mv_, position_sp_, velocity_mv_;
+		geometry_msgs::Vector3Stamped position_mv_, position_sp_, velocity_mv_;
 		rosgraph_msgs::Clock clock_;
 		ros::Time t_old_;
 

@@ -39,7 +39,7 @@ void mraic::initializeAdaptationLaws(float *a, float *b, float *c, float *sigma,
     samplingTime_ = T;
 
     Gg.reset();
-    Gg.setNumerator(a[0], a[1]);
+    Gg.setNumerator(-a[0], -a[1]);
     Gg.setDenominator(0.0, 1.0);
     Gg.c2d(samplingTime_, "zoh");
 
