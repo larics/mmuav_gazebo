@@ -48,6 +48,12 @@ target_link_libraries(pid ${catkin_LIBRARIES})
 add_library(DualArmManipulatorDirectKinematics src/DualArmManipulatorDirectKinematics.cpp)
 target_link_libraries(DualArmManipulatorDirectKinematics ${catkin_LIBRARIES} yaml-cpp)
 
+add_library(MmuavDirectKinematics src/MmuavDirectKinematics.cpp)
+target_link_libraries(MmuavDirectKinematics ${catkin_LIBRARIES} yaml-cpp)
+
+add_library(MmuavInverseKinematics src/MmuavInverseKinematics.cpp)
+target_link_libraries(MmuavInverseKinematics ${catkin_LIBRARIES} yaml-cpp)
+
 add_library(Tf2 src/Tf2.cpp)
 target_link_libraries(Tf2 ${catkin_LIBRARIES})
 

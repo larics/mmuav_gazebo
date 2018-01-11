@@ -265,8 +265,8 @@
 
 
     <joint name="joint_screw" type="fixed">
-        <origin xyz="-0.03100388 0.00719119 -0.03527511" rpy="${PI} 0 ${PI/6}" />
-        <parent link="base_link"/>
+        <origin xyz="0.023 0.006 0.0385" rpy="${PI} 0 ${PI/6}" />
+        <parent link="link_gripper2_left"/>
         <child link="link_screw"/>
     </joint>
 

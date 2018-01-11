@@ -425,7 +425,7 @@
       <parent link="link_manipulator2uav_${suffix}"/>
       <child link="link_dynamixel1_${suffix}"/>
       <origin xyz="0 0 0" rpy="${PI} 0 ${-PI/2}" /> 
-      <limit upper="6" lower="-6" effort="1.5" velocity="1"/>
+      <limit upper="6" lower="-6" effort="15" velocity="0.5"/>
       <axis xyz="0 0 1" />
     </joint>
     <!--_____________________________________________________________-->
@@ -451,7 +451,7 @@
       <parent link="link_F4_${suffix}"/>
       <child link="link_dynamixel2_${suffix}"/>
       <origin xyz="0 0 0" rpy="0 0 ${-PI/2}" />
-      <limit upper="6" lower="-6" effort="0.3" velocity="0.1"/>
+      <limit upper="6" lower="-6" effort="3" velocity="0.05"/>
       <axis xyz="0 0 1" />
     </joint>
     <!--_____________________________________________________________-->
@@ -469,7 +469,7 @@
       <parent link="link_gripper1_${suffix}"/>
       <child link="link_gripper2_${suffix}"/>
       <origin xyz="0.01265 0.00104 -0.00134" rpy="0 0 ${PI}" />
-      <limit upper="6" lower="-6" effort="0.05" velocity="0.01"/>
+      <limit upper="6" lower="-6" effort="2" velocity="0.005"/>
       <axis xyz="0 0 1" />
     </joint>
 
