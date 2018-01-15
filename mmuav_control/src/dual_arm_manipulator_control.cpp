@@ -1,7 +1,5 @@
 #include <mmuav_control/dual_arm_manipulator_control.h>
 
-#include <mmuav_control/MmuavDirectKinematics.h>
-
 
 DualArmManipulatorControl::DualArmManipulatorControl()
 {
@@ -32,6 +30,8 @@ DualArmManipulatorControl::DualArmManipulatorControl()
 	joint2_right_state_sub_ros_ = n_.subscribe("joint2_right_controller/state", 1, &DualArmManipulatorControl::joint2_right_controller_state_cb_ros, this);
 	joint3_right_state_sub_ros_ = n_.subscribe("joint3_right_controller/state", 1, &DualArmManipulatorControl::joint3_right_controller_state_cb_ros, this);
 
+	mmuav_position_sub_ros_ = n_.subscribe("odometry", 1, &DualArmManipulatorControl::mmuav_position_cb_ros, this);
+
 	joint1_right_pub_ros_ = n_.advertise<std_msgs::Float64>("joint1_right_controller/command", 1);
 	joint2_right_pub_ros_ = n_.advertise<std_msgs::Float64>("joint2_right_controller/command", 1);
 	joint3_right_pub_ros_ = n_.advertise<std_msgs::Float64>("joint3_right_controller/command", 1);
@@ -42,6 +42,11 @@ DualArmManipulatorControl::DualArmManipulatorControl()
 
 	left_manipulator_position_pub_ros_ = n_.advertise<geometry_msgs::PoseStamped>("left_manipulator/position", 1);
 	right_manipulator_position_pub_ros_ = n_.advertise<geometry_msgs::PoseStamped>("right_manipulator/position", 1);
+
+	Tworld_ << 1, 0, 0, 0,
+			  0, 1, 0, 0, 
+			  0, 0, 1, 0,
+			  0, 0, 0, 1;
 
 }
 
@@ -94,8 +99,6 @@ void DualArmManipulatorControl::start()
 	float orientationEuler_left[3], orientationEuler_right[3];
 	float orientationQuaternion_left[4], orientationQuaternion_right[4];
 
-	std::cout<<manipulator_direct.dk_calculate(M_PI,M_PI,0)<<std::endl;
-
 	while (ros::ok())
 	{
 		ros::spinOnce();
@@ -104,8 +107,8 @@ void DualArmManipulatorControl::start()
 		T13_left = manipulator_direct.dk_calculate(left_q1_meas_,left_q2_meas_,left_q3_meas_);
 		T13_right = manipulator_direct.dk_calculate(right_q1_meas_,right_q2_meas_,right_q3_meas_);
 
-		Tuav_left = Torigin_left_*T01_*T13_left;
-		Tuav_right = Torigin_right_*T01_*T13_left;
+		Tuav_left = Tworld_*Torigin_left_*T01_*T13_left;
+		Tuav_right = Tworld_*Torigin_right_*T01_*T13_left;
 
 		getAnglesFromRotationTranslationMatrix(Tuav_left, orientationEuler_left);
 		euler2quaternion(orientationEuler_left, orientationQuaternion_left);
@@ -228,6 +231,24 @@ void DualArmManipulatorControl::right_mapinulator_position_cb_ros(const geometry
 		ROS_WARN("RIGHT_MANIPULATOR: There is no solution for point x: %.2f, y: %.2f, yaw: %.2f", position[0], position[1], yaw);
 	}
 
+}
+
+void DualArmManipulatorControl::mmuav_position_cb_ros(const nav_msgs::Odometry &msg)
+{
+	float position[3], q[4], orientationEuler[3];
+
+	position[0] = msg.pose.pose.position.x;
+	position[1] = msg.pose.pose.position.y;
+	position[2] = msg.pose.pose.position.z;
+
+	q[0] = msg.pose.pose.orientation.w;
+    q[1] = msg.pose.pose.orientation.x;
+    q[2] = msg.pose.pose.orientation.y;
+    q[3] = msg.pose.pose.orientation.z;
+
+    quaternion2euler(q, orientationEuler);
+
+	getRotationTranslationMatrix(Tworld_, orientationEuler, position);
 }
 
 int DualArmManipulatorControl::joint_criterion_function(float *q1_in, float *q2_in, float *q3_in, float q1_old, float q2_old, float q3_old, float *q_out)
@@ -405,13 +426,8 @@ int main(int argc, char **argv)
 	ros::NodeHandle n;
 	int rate;
 
-	MmuavDirectKinematics kk;
-
 	std::string path = ros::package::getPath("mmuav_control");
 	std::string dh_parameters_file;
-
-	kk.LoadParameters(path+std::string("/config/mmuav_dh_parameters.yaml"));
-	std::cout<<"m "<<kk.dk_calculate(0.0, 2.0, 0, 0, -3.75415563583, -1.44253921509, 2.05509305)<<std::endl;
 
 	DualArmManipulatorControl dam_control;
 

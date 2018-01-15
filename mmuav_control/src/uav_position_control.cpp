@@ -82,6 +82,7 @@ PositionControl::PositionControl(int rate)
     yaw_ros_sub_ = n_.subscribe("position_control/yaw_ref", 1, &PositionControl::yaw_ref_cb, this);
     position_ref_ros_sub_ = n_.subscribe("position_control/position_ref", 1, &PositionControl::position_ref_cb, this);
     clock_ros_sub_ = n_.subscribe("/clock", 1, &PositionControl::clock_cb, this);
+    //imu_ros_sub_ = n_.subscribe("imu", 1, &AttitudeControl::ahrs_cb, this);
 
     euler_ref_pub_ros_ = n_.advertise<geometry_msgs::Vector3>("euler_ref", 1);
     height_pub_ros_ = n_.advertise<std_msgs::Float64>("mot_vel_ref", 1);
@@ -105,6 +106,7 @@ void PositionControl::run()
     float vy_sv, vy_output;
     float vz_sv, vz_output;
     float mot_speed_hover;
+    float temp_x, temp_y;
 
     rosgraph_msgs::Clock clock_old;
     geometry_msgs::Vector3 euler_ref;
@@ -161,10 +163,10 @@ void PositionControl::run()
             vz_output = mot_speed_hover + pid_vz_.compute(vz_sv, velocity_mv_.vector.z, dt);
 
             // Publish attitude
-            euler_ref.x = -(cos(orientation_mv_[2])*vy_output - sin(orientation_mv_[2])*vx_output);
-            euler_ref.y = cos(orientation_mv_[2])*vx_output + sin(orientation_mv_[2])*vy_output;
+            euler_ref.x = vy_output;//- sin(orientation_mv_[2])*vx_output;//sin(orientation_mv_[2])*vx_output - cos(orientation_mv_[2])*vy_output;
+            euler_ref.y = vx_output;//cos(orientation_mv_[2])*vx_output + sin(orientation_mv_[2])*vy_output;
             euler_ref.z = yaw_sp_;
-            euler_ref_pub_ros_.publish(euler_ref);
+            //euler_ref_pub_ros_.publish(euler_ref);
 
             height_ref.data = vz_output;
             height_pub_ros_.publish(height_ref);
@@ -222,6 +224,10 @@ void PositionControl::odometry_cb(const nav_msgs::Odometry &msg)
     quaternion2euler(q, orientation_mv_);
 
 }
+
+/*void PositionControl::ahrs_cb(const sensor_msgs::Imu &msg)
+{   
+}*/
 
 void PositionControl::quaternion2euler(float *quaternion, float *euler)
 {

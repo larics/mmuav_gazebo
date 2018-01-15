@@ -129,7 +129,7 @@
     position_topic="link_gripper1_left/position"
     transform_topic="link_gripper1_left/transform"
     odometry_topic="link_gripper1_left/odometry"
-    parent_frame_id="world"
+    parent_frame_id="base_link"
     mass_odometry_sensor="0.01"
     measurement_divisor="10"
     measurement_delay="10"

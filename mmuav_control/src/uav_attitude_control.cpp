@@ -92,6 +92,7 @@ void AttitudeControl::run()
     float roll_rate_sv, roll_rate_output;
     float pitch_rate_sv, pitch_rate_output;
     float yaw_rate_sv, yaw_rate_output;
+    float yaw_error;
 
     rosgraph_msgs::Clock clock_old;
     geometry_msgs::Vector3Stamped attitude_output;
@@ -138,8 +139,21 @@ void AttitudeControl::run()
             pitch_rate_sv = pid_pitch_.compute(euler_sp_.y, euler_mv_.y, dt);
             // pitch rate pid compute
             pitch_rate_output = pid_pitch_rate_.compute(pitch_rate_sv, euler_rate_mv_.y, dt);
-           
+        
             // Yaw
+            yaw_error = euler_sp_.z - euler_mv_.z;
+            
+            if (fabs(yaw_error) > M_PI) {
+                if (yaw_error > 0) {
+                    yaw_error = yaw_error - 2 * M_PI;
+                }
+                else {
+                    yaw_error = yaw_error + 2 * M_PI;
+                }
+            }
+
+            euler_mv_.z = euler_sp_.z - yaw_error;
+
             yaw_rate_sv = pid_yaw_.compute(euler_sp_.z, euler_mv_.z, dt);
             // yaw rate pid compute
             yaw_rate_output = pid_yaw_rate_.compute(yaw_rate_sv, euler_rate_mv_.z, dt);

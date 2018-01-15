@@ -1,6 +1,7 @@
 #include <mmuav_control/DualArmManipulatorInverseKinematics.h>
 #include "ros/ros.h"
 #include <geometry_msgs/PoseStamped.h>
+#include <nav_msgs/Odometry.h>
 #include <ros/package.h>
 #include <std_msgs/Float64.h>
 #include <control_msgs/JointControllerState.h>
@@ -30,11 +31,12 @@ class DualArmManipulatorControl
 		void joint1_right_controller_state_cb_ros(const control_msgs::JointControllerState &msg);
 		void joint2_right_controller_state_cb_ros(const control_msgs::JointControllerState &msg);
 		void joint3_right_controller_state_cb_ros(const control_msgs::JointControllerState &msg);
+		void mmuav_position_cb_ros(const nav_msgs::Odometry &msg);
 
 		DualArmManipulatorInverseKinematics manipulator_inverse;
 		DualArmManipulatorDirectKinematics manipulator_direct;
 
-		Eigen::Matrix4d T01_, T10_, Torigin_right_, Torigin_left_;
+		Eigen::Matrix4d T01_, T10_, Torigin_right_, Torigin_left_, Tworld_;
 		Eigen::Matrix4d Torigin_right_inv_, Torigin_left_inv_;
 
 		int rate_;
@@ -44,6 +46,7 @@ class DualArmManipulatorControl
 		ros::Subscriber left_manipulator_position_sub_ros_, right_manipulator_position_sub_ros_;
 		ros::Subscriber joint1_right_state_sub_ros_, joint2_right_state_sub_ros_, joint3_right_state_sub_ros_;
 		ros::Subscriber joint1_left_state_sub_ros_, joint2_left_state_sub_ros_, joint3_left_state_sub_ros_;
+		ros::Subscriber mmuav_position_sub_ros_;
 		ros::Publisher joint1_right_pub_ros_, joint2_right_pub_ros_, joint3_right_pub_ros_;
 		ros::Publisher joint1_left_pub_ros_, joint2_left_pub_ros_, joint3_left_pub_ros_;
 		ros::Publisher left_manipulator_position_pub_ros_, right_manipulator_position_pub_ros_;
