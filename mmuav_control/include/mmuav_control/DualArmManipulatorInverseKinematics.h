@@ -12,9 +12,9 @@ class DualArmManipulatorInverseKinematics
 		DualArmManipulatorInverseKinematics(void);
 		void LoadParameters(std::string file);
 		void ik_calculate(float x, float y, float rot_z, float *q1, float *q2, float *q3);
-		void setDHparams(DH_Parameters_TypeDef dhParams);
+		void setDHparams(DualArmManipulatorDirectKinematics::DH_Parameters_TypeDef dhParams);
 	private:
-		DH_Parameters_TypeDef dhParams_;
+		DualArmManipulatorDirectKinematics::DH_Parameters_TypeDef dhParams_;
 		bool isInit;
 };
 

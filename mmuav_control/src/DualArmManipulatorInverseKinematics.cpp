@@ -24,7 +24,7 @@ void DualArmManipulatorInverseKinematics::LoadParameters(std::string file)
 	isInit = true;
 }
 
-void DualArmManipulatorInverseKinematics::setDHparams(DH_Parameters_TypeDef dhParams)
+void DualArmManipulatorInverseKinematics::setDHparams(DualArmManipulatorDirectKinematics::DH_Parameters_TypeDef dhParams)
 {
 	dhParams_ = dhParams;
 	isInit = true;

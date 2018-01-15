@@ -1,5 +1,7 @@
 #include <mmuav_control/dual_arm_manipulator_control.h>
 
+#include <mmuav_control/MmuavDirectKinematics.h>
+
 
 DualArmManipulatorControl::DualArmManipulatorControl()
 {
@@ -47,7 +49,7 @@ void DualArmManipulatorControl::LoadParameters(std::string file)
 {
 	YAML::Node config = YAML::LoadFile(file);
 	std::vector<double> theta, a, left_arm_origin, right_arm_origin;
-	DH_Parameters_TypeDef dhParams;
+	DualArmManipulatorDirectKinematics::DH_Parameters_TypeDef dhParams;
 
 	theta = config["theta"].as<std::vector<double> >();
 	a = config["a"].as<std::vector<double> >();
@@ -403,8 +405,13 @@ int main(int argc, char **argv)
 	ros::NodeHandle n;
 	int rate;
 
+	MmuavDirectKinematics kk;
+
 	std::string path = ros::package::getPath("mmuav_control");
 	std::string dh_parameters_file;
+
+	kk.LoadParameters(path+std::string("/config/mmuav_dh_parameters.yaml"));
+	std::cout<<"m "<<kk.dk_calculate(0.0, 2.0, 0, 0, -3.75415563583, -1.44253921509, 2.05509305)<<std::endl;
 
 	DualArmManipulatorControl dam_control;
 
