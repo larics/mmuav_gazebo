@@ -238,7 +238,7 @@
     <dampingFactor>0.0002</dampingFactor>
   </gazebo>
 
-  <gazebo reference="link_screw">
+  <!--gazebo reference="link_screw">
     <gravity>true</gravity>
     <self_collide>true</self_collide>
     <mu1>0</mu1>
@@ -246,5 +246,9 @@
     <maxContacts>1</maxContacts>
     <fdir1 value = "1 0 0"/>
   </gazebo>
+
+  <gazebo reference="link_screw2">
+    <gravity>true</gravity>
+  </gazebo-->
 
 </robot>

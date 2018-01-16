@@ -36,8 +36,9 @@ class DualArmManipulatorControl
 		DualArmManipulatorInverseKinematics manipulator_inverse;
 		DualArmManipulatorDirectKinematics manipulator_direct;
 
-		Eigen::Matrix4d T01_, T10_, Torigin_right_, Torigin_left_, Tworld_;
-		Eigen::Matrix4d Torigin_right_inv_, Torigin_left_inv_;
+		Eigen::Matrix4d T01_, T10_, Tuav_origin_right0_, Tuav_origin_left0_, Tworld_uav_origin_;
+		Eigen::Matrix4d Tworld_left_end_effector_ref_, Tworld_right_end_effector_ref_;
+		Eigen::Matrix4d Tuav_origin_right0_inv_, Tuav_origin_left0_inv_, Tuav_origin_world_;
 
 		int rate_;
 		float left_q1_meas_, left_q2_meas_, left_q3_meas_;

@@ -235,7 +235,7 @@
   </xacro:transmisija>
 
             <!-- delete afteR-->
-    <link name='link_screw'>
+    <!--link name='link_screw'>
       
       <inertial>
         <mass value="0.05" />
@@ -269,6 +269,25 @@
         <parent link="link_gripper2_left"/>
         <child link="link_screw"/>
     </joint>
+
+    <link name='link_screw2'>
+      <inertial>
+        <mass value="0.05" />
+        <origin rpy="0 0 0" xyz="0.02100388 0.01819119 0.05027511"/>
+        <inertia
+          ixx="0.00020051" ixy="0" ixz="-0.00000019"
+          iyx="0" iyy="0.00020054" iyz="0.00000001"
+          izx="-0.00000019" izy="0.00000001" izz="0.00006377"/>
+      </inertial>
+    </link>
+
+    <joint name="joint_screw2" type="fixed">
+        <origin xyz="0.023 0.006 0.0385" rpy="${PI} 0 ${PI/6}" />
+        <parent link="link_gripper2_right"/>
+        <child link="link_screw2"/>
+    </joint-->
+
+
 
   <!-- Camera properties -->
   <!--xacro:property name="camera_link" value="0.05" />
