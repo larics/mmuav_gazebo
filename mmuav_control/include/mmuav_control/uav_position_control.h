@@ -38,7 +38,7 @@ class PositionControl
 
 		ros::NodeHandle n_;
 		ros::Subscriber odometry_ros_sub_, position_ref_ros_sub_;
-		ros::Subscriber clock_ros_sub_, yaw_ros_sub_, imu_ros_sub_;
+		ros::Subscriber clock_ros_sub_, yaw_ros_sub_;
 
 		ros::Publisher euler_ref_pub_ros_, pid_y_pub_ros_, pid_vy_pub_ros_;
 		ros::Publisher pid_x_pub_ros_, pid_vx_pub_ros_, height_pub_ros_;

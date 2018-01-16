@@ -92,7 +92,7 @@ void DualArmManipulatorControl::start()
 	ros::Rate loop_rate(rate_);
 
 	Eigen::Matrix4d T13_left, T13_right;
-	Eigen::Matrix4d Tuav_left, Tuav_right;
+	Eigen::Matrix4d Tworld_left, Tworld_right;
 
 	geometry_msgs::PoseStamped manipulator_pose;
 
@@ -107,18 +107,18 @@ void DualArmManipulatorControl::start()
 		T13_left = manipulator_direct.dk_calculate(left_q1_meas_,left_q2_meas_,left_q3_meas_);
 		T13_right = manipulator_direct.dk_calculate(right_q1_meas_,right_q2_meas_,right_q3_meas_);
 
-		Tuav_left = Tworld_*Torigin_left_*T01_*T13_left;
-		Tuav_right = Tworld_*Torigin_right_*T01_*T13_left;
+		Tworld_left = Tworld_*Torigin_left_*T01_*T13_left;
+		Tworld_right = Tworld_*Torigin_right_*T01_*T13_left;
 
-		getAnglesFromRotationTranslationMatrix(Tuav_left, orientationEuler_left);
+		getAnglesFromRotationTranslationMatrix(Tworld_left, orientationEuler_left);
 		euler2quaternion(orientationEuler_left, orientationQuaternion_left);
-		getAnglesFromRotationTranslationMatrix(Tuav_right, orientationEuler_right);
+		getAnglesFromRotationTranslationMatrix(Tworld_right, orientationEuler_right);
 
 		manipulator_pose.header.stamp = ros::Time::now();
 		manipulator_pose.header.frame_id = "left_manipulator";
-		manipulator_pose.pose.position.x = Tuav_left(0,3);
-		manipulator_pose.pose.position.y = Tuav_left(1,3);
-		manipulator_pose.pose.position.z = Tuav_left(2,3);
+		manipulator_pose.pose.position.x = Tworld_left(0,3);
+		manipulator_pose.pose.position.y = Tworld_left(1,3);
+		manipulator_pose.pose.position.z = Tworld_left(2,3);
 		manipulator_pose.pose.orientation.x = orientationQuaternion_left[1];
 		manipulator_pose.pose.orientation.y = orientationQuaternion_left[2];
 		manipulator_pose.pose.orientation.z = orientationQuaternion_left[3];
@@ -127,9 +127,9 @@ void DualArmManipulatorControl::start()
 		left_manipulator_position_pub_ros_.publish(manipulator_pose);
 
 		manipulator_pose.header.frame_id = "right_manipulator";
-		manipulator_pose.pose.position.x = Tuav_right(0,3);
-		manipulator_pose.pose.position.y = Tuav_right(1,3);
-		manipulator_pose.pose.position.z = Tuav_right(2,3);
+		manipulator_pose.pose.position.x = Tworld_right(0,3);
+		manipulator_pose.pose.position.y = Tworld_right(1,3);
+		manipulator_pose.pose.position.z = Tworld_right(2,3);
 		manipulator_pose.pose.orientation.x = orientationQuaternion_right[1];
 		manipulator_pose.pose.orientation.y = orientationQuaternion_right[2];
 		manipulator_pose.pose.orientation.z = orientationQuaternion_right[3];
