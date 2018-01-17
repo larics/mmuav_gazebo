@@ -421,11 +421,11 @@
     <!--_____________________________________________________________-->
     <!--JOINT1 CONTINOUS dynamixel1-->
     <!--_____________________________________________________________-->
-    <joint name="joint_dynamixel1_${suffix}" type="revolute">
+    <joint name="joint_dynamixel1_${suffix}" type="continuous">
       <parent link="link_manipulator2uav_${suffix}"/>
       <child link="link_dynamixel1_${suffix}"/>
       <origin xyz="0 0 0" rpy="${PI} 0 ${-PI/2}" /> 
-      <limit upper="6" lower="-6" effort="15" velocity="0.5"/>
+      <!--limit upper="6" lower="-6" effort="15" velocity="6.17"/-->
       <axis xyz="0 0 1" />
     </joint>
     <!--_____________________________________________________________-->
@@ -447,11 +447,11 @@
     <!--_____________________________________________________________-->
     <!--JOINT2 CONTINOUS dynamixel2-->
     <!--_____________________________________________________________-->
-    <joint name="joint_dynamixel2_${suffix}" type="revolute">
+    <joint name="joint_dynamixel2_${suffix}" type="continuous">
       <parent link="link_F4_${suffix}"/>
       <child link="link_dynamixel2_${suffix}"/>
       <origin xyz="0 0 0" rpy="0 0 ${-PI/2}" />
-      <limit upper="6" lower="-6" effort="3" velocity="0.05"/>
+      <!--limit upper="6" lower="-6" effort="15" velocity="6.17"/-->
       <axis xyz="0 0 1" />
     </joint>
     <!--_____________________________________________________________-->
@@ -465,11 +465,11 @@
     <!--_____________________________________________________________-->
     <!--JOINT3 CONTINOUS gripper-->
     <!--_____________________________________________________________-->
-    <joint name="joint_gripper2_${suffix}" type="revolute">
+    <joint name="joint_gripper2_${suffix}" type="continuous">
       <parent link="link_gripper1_${suffix}"/>
       <child link="link_gripper2_${suffix}"/>
       <origin xyz="0.01265 0.00104 -0.00134" rpy="0 0 ${PI}" />
-      <limit upper="6" lower="-6" effort="1" velocity="0.005"/>
+      <!--limit upper="6" lower="-6" effort="15" velocity="6.17"/-->
       <axis xyz="0 0 1" />
     </joint>
 

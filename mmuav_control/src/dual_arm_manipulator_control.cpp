@@ -165,14 +165,14 @@ void DualArmManipulatorControl::start()
 
 		if (joint_criterion_function(q1_left, q2_left, q3_left, left_q1_meas_, left_q2_meas_, left_q3_meas_, Q_left))
 		{
-			joint_setpoint.data = Q_left[0];
+			/*joint_setpoint.data = Q_left[0];
 			joint1_left_pub_ros_.publish(joint_setpoint);
 
 			joint_setpoint.data = Q_left[1];
 			joint2_left_pub_ros_.publish(joint_setpoint);
 
 			joint_setpoint.data = Q_left[2];
-			joint3_left_pub_ros_.publish(joint_setpoint);
+			joint3_left_pub_ros_.publish(joint_setpoint);*/
 		}
 		else
 		{
@@ -181,14 +181,14 @@ void DualArmManipulatorControl::start()
 
 		if (joint_criterion_function(q1_right, q2_right, q3_right, right_q1_meas_, right_q2_meas_, right_q3_meas_, Q_right))
 		{
-			joint_setpoint.data = Q_right[0];
+			/*joint_setpoint.data = Q_right[0];
 			joint1_right_pub_ros_.publish(joint_setpoint);
 
 			joint_setpoint.data = Q_right[1];
 			joint2_right_pub_ros_.publish(joint_setpoint);
 
 			joint_setpoint.data = Q_right[2];
-			joint3_right_pub_ros_.publish(joint_setpoint);
+			joint3_right_pub_ros_.publish(joint_setpoint);*/
 		}
 		else
 		{

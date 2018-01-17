@@ -235,7 +235,7 @@
   </xacro:transmisija>
 
             <!-- delete afteR-->
-    <!--link name='link_screw'>
+    <link name='link_screw'>
       
       <inertial>
         <mass value="0.05" />
@@ -270,7 +270,7 @@
         <child link="link_screw"/>
     </joint>
 
-    <link name='link_screw2'>
+    <!--link name='link_screw2'>
       <inertial>
         <mass value="0.05" />
         <origin rpy="0 0 0" xyz="0.02100388 0.01819119 0.05027511"/>

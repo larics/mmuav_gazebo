@@ -1,3 +1,6 @@
+#ifndef DUAL_ARM_MANIPULATOR_CONTROL_H
+#define DUAL_ARM_MANIPULATOR_CONTROL_H
+
 #include <mmuav_control/DualArmManipulatorInverseKinematics.h>
 #include "ros/ros.h"
 #include <geometry_msgs/PoseStamped.h>
@@ -55,3 +58,5 @@ class DualArmManipulatorControl
 		ros::NodeHandle n_;
 
 };
+
+#endif

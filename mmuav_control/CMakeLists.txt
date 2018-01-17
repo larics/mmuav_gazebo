@@ -81,6 +81,9 @@ target_link_libraries(uav_position_control pid ${catkin_LIBRARIES})
 add_executable(uav_impedance_control src/uav_impedance_control.cpp)
 target_link_libraries(uav_impedance_control pid ${catkin_LIBRARIES} yaml-cpp mraic)
 
+add_executable(mmuav_joint_position_control src/mmuav_joint_position_control.cpp)
+target_link_libraries(mmuav_joint_position_control pid ${catkin_LIBRARIES} yaml-cpp)
+
 
 #install(DIRECTORY config
 #  DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION})
