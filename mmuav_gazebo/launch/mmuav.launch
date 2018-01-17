@@ -35,6 +35,7 @@
     <node name="uav_attitude_control" pkg="mmuav_control" type="uav_attitude_control" output="screen"/>
     <node name="uav_position_control" pkg="mmuav_control" type="uav_position_control" output="screen"/>
     <node name="uav_impedance_control" pkg="mmuav_control" type="uav_impedance_control" output="screen"/>
+    <node name="mmuav_joint_position_control" pkg="mmuav_control" type="mmuav_joint_position_control" output="screen"  args="joint1_left_position_controller joint2_left_position_controller joint3_left_position_controller joint1_right_position_controller joint2_right_position_controller joint3_right_position_controller"/>
     <node name="controller_outputs_to_motor_velocities" pkg="mmuav_control" type="controller_outputs_to_motor_velocities.py" output="screen"/>
   </group>
 

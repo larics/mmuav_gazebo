@@ -23,25 +23,27 @@ DualArmManipulatorControl::DualArmManipulatorControl()
 	left_manipulator_position_sub_ros_ = n_.subscribe("left_manipulator/set_point", 1, &DualArmManipulatorControl::left_mapinulator_position_cb_ros, this);
 	right_manipulator_position_sub_ros_ = n_.subscribe("right_manipulator/set_point", 1, &DualArmManipulatorControl::right_mapinulator_position_cb_ros, this);
 	
-	joint1_left_state_sub_ros_ = n_.subscribe("joint1_left_controller/state", 1, &DualArmManipulatorControl::joint1_left_controller_state_cb_ros, this);
-	joint2_left_state_sub_ros_ = n_.subscribe("joint2_left_controller/state", 1, &DualArmManipulatorControl::joint2_left_controller_state_cb_ros, this);
-	joint3_left_state_sub_ros_ = n_.subscribe("joint3_left_controller/state", 1, &DualArmManipulatorControl::joint3_left_controller_state_cb_ros, this);
-	joint1_right_state_sub_ros_ = n_.subscribe("joint1_right_controller/state", 1, &DualArmManipulatorControl::joint1_right_controller_state_cb_ros, this);
-	joint2_right_state_sub_ros_ = n_.subscribe("joint2_right_controller/state", 1, &DualArmManipulatorControl::joint2_right_controller_state_cb_ros, this);
-	joint3_right_state_sub_ros_ = n_.subscribe("joint3_right_controller/state", 1, &DualArmManipulatorControl::joint3_right_controller_state_cb_ros, this);
+	joint1_left_state_sub_ros_ = n_.subscribe("joint1_left_position_controller/state", 1, &DualArmManipulatorControl::joint1_left_controller_state_cb_ros, this);
+	joint2_left_state_sub_ros_ = n_.subscribe("joint2_left_position_controller/state", 1, &DualArmManipulatorControl::joint2_left_controller_state_cb_ros, this);
+	joint3_left_state_sub_ros_ = n_.subscribe("joint3_left_position_controller/state", 1, &DualArmManipulatorControl::joint3_left_controller_state_cb_ros, this);
+	joint1_right_state_sub_ros_ = n_.subscribe("joint1_right_position_controller/state", 1, &DualArmManipulatorControl::joint1_right_controller_state_cb_ros, this);
+	joint2_right_state_sub_ros_ = n_.subscribe("joint2_right_position_controller/state", 1, &DualArmManipulatorControl::joint2_right_controller_state_cb_ros, this);
+	joint3_right_state_sub_ros_ = n_.subscribe("joint3_right_position_controller/state", 1, &DualArmManipulatorControl::joint3_right_controller_state_cb_ros, this);
 
 	mmuav_position_sub_ros_ = n_.subscribe("odometry", 1, &DualArmManipulatorControl::mmuav_position_cb_ros, this);
 
-	joint1_right_pub_ros_ = n_.advertise<std_msgs::Float64>("joint1_right_controller/command", 1);
-	joint2_right_pub_ros_ = n_.advertise<std_msgs::Float64>("joint2_right_controller/command", 1);
-	joint3_right_pub_ros_ = n_.advertise<std_msgs::Float64>("joint3_right_controller/command", 1);
+	joint1_right_pub_ros_ = n_.advertise<std_msgs::Float64>("joint1_right_position_controller/command", 1);
+	joint2_right_pub_ros_ = n_.advertise<std_msgs::Float64>("joint2_right_position_controller/command", 1);
+	joint3_right_pub_ros_ = n_.advertise<std_msgs::Float64>("joint3_right_position_controller/command", 1);
 
-	joint1_left_pub_ros_ = n_.advertise<std_msgs::Float64>("joint1_left_controller/command", 1);
-	joint2_left_pub_ros_ = n_.advertise<std_msgs::Float64>("joint2_left_controller/command", 1);
-	joint3_left_pub_ros_ = n_.advertise<std_msgs::Float64>("joint3_left_controller/command", 1);
+	joint1_left_pub_ros_ = n_.advertise<std_msgs::Float64>("joint1_left_position_controller/command", 1);
+	joint2_left_pub_ros_ = n_.advertise<std_msgs::Float64>("joint2_left_position_controller/command", 1);
+	joint3_left_pub_ros_ = n_.advertise<std_msgs::Float64>("joint3_left_position_controller/command", 1);
 
 	left_manipulator_position_pub_ros_ = n_.advertise<geometry_msgs::PoseStamped>("left_manipulator/position", 1);
 	right_manipulator_position_pub_ros_ = n_.advertise<geometry_msgs::PoseStamped>("right_manipulator/position", 1);
+
+	uav_position_commanded_pub_ = n_.advertise<geometry_msgs::Vector3Stamped>("position_control/position_ref", 1);
 
 	Tworld_uav_origin_ << 1, 0, 0, 0,
 			  			  0, 1, 0, 0, 
@@ -92,7 +94,6 @@ void DualArmManipulatorControl::LoadParameters(std::string file)
 		dhParams.d[i] = 0;
 		dhParams.a[i] = a[i];
 	}
-	dhParams.a[2] = 0;
 	
 	Tuav_origin_right0_inv_ = Tuav_origin_right0_.inverse();
 	Tuav_origin_left0_inv_ = Tuav_origin_left0_.inverse();
@@ -110,12 +111,14 @@ void DualArmManipulatorControl::start()
 	Eigen::Matrix4d Tworld_end_effector_left_dk, Tworld_end_effector_right_dk;
 
 	geometry_msgs::PoseStamped manipulator_pose;
+	geometry_msgs::Vector3Stamped uav_commanded_position_msg;
 	std_msgs::Float64 joint_setpoint;
 
 	float orientationEuler_left[3], orientationEuler_right[3];
 	float orientationQuaternion_left[4], orientationQuaternion_right[4];
 	float q1_left[2], q2_left[2], q3_left[2], q1_right[2], q2_right[2], q3_right[2];
 	float Q_left[3], Q_right[3];
+	bool left_manipulator_solution = false, right_manipulator_solution = true;
 
 	while (ros::ok())
 	{
@@ -163,24 +166,23 @@ void DualArmManipulatorControl::start()
 		manipulator_inverse.ik_calculate(T13_left_ref(0,3), T13_left_ref(1,3), orientationEuler_left[2], q1_left, q2_left, q3_left);
 		manipulator_inverse.ik_calculate(T13_right_ref(0,3), T13_right_ref(1,3), orientationEuler_right[2], q1_right, q2_right, q3_right);
 
-		if (joint_criterion_function(q1_left, q2_left, q3_left, left_q1_meas_, left_q2_meas_, left_q3_meas_, Q_left))
+		if (joint_criterion_function(q1_left, q2_left, q3_left, left_q1_meas_, left_q2_meas_, left_q3_meas_, Q_left)) left_manipulator_solution = true;
+		else left_manipulator_solution = false;
+
+		//if (joint_criterion_function(q1_right, q2_right, q3_right, right_q1_meas_, right_q2_meas_, right_q3_meas_, Q_right)) right_manipulator_solution = true;
+		//else right_manipulator_solution = false;
+
+		if (right_manipulator_solution && left_manipulator_solution)
 		{
-			/*joint_setpoint.data = Q_left[0];
+			joint_setpoint.data = Q_left[0];
 			joint1_left_pub_ros_.publish(joint_setpoint);
 
 			joint_setpoint.data = Q_left[1];
 			joint2_left_pub_ros_.publish(joint_setpoint);
 
 			joint_setpoint.data = Q_left[2];
-			joint3_left_pub_ros_.publish(joint_setpoint);*/
-		}
-		else
-		{
-			//ROS_WARN("LEFTT_MANIPULATOR: There is no solution");
-		}
+			joint3_left_pub_ros_.publish(joint_setpoint);
 
-		if (joint_criterion_function(q1_right, q2_right, q3_right, right_q1_meas_, right_q2_meas_, right_q3_meas_, Q_right))
-		{
 			/*joint_setpoint.data = Q_right[0];
 			joint1_right_pub_ros_.publish(joint_setpoint);
 
@@ -192,8 +194,14 @@ void DualArmManipulatorControl::start()
 		}
 		else
 		{
-			ROS_WARN("Right_MANIPULATOR: There is no solution");
+			uav_commanded_position_msg.vector.x = Tworld_left_end_effector_ref_(0,3);
+			uav_commanded_position_msg.vector.y = Tworld_left_end_effector_ref_(1,3);
 		}
+
+
+		uav_commanded_position_msg.header.stamp = ros::Time::now();
+        uav_commanded_position_msg.vector.z = Tworld_left_end_effector_ref_(2,3);
+        uav_position_commanded_pub_.publish(uav_commanded_position_msg);
 
 		loop_rate.sleep();
 	}
@@ -331,34 +339,34 @@ int DualArmManipulatorControl::joint_criterion_function(float *q1_in, float *q2_
 	return 1;
 }
 
-void DualArmManipulatorControl::joint1_left_controller_state_cb_ros(const control_msgs::JointControllerState &msg)
+void DualArmManipulatorControl::joint1_left_controller_state_cb_ros(const mmuav_msgs::PIDController &msg)
 {
-	left_q1_meas_ = msg.process_value;
+	left_q1_meas_ = msg.meas;
 }
 
-void DualArmManipulatorControl::joint2_left_controller_state_cb_ros(const control_msgs::JointControllerState &msg)
+void DualArmManipulatorControl::joint2_left_controller_state_cb_ros(const mmuav_msgs::PIDController &msg)
 {
-	left_q2_meas_ = msg.process_value;
+	left_q2_meas_ = msg.meas;
 }	
 
-void DualArmManipulatorControl::joint3_left_controller_state_cb_ros(const control_msgs::JointControllerState &msg)
+void DualArmManipulatorControl::joint3_left_controller_state_cb_ros(const mmuav_msgs::PIDController &msg)
 {
-	left_q3_meas_ = msg.process_value;
+	left_q3_meas_ = msg.meas;
 }
 
-void DualArmManipulatorControl::joint1_right_controller_state_cb_ros(const control_msgs::JointControllerState &msg)
+void DualArmManipulatorControl::joint1_right_controller_state_cb_ros(const mmuav_msgs::PIDController &msg)
 {
-	right_q1_meas_ = msg.process_value;
+	right_q1_meas_ = msg.meas;
 }
 
-void DualArmManipulatorControl::joint2_right_controller_state_cb_ros(const control_msgs::JointControllerState &msg)
+void DualArmManipulatorControl::joint2_right_controller_state_cb_ros(const mmuav_msgs::PIDController &msg)
 {
-	right_q2_meas_ = msg.process_value;
+	right_q2_meas_ = msg.meas;
 }
 
-void DualArmManipulatorControl::joint3_right_controller_state_cb_ros(const control_msgs::JointControllerState &msg)
+void DualArmManipulatorControl::joint3_right_controller_state_cb_ros(const mmuav_msgs::PIDController &msg)
 {
-	right_q3_meas_ = msg.process_value;
+	right_q3_meas_ = msg.meas;
 }	
 
 void DualArmManipulatorControl::quaternion2euler(float *quaternion, float *euler)

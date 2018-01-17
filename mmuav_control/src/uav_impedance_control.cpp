@@ -465,7 +465,7 @@ void ImpedanceControl::run()
                 commanded_position_msg.vector.x = xc[3];
                 commanded_position_msg.vector.y = xc[4];
                 commanded_position_msg.vector.z = xc[2];
-                position_commanded_pub_.publish(commanded_position_msg);
+                //position_commanded_pub_.publish(commanded_position_msg);
 
                 commanded_yaw_msg.data = xc[5];
                 yaw_commanded_pub_.publish(commanded_yaw_msg);

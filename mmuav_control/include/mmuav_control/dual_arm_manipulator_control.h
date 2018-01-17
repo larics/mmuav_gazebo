@@ -8,6 +8,8 @@
 #include <ros/package.h>
 #include <std_msgs/Float64.h>
 #include <control_msgs/JointControllerState.h>
+#include <mmuav_msgs/PIDController.h>
+#include <geometry_msgs/Vector3Stamped.h>
 #include <cmath>
 
 class DualArmManipulatorControl
@@ -28,12 +30,12 @@ class DualArmManipulatorControl
 			float *angles);
 		void euler2quaternion(float *euler, float *quaternion);
 		int joint_criterion_function(float *q1_in, float *q2_in, float *q3_in, float q1_old, float q2_old, float q3_old, float *q_out);
-		void joint1_left_controller_state_cb_ros(const control_msgs::JointControllerState &msg);
-		void joint2_left_controller_state_cb_ros(const control_msgs::JointControllerState &msg);
-		void joint3_left_controller_state_cb_ros(const control_msgs::JointControllerState &msg);
-		void joint1_right_controller_state_cb_ros(const control_msgs::JointControllerState &msg);
-		void joint2_right_controller_state_cb_ros(const control_msgs::JointControllerState &msg);
-		void joint3_right_controller_state_cb_ros(const control_msgs::JointControllerState &msg);
+		void joint1_left_controller_state_cb_ros(const mmuav_msgs::PIDController &msg);
+		void joint2_left_controller_state_cb_ros(const mmuav_msgs::PIDController &msg);
+		void joint3_left_controller_state_cb_ros(const mmuav_msgs::PIDController &msg);
+		void joint1_right_controller_state_cb_ros(const mmuav_msgs::PIDController &msg);
+		void joint2_right_controller_state_cb_ros(const mmuav_msgs::PIDController &msg);
+		void joint3_right_controller_state_cb_ros(const mmuav_msgs::PIDController &msg);
 		void mmuav_position_cb_ros(const nav_msgs::Odometry &msg);
 
 		DualArmManipulatorInverseKinematics manipulator_inverse;
@@ -54,6 +56,7 @@ class DualArmManipulatorControl
 		ros::Publisher joint1_right_pub_ros_, joint2_right_pub_ros_, joint3_right_pub_ros_;
 		ros::Publisher joint1_left_pub_ros_, joint2_left_pub_ros_, joint3_left_pub_ros_;
 		ros::Publisher left_manipulator_position_pub_ros_, right_manipulator_position_pub_ros_;
+		ros::Publisher uav_position_commanded_pub_;
 
 		ros::NodeHandle n_;
 
