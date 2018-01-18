@@ -11,7 +11,7 @@
     </node>
 
     <!-- Position control -->
-    <node name="vpc_mmc_position_control" pkg="mmuav_control" type="vpc_mmc_position_ctl.py" output="screen">
+    <node name="position_control" pkg="mmuav_control" type="position_ctl.py" output="screen">
       <param name="rate" value="(arg rate)"/>
     </node>
 

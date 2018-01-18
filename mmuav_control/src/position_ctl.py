@@ -8,11 +8,12 @@ from geometry_msgs.msg import Vector3, PoseWithCovarianceStamped, PoseStamped, T
 from nav_msgs.msg import Odometry
 from std_msgs.msg import Float64, Empty
 from dynamic_reconfigure.server import Server
-from mmuav_control.cfg import VpcMmcuavPositionCtlParamsConfig
+from mmuav_control.cfg import PositionCtlParamsConfig
 from mmuav_msgs.msg import PIDController
 from mmuav_msgs.msg import MotorSpeed
 from mav_msgs.msg import Actuators
-
+from rospkg import RosPack
+import yaml
 
 class PositionControl:
     '''
@@ -39,6 +40,15 @@ class PositionControl:
         self.start_flag = False         # indicates if we received the first measurement
         self.config_start = False       # flag indicates if the config callback is called for the first time
 
+        # Load parameters from yaml file
+        file_name = rospy.get_param('filename', 'PositionControl.yaml')
+        file_name = RosPack().get_path('mmuav_control') + '/config/' + file_name
+        initial_params = yaml.load(file(file_name, 'r'))
+
+        #                              (m_uav + m_arms)/(C*4)
+        self.mot_speed_hover = math.sqrt(9.81*(initial_params['mass'])/(
+            initial_params['rotor_c']*initial_params['rotor_num']))
+
         # X controller
         self.x_sp = 0.0
         self.x_mv = 0.0
@@ -58,7 +68,7 @@ class PositionControl:
         self.pid_vy = PID()
 
         # Z controller
-        self.z_sp = 2.0                 # z-position set point
+        self.z_sp = 1.0                 # z-position set point
         self.z_ref_filt = 0             # z ref filtered
         self.z_mv = 0                   # z-position measured value
         self.pid_z = PID()              # pid instance for z control
@@ -71,46 +81,46 @@ class PositionControl:
         #########################################################
 
         # Add parameters for x controller
-        self.pid_x.set_kp(0.65)# 0.05
-        self.pid_x.set_ki(0.0)
-        self.pid_x.set_kd(0.03) # 0.07
-        self.pid_x.set_lim_high(500)      # max vertical ascent speed
-        self.pid_x.set_lim_low(-500)      # max vertical descent speed
+        self.pid_x.set_kp(initial_params['pid_x']['Kp'])
+        self.pid_x.set_ki(initial_params['pid_x']['Ki'])
+        self.pid_x.set_kd(initial_params['pid_x']['Kd'])
+        self.pid_x.set_lim_high(initial_params['pid_x']['limit']['high'])
+        self.pid_x.set_lim_low(initial_params['pid_x']['limit']['low'])
 
         # Add parameters for vx controller
-        self.pid_vx.set_kp(0.11) # 0.11
-        self.pid_vx.set_ki(0.0)
-        self.pid_vx.set_kd(0)
-        self.pid_vx.set_lim_high(500)   # max velocity of a motor
-        self.pid_vx.set_lim_low(-500)   # min velocity of a motor
+        self.pid_vx.set_kp(initial_params['pid_vx']['Kp'])
+        self.pid_vx.set_ki(initial_params['pid_vx']['Ki'])
+        self.pid_vx.set_kd(initial_params['pid_vx']['Kd'])
+        self.pid_vx.set_lim_high(initial_params['pid_vx']['limit']['high'])
+        self.pid_vx.set_lim_low(initial_params['pid_vx']['limit']['low'])
 
         # Add parameters for y controller
-        self.pid_y.set_kp(0.65)
-        self.pid_y.set_ki(0.0) #0.05
-        self.pid_y.set_kd(0.03) #0.03
-        self.pid_y.set_lim_high(500)      # max vertical ascent speed
-        self.pid_y.set_lim_low(-500)      # max vertical descent speed
+        self.pid_y.set_kp(initial_params['pid_y']['Kp'])
+        self.pid_y.set_ki(initial_params['pid_y']['Ki'])
+        self.pid_y.set_kd(initial_params['pid_y']['Kd'])
+        self.pid_y.set_lim_high(initial_params['pid_y']['limit']['high'])
+        self.pid_y.set_lim_low(initial_params['pid_y']['limit']['low'])
 
         # Add parameters for vy controller
-        self.pid_vy.set_kp(0.11) # 0.11
-        self.pid_vy.set_ki(0.0)
-        self.pid_vy.set_kd(0)
-        self.pid_vy.set_lim_high(500)   # max velocity of a motor
-        self.pid_vy.set_lim_low(-500)   # min velocity of a motor
+        self.pid_vy.set_kp(initial_params['pid_vy']['Kp'])
+        self.pid_vy.set_ki(initial_params['pid_vy']['Ki'])
+        self.pid_vy.set_kd(initial_params['pid_vy']['Kd'])
+        self.pid_vy.set_lim_high(initial_params['pid_vy']['limit']['high'])
+        self.pid_vy.set_lim_low(initial_params['pid_vy']['limit']['low'])
 
         # Add parameters for z controller
-        self.pid_z.set_kp(100)
-        self.pid_z.set_ki(10)
-        self.pid_z.set_kd(100)
-        self.pid_z.set_lim_high(500)      # max vertical ascent speed
-        self.pid_z.set_lim_low(-500)      # max vertical descent speed
+        self.pid_z.set_kp(initial_params['pid_z']['Kp'])
+        self.pid_z.set_ki(initial_params['pid_z']['Ki'])
+        self.pid_z.set_kd(initial_params['pid_z']['Kd'])
+        self.pid_z.set_lim_high(initial_params['pid_z']['limit']['high'])
+        self.pid_z.set_lim_low(initial_params['pid_z']['limit']['low'])
 
         # Add parameters for vz controller
-        self.pid_vz.set_kp(1)#87.2)
-        self.pid_vz.set_ki(0.0)
-        self.pid_vz.set_kd(0)#10.89)
-        self.pid_vz.set_lim_high(500)   # max velocity of a motor
-        self.pid_vz.set_lim_low(-500)   # min velocity of a motor
+        self.pid_vz.set_kp(initial_params['pid_vz']['Kp'])
+        self.pid_vz.set_ki(initial_params['pid_vz']['Ki'])
+        self.pid_vz.set_kd(initial_params['pid_vz']['Kd'])
+        self.pid_vz.set_lim_high(initial_params['pid_vz']['limit']['high'])
+        self.pid_vz.set_lim_low(initial_params['pid_vz']['limit']['low'])
         #########################################################
         #########################################################
 
@@ -133,7 +143,7 @@ class PositionControl:
         self.euler_ref_pub = rospy.Publisher('euler_ref', Vector3, queue_size=1)
 
         #self.pub_gm_mot = rospy.Publisher('collectiveThrust', GmStatus, queue_size=1)       
-        self.cfg_server = Server(VpcMmcuavPositionCtlParamsConfig, self.cfg_callback)
+        self.cfg_server = Server(PositionCtlParamsConfig, self.cfg_callback)
         self.rate = rospy.get_param('rate', 100)
         self.ros_rate = rospy.Rate(self.rate)                 # attitude control at 100 Hz
         self.t_start = rospy.Time.now()
@@ -185,8 +195,6 @@ class PositionControl:
             vy_ref = self.pid_y.compute(self.y_sp, self.y_mv, dt)
             temp_euler_ref.x = self.pid_vy.compute(vy_ref, self.vy_mv, dt)
 
-            #                              (m_uav + m_arms)/(C*4)
-            self.mot_speed_hover = math.sqrt(9.81*(2.083+0.208*4+0.6)/(8.54858e-06*4.0))
             # prefilter for reference
             #a = 0.1
             #self.z_ref_filt = (1-a) * self.z_ref_filt  + a * self.z_sp
@@ -222,7 +230,7 @@ class PositionControl:
         self.pid_y.reset()
         self.pid_vy.reset()
         self.pid_z.reset()
-        self.pid_z.ui_old = 22.0
+        #self.pid_z.ui_old = 22.0
         self.pid_vz.reset()
         rospy.Subscriber('odometry', Odometry, self.vel_cb)
         rospy.Subscriber('pose', PoseStamped, self.pose_cb)
@@ -333,7 +341,7 @@ class PositionControl:
 
 if __name__ == '__main__':
 
-    rospy.init_node('vpc_mmcuav_position_controller')
+    rospy.init_node('position_controller')
     position_ctl = PositionControl()
     position_ctl.run()
 
