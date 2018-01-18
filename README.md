@@ -12,17 +12,7 @@ Package ```mmuav_arducopter_bridge``` is used for controlling the UAV in real wo
     * [VpcMmc UAV](#MMCUAV)
 
 ## <a name="Installation"></a> Installation
-Before you start some packages are required. You can install them with:
-
-```sudo apt-get install ros-kinetic-hector-gazebo-plugins ros-kinetic-effort-controllers```
-
-Rotor dynamics are simulated with ```rotors_simulator``` which can be found on [rotors simulator github page](https://github.com/ethz-asl/rotors_simulator). Instructions for workspace creation are supplied within this package.
-
-Finally, to install simply clone this repository and build it:
-```
-git clone https://github.com/larics/mmuav_gazebo.git
-catkin build
-```
+Detailed installation instructions can be found in InstallationInstructions.md
 
 ## <a name="BasicUsage"></a> Basic Usage
 This section describes how to run the simulation and lists topis of interest.
