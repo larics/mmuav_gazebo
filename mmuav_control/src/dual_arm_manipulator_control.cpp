@@ -45,6 +45,8 @@ DualArmManipulatorControl::DualArmManipulatorControl()
 
 	uav_position_commanded_pub_ = n_.advertise<geometry_msgs::Vector3Stamped>("position_control/position_ref", 1);
 
+	nesto = n_.advertise<geometry_msgs::Vector3Stamped>("nesto", 1);
+
 	Tworld_uav_origin_ << 1, 0, 0, 0,
 			  			  0, 1, 0, 0, 
 			  			  0, 0, 1, 0,
@@ -103,6 +105,40 @@ void DualArmManipulatorControl::LoadParameters(std::string file)
 
 }
 
+void DualArmManipulatorControl::initialiceUavPositionFilter(void)
+{
+	float samplingTime;
+    int i;
+
+    samplingTime = (float)1.0/(float)rate_;
+
+    for (i = 0; i < 2; i++)
+	{
+	    Guav_e_[i].reset();
+	    Guav_e_[i].setNumerator(1.0, 0.0, 0.0);
+	    Guav_e_[i].setDenominator(0, 0, 0);
+	    Guav_e_[i].c2d(samplingTime, "zoh");
+	       
+	    Guav_xr_[i].reset();
+	    Guav_xr_[i].setNumerator(0, 0.0, 0.0);
+	    Guav_xr_[i].setDenominator(0, 0, 0);
+	    Guav_xr_[i].c2d(samplingTime, "zoh");
+	}
+}
+
+float* DualArmManipulatorControl::uavPositionFilter(float *xr, float *e)
+{
+	float *Xc = (float * )malloc(sizeof(float)*2);
+    int i;
+
+    for (i = 0; i < 2; i++)
+    {
+		Xc[i] = Guav_e_[i].getDiscreteOutput(e[i]) + Guav_xr_[i].getDiscreteOutput(xr[i]);
+	}
+
+	return Xc;
+}
+
 void DualArmManipulatorControl::start()
 {
 	ros::Rate loop_rate(rate_);
@@ -112,12 +148,13 @@ void DualArmManipulatorControl::start()
 
 	geometry_msgs::PoseStamped manipulator_pose;
 	geometry_msgs::Vector3Stamped uav_commanded_position_msg;
+	geometry_msgs::Vector3Stamped nesto_msg;
 	std_msgs::Float64 joint_setpoint;
 
 	float orientationEuler_left[3], orientationEuler_right[3];
 	float orientationQuaternion_left[4], orientationQuaternion_right[4];
 	float q1_left[2], q2_left[2], q3_left[2], q1_right[2], q2_right[2], q3_right[2];
-	float Q_left[3], Q_right[3];
+	float Q_left[3], Q_right[3], *x_uav;
 	bool left_manipulator_solution = false, right_manipulator_solution = true;
 
 	while (ros::ok())
@@ -198,10 +235,18 @@ void DualArmManipulatorControl::start()
 			uav_commanded_position_msg.vector.y = Tworld_left_end_effector_ref_(1,3);
 		}
 
+		//x_uav = uavPositionFilter();
+
 
 		uav_commanded_position_msg.header.stamp = ros::Time::now();
         uav_commanded_position_msg.vector.z = Tworld_left_end_effector_ref_(2,3);
         uav_position_commanded_pub_.publish(uav_commanded_position_msg);
+
+        nesto_msg.header.stamp = ros::Time::now();
+        nesto_msg.vector.x = Tworld_left_end_effector_ref_(0,3);
+        nesto.publish(nesto_msg);
+
+        free(x_uav);
 
 		loop_rate.sleep();
 	}

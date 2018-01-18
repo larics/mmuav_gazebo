@@ -11,6 +11,8 @@
 #include <mmuav_msgs/PIDController.h>
 #include <geometry_msgs/Vector3Stamped.h>
 #include <cmath>
+#include <mmuav_control/Tf1.h>
+#include <mmuav_control/Tf2.h>
 
 class DualArmManipulatorControl
 {
@@ -23,6 +25,8 @@ class DualArmManipulatorControl
 	private:
 		void left_mapinulator_position_cb_ros(const geometry_msgs::PoseStamped &msg);
 		void right_mapinulator_position_cb_ros(const geometry_msgs::PoseStamped &msg);
+		void initialiceUavPositionFilter(void);
+		float* uavPositionFilter(float *xr, float *e);
 		void quaternion2euler(float *quaternion, float *euler);
 		void getRotationTranslationMatrix(Eigen::Matrix4d &rotationTranslationMatrix, 
 			float *orientationEuler, float *position);
@@ -41,6 +45,8 @@ class DualArmManipulatorControl
 		DualArmManipulatorInverseKinematics manipulator_inverse;
 		DualArmManipulatorDirectKinematics manipulator_direct;
 
+		Tf2 Guav_e_[2], Guav_xr_[2];
+
 		Eigen::Matrix4d T01_, T10_, Tuav_origin_right0_, Tuav_origin_left0_, Tworld_uav_origin_;
 		Eigen::Matrix4d Tworld_left_end_effector_ref_, Tworld_right_end_effector_ref_;
 		Eigen::Matrix4d Tuav_origin_right0_inv_, Tuav_origin_left0_inv_, Tuav_origin_world_;
@@ -56,7 +62,7 @@ class DualArmManipulatorControl
 		ros::Publisher joint1_right_pub_ros_, joint2_right_pub_ros_, joint3_right_pub_ros_;
 		ros::Publisher joint1_left_pub_ros_, joint2_left_pub_ros_, joint3_left_pub_ros_;
 		ros::Publisher left_manipulator_position_pub_ros_, right_manipulator_position_pub_ros_;
-		ros::Publisher uav_position_commanded_pub_;
+		ros::Publisher uav_position_commanded_pub_, nesto;
 
 		ros::NodeHandle n_;
 
