@@ -121,7 +121,7 @@ class AttitudeControl:
         self.roll_reference_prefilter_K = 1.0
         self.roll_reference_prefilter_T = 0.0
         self.pitch_reference_prefilter_K = 1.0
-        self.pitch_reference_prefilter_T = 0.1
+        self.pitch_reference_prefilter_T = 0.0
 
         # Offsets for pid outputs
         self.roll_rate_output_trim = 0.0
@@ -192,6 +192,7 @@ class AttitudeControl:
             self.euler_sp_filt.y = simple_filters.filterPT1(self.euler_sp_old.y, 
                 self.euler_sp.y, self.pitch_reference_prefilter_T, self.Ts, 
                 self.pitch_reference_prefilter_K)
+            self.euler_sp_filt.z = self.euler_sp.z
             #self.euler_sp.z = simple_filters.filterPT1(self.euler_sp_old.z, self.euler_sp.z, 0.2, self.Ts, 1.0)
 
             self.euler_sp_old = copy.deepcopy(self.euler_sp_filt)
