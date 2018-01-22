@@ -27,14 +27,14 @@
         </geometry>
       </visual>
 
-      <!--collision>
+      <collision>
         <origin xyz="0 0 0" rpy="0 0 0" />
         <geometry>
-          <mesh filename="package://mmuav_description/meshes/${mesh_file}"
-            scale="1 1 1" />
+          <!--mesh filename="package://mmuav_description/meshes/${mesh_file}"
+            scale="1 1 1" /-->
           <box size="${body_width} ${body_width} ${body_height}" />
         </geometry>
-      </collision-->
+      </collision>
     </link>
 
     <!-- IMU -->
@@ -482,8 +482,8 @@
       <axis xyz="${x_axis} ${y_axis} ${z_axis}"/>
       <parent link="${parent}"/>
       <child link="movable_mass_${mass_number}"/>
-      <limit lower="${-path_len/2}" upper="${path_len/2}" effort="10000" velocity="20"/>
-      <dynamics damping="10" />
+      <limit lower="${-path_len/2}" upper="${path_len/2}" effort="50" velocity="5"/>
+      <dynamics damping="0.2" />
     </joint>
     <link name="movable_mass_${mass_number}">
       <visual>
