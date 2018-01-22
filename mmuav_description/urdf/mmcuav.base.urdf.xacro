@@ -263,4 +263,25 @@
     trans_number="3"
     joint_name="stick_to_movable_mass_3">
   </xacro:transmisija>
+
+  <gazebo reference="base_link">
+    <dampingFactor>0.001</dampingFactor>
+  </gazebo>
+
+  <gazebo reference="movable_mass_0">
+    <dampingFactor>0.001</dampingFactor>
+  </gazebo>
+
+  <gazebo reference="movable_mass_1">
+    <dampingFactor>0.001</dampingFactor>
+  </gazebo>
+
+  <gazebo reference="movable_mass_2">
+    <dampingFactor>0.001</dampingFactor>
+  </gazebo>
+
+  <gazebo reference="movable_mass_3">
+    <dampingFactor>0.001</dampingFactor>
+  </gazebo>
+
 </robot>
