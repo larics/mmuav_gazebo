@@ -4,7 +4,8 @@ __author__ = 'aivanovic'
 
 import rospy, math
 from pid import PID
-from geometry_msgs.msg import Vector3, PoseWithCovarianceStamped, PoseStamped, TwistStamped
+from geometry_msgs.msg import Vector3, PoseWithCovarianceStamped, PoseStamped, \
+    TwistStamped, Pose, Point
 from nav_msgs.msg import Odometry
 from std_msgs.msg import Float64, Empty
 from dynamic_reconfigure.server import Server
@@ -49,32 +50,21 @@ class PositionControl:
         self.mot_speed_hover = math.sqrt(9.81*(initial_params['mass'])/(
             initial_params['rotor_c']*initial_params['rotor_num']))
 
-        # X controller
-        self.x_sp = 0.0
-        self.x_mv = 0.0
-        self.pid_x = PID()
+        self.pos_sp = Point()
+        self.pos_sp.z = 1.0
+        self.pos_mv = Point()
+        self.vel_mv = Vector3()
 
-        self.vx_sp = 0.0
-        self.vx_mv = 0.0
+        # X controller
+        self.pid_x = PID()
         self.pid_vx = PID()
 
-        # X controller
-        self.y_sp = 0.0
-        self.y_mv = 0.0
+        # Y controller
         self.pid_y = PID()
-
-        self.vy_sp = 0.0
-        self.vy_mv = 0.0
         self.pid_vy = PID()
 
         # Z controller
-        self.z_sp = 1.0                 # z-position set point
-        self.z_ref_filt = 0             # z ref filtered
-        self.z_mv = 0                   # z-position measured value
         self.pid_z = PID()              # pid instance for z control
-
-        self.vz_sp = 0                  # vz velocity set_point
-        self.vz_mv = 0                   # vz velocity measured value
         self.pid_vz = PID()             # pid instance for z-velocity control
 
         #########################################################
@@ -131,7 +121,7 @@ class PositionControl:
         rospy.Subscriber('pose', PoseStamped, self.pose_cb)
         rospy.Subscriber('odometry', Odometry, self.vel_cb)
         rospy.Subscriber('vel_ref', Vector3, self.vel_ref_cb)
-        rospy.Subscriber('pos_ref', Vector3, self.pos_ref_cb)
+        rospy.Subscriber('pose_ref', Pose, self.pose_ref_cb)
         rospy.Subscriber('reset_controllers', Empty, self.reset_controllers_cb)
         self.pub_pid_x = rospy.Publisher('pid_x', PIDController, queue_size=1)
         self.pub_pid_vx = rospy.Publisher('pid_vx', PIDController, queue_size=1)
@@ -190,17 +180,15 @@ class PositionControl:
             self.t_old = t
 
             temp_euler_ref = Vector3()
-            vx_ref = self.pid_x.compute(self.x_sp, self.x_mv, dt)
-            temp_euler_ref.y = self.pid_vx.compute(vx_ref, self.vx_mv, dt)
-            vy_ref = self.pid_y.compute(self.y_sp, self.y_mv, dt)
-            temp_euler_ref.x = self.pid_vy.compute(vy_ref, self.vy_mv, dt)
+            vx_ref = self.pid_x.compute(self.pos_sp.x, self.pos_mv.x, dt)
+            temp_euler_ref.y = self.pid_vx.compute(vx_ref, self.vel_mv.x, dt)
+            vy_ref = self.pid_y.compute(self.pos_sp.y, self.pos_mv.y, dt)
+            temp_euler_ref.x = -self.pid_vy.compute(vy_ref, self.vel_mv.y, dt)
 
-            # prefilter for reference
-            #a = 0.1
-            #self.z_ref_filt = (1-a) * self.z_ref_filt  + a * self.z_sp
-            vz_ref = self.pid_z.compute(self.z_sp, self.z_mv, dt)
+
+            vz_ref = self.pid_z.compute(self.pos_sp.z, self.pos_mv.z, dt)
             self.mot_speed = self.mot_speed_hover + \
-                        self.pid_vz.compute(vz_ref, self.vz_mv, dt)
+                        self.pid_vz.compute(vz_ref, self.vel_mv.z, dt)
             #print "mot_speed", self.mot_speed
 
             ########################################################
@@ -243,9 +231,7 @@ class PositionControl:
         if not self.start_flag:
             self.start_flag = True
         
-        self.x_mv = msg.pose.position.x
-        self.y_mv = -msg.pose.position.y
-        self.z_mv = msg.pose.position.z
+        self.pos_mv = msg.pose.position
 
     def vel_cb(self, msg):
         '''
@@ -254,9 +240,7 @@ class PositionControl:
         '''
         #if not self.start_flag:
         #    self.start_flag = True
-        self.vx_mv = msg.twist.twist.linear.x
-        self.vy_mv = -msg.twist.twist.linear.y
-        self.vz_mv = msg.twist.twist.linear.z
+        self.vel_mv = msg.twist.twist.linear
 
     def vel_ref_cb(self, msg):
         '''
@@ -268,14 +252,12 @@ class PositionControl:
         self.vy_sp = msg.y
         self.vz_sp = msg.z
 
-    def pos_ref_cb(self, msg):
+    def pose_ref_cb(self, msg):
         '''
         Referent position callback. Received value (z-component) is used as a referent height.
         :param msg: Type Vector3
         '''
-        self.x_sp = msg.x
-        self.y_sp = msg.y
-        self.z_sp = msg.z
+        self.pos_sp = msg.position
 
     def cfg_callback(self, config, level):
         """
