@@ -2,6 +2,8 @@
 mass: 2.915
 rotor_num: 4.0
 rotor_c: 8.54858e-06
+Kff_v: 0.0
+Kff_a: 0.0
 
 pid_x:
   Kp: 0.65

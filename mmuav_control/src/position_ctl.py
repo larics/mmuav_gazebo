@@ -48,7 +48,14 @@ class PositionControl:
         initial_params = yaml.load(file(file_name, 'r'))
 
         #                              (m_uav + m_arms)/(C*4)
-        self.mot_speed_hover = math.sqrt(9.81*(initial_params['mass'])/(
+        self.g = 9.81
+        self.mot_speed_hover = math.sqrt(self.g*(initial_params['mass'])/(
+            initial_params['rotor_c']*initial_params['rotor_num']))
+        self.Kff_v = initial_params['Kff_v']
+        self.Kff_a = initial_params['Kff_a']
+        # Delta omega(rotor speed) = self.z_ff_scaler*sqrt(a) where a is 
+        # acceleration from trajectory
+        self.z_ff_scaler = math.sqrt((initial_params['mass'])/(
             initial_params['rotor_c']*initial_params['rotor_num']))
 
         self.pos_sp = Point()
@@ -193,14 +200,18 @@ class PositionControl:
             temp_euler_ref = Vector3()
             # x
             vx_ref = self.pid_x.compute(self.pos_sp.x, self.pos_mv.x, dt)
-            vx_output = self.pid_vx.compute(vx_ref, self.vel_mv.x, dt)
+            vx_output = self.pid_vx.compute(vx_ref + self.Kff_v*self.velocity_ff.x, 
+                self.vel_mv.x, dt) + self.Kff_a*self.acceleration_ff.x/self.g
             # y
             vy_ref = self.pid_y.compute(self.pos_sp.y, self.pos_mv.y, dt)
-            vy_output = self.pid_vy.compute(vy_ref, self.vel_mv.y, dt)
+            vy_output = self.pid_vy.compute(vy_ref + self.Kff_v*self.velocity_ff.y, 
+                self.vel_mv.y, dt) + self.Kff_a*self.acceleration_ff.y/self.g
             # z
             vz_ref = self.pid_z.compute(self.pos_sp.z, self.pos_mv.z, dt)
             self.mot_speed = self.mot_speed_hover + \
-                        self.pid_vz.compute(vz_ref, self.vel_mv.z, dt)
+                        self.pid_vz.compute(vz_ref + self.Kff_v*self.velocity_ff.z, 
+                        self.vel_mv.z, dt) + \
+                        self.Kff_a*self.z_ff_scaler*self.acceleration_ff.z
             #print "mot_speed", self.mot_speed
 
             ########################################################
