@@ -3,16 +3,16 @@
 __author__ = 'aivanovic'
 
 import rospy, math
+from math import sin, cos
 from pid import PID
 from geometry_msgs.msg import Vector3, PoseWithCovarianceStamped, PoseStamped, \
-    TwistStamped, Pose, Point
+    TwistStamped, Pose, Point, Quaternion
 from nav_msgs.msg import Odometry
 from std_msgs.msg import Float64, Empty
 from dynamic_reconfigure.server import Server
 from mmuav_control.cfg import PositionCtlParamsConfig
 from mmuav_msgs.msg import PIDController
-from mmuav_msgs.msg import MotorSpeed
-from mav_msgs.msg import Actuators
+import tf
 from rospkg import RosPack
 import yaml
 
@@ -54,6 +54,8 @@ class PositionControl:
         self.pos_sp.z = 1.0
         self.pos_mv = Point()
         self.vel_mv = Vector3()
+        self.orientation_mv = Quaternion()
+        self.orientation_mv_euler = Vector3()
 
         # X controller
         self.pid_x = PID()
@@ -64,8 +66,11 @@ class PositionControl:
         self.pid_vy = PID()
 
         # Z controller
-        self.pid_z = PID()              # pid instance for z control
-        self.pid_vz = PID()             # pid instance for z-velocity control
+        self.pid_z = PID()          # pid instance for z control
+        self.pid_vz = PID()         # pid instance for z-velocity control
+
+        # YAW
+        self.yaw_sp = 0             # Yaw setpoint propagates through system
 
         #########################################################
         #########################################################
@@ -180,12 +185,13 @@ class PositionControl:
             self.t_old = t
 
             temp_euler_ref = Vector3()
+            # x
             vx_ref = self.pid_x.compute(self.pos_sp.x, self.pos_mv.x, dt)
-            temp_euler_ref.y = self.pid_vx.compute(vx_ref, self.vel_mv.x, dt)
+            vx_output = self.pid_vx.compute(vx_ref, self.vel_mv.x, dt)
+            # y
             vy_ref = self.pid_y.compute(self.pos_sp.y, self.pos_mv.y, dt)
-            temp_euler_ref.x = -self.pid_vy.compute(vy_ref, self.vel_mv.y, dt)
-
-
+            vy_output = self.pid_vy.compute(vy_ref, self.vel_mv.y, dt)
+            # z
             vz_ref = self.pid_z.compute(self.pos_sp.z, self.pos_mv.z, dt)
             self.mot_speed = self.mot_speed_hover + \
                         self.pid_vz.compute(vz_ref, self.vel_mv.z, dt)
@@ -195,6 +201,18 @@ class PositionControl:
             ########################################################
 
             # Publish to euler ref
+            temp_euler_ref.x = -cos(self.orientation_mv_euler.z)*vy_output \
+                + sin(self.orientation_mv_euler.z)*vx_output;
+            temp_euler_ref.y = sin(self.orientation_mv_euler.z)*vy_output \
+                + cos(self.orientation_mv_euler.z)*vx_output;
+            temp_euler_ref.z = self.yaw_sp
+            #euler_ref_decoupled = self.qv_mult((self.orientation_mv.x,
+            #self.orientation_mv.y, self.orientation_mv.z,
+            #self.orientation_mv.w), (temp_euler_ref.y, 
+            #temp_euler_ref.x, temp_euler_ref.z))
+            #temp_euler_ref.x = euler_ref_decoupled[1]
+            #temp_euler_ref.y = euler_ref_decoupled[0]
+            #temp_euler_ref.z = euler_ref_decoupled[2]
             self.euler_ref_pub.publish(temp_euler_ref)
 
             # gas motors are used to control attitude
@@ -240,7 +258,42 @@ class PositionControl:
         '''
         #if not self.start_flag:
         #    self.start_flag = True
-        self.vel_mv = msg.twist.twist.linear
+        #mv = self.qv_mult((msg.pose.pose.orientation.x,
+        #    msg.pose.pose.orientation.y, msg.pose.pose.orientation.z,
+        #    msg.pose.pose.orientation.w), (msg.twist.twist.linear.x, 
+        #    msg.twist.twist.linear.y, msg.twist.twist.linear.z))
+        temp_euler = tf.transformations.euler_from_quaternion((msg.pose.pose.orientation.x,
+            msg.pose.pose.orientation.y, msg.pose.pose.orientation.z,
+            msg.pose.pose.orientation.w))
+        self.orientation_mv_euler.x = temp_euler[0]
+        self.orientation_mv_euler.y = temp_euler[1]
+        self.orientation_mv_euler.z = temp_euler[2]
+
+
+        self.vel_mv.x = cos(self.orientation_mv_euler.z)*msg.twist.twist.linear.x \
+            - sin(self.orientation_mv_euler.z)*msg.twist.twist.linear.y
+        self.vel_mv.y = sin(self.orientation_mv_euler.z)*msg.twist.twist.linear.x \
+            + cos(self.orientation_mv_euler.z)*msg.twist.twist.linear.y
+        self.vel_mv.z = msg.twist.twist.linear.z
+        self.orientation_mv = msg.pose.pose.orientation
+        #temp_mv = Vector3()
+        #temp_mv.x = mv[0]
+        #temp_mv.y = mv[1]
+        #temp_mv.z = mv[2]
+
+        #matrix = tf.transformations.quaternion_matrix((msg.pose.pose.orientation.x,
+        #    msg.pose.pose.orientation.y, msg.pose.pose.orientation.z,
+        #    msg.pose.pose.orientation.w))
+        #self.vel_mv = msg.twist.twist.linear
+
+    def qv_mult(self, q1, v1):
+        #v1 = tf.transformations.unit_vector(v1)
+        q2 = list(v1)
+        q2.append(0.0)
+        return tf.transformations.quaternion_multiply(
+            tf.transformations.quaternion_multiply(q1, q2), 
+            tf.transformations.quaternion_conjugate(q1)
+        )[:3]
 
     def vel_ref_cb(self, msg):
         '''
@@ -258,6 +311,9 @@ class PositionControl:
         :param msg: Type Vector3
         '''
         self.pos_sp = msg.position
+        euler = tf.transformations.euler_from_quaternion((msg.orientation.x, 
+            msg.orientation.y, msg.orientation.z, msg.orientation.w))
+        self.yaw_sp = euler[2]
 
     def cfg_callback(self, config, level):
         """
