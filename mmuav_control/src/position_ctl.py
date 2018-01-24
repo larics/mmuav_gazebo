@@ -9,6 +9,7 @@ from geometry_msgs.msg import Vector3, PoseWithCovarianceStamped, PoseStamped, \
     TwistStamped, Pose, Point, Quaternion
 from nav_msgs.msg import Odometry
 from std_msgs.msg import Float64, Empty
+from trajectory_msgs.msg import MultiDOFJointTrajectoryPoint
 from dynamic_reconfigure.server import Server
 from mmuav_control.cfg import PositionCtlParamsConfig
 from mmuav_msgs.msg import PIDController
@@ -56,6 +57,9 @@ class PositionControl:
         self.vel_mv = Vector3()
         self.orientation_mv = Quaternion()
         self.orientation_mv_euler = Vector3()
+        self.orientation_sp = Quaternion()
+        self.velocity_ff = Vector3()
+        self.acceleration_ff = Vector3()
 
         # X controller
         self.pid_x = PID()
@@ -128,6 +132,8 @@ class PositionControl:
         rospy.Subscriber('vel_ref', Vector3, self.vel_ref_cb)
         rospy.Subscriber('pose_ref', Pose, self.pose_ref_cb)
         rospy.Subscriber('reset_controllers', Empty, self.reset_controllers_cb)
+        rospy.Subscriber('trajectory_point_ref', MultiDOFJointTrajectoryPoint, 
+            self.trajectory_point_ref_cb)
         self.pub_pid_x = rospy.Publisher('pid_x', PIDController, queue_size=1)
         self.pub_pid_vx = rospy.Publisher('pid_vx', PIDController, queue_size=1)
         self.pub_pid_y = rospy.Publisher('pid_y', PIDController, queue_size=1)
@@ -205,7 +211,11 @@ class PositionControl:
                 + sin(self.orientation_mv_euler.z)*vx_output;
             temp_euler_ref.y = sin(self.orientation_mv_euler.z)*vy_output \
                 + cos(self.orientation_mv_euler.z)*vx_output;
-            temp_euler_ref.z = self.yaw_sp
+
+
+            euler_sp = tf.transformations.euler_from_quaternion((self.orientation_sp.x, 
+                self.orientation_sp.y, self.orientation_sp.z, self.orientation_sp.w))
+            temp_euler_ref.z = euler_sp[2]
             #euler_ref_decoupled = self.qv_mult((self.orientation_mv.x,
             #self.orientation_mv.y, self.orientation_mv.z,
             #self.orientation_mv.w), (temp_euler_ref.y, 
@@ -311,9 +321,24 @@ class PositionControl:
         :param msg: Type Vector3
         '''
         self.pos_sp = msg.position
-        euler = tf.transformations.euler_from_quaternion((msg.orientation.x, 
-            msg.orientation.y, msg.orientation.z, msg.orientation.w))
-        self.yaw_sp = euler[2]
+        self.orientation_sp = msg.orientation
+
+    def trajectory_point_ref_cb(self, msg):
+        '''
+        Callback for one trajectory point with speed and acceleration
+        '''
+
+        # translation is vector3, we need point
+        self.pos_sp.x = msg.transforms[0].translation.x
+        self.pos_sp.y = msg.transforms[0].translation.y
+        self.pos_sp.z = msg.transforms[0].translation.z
+
+        # orientation
+        self.orientation_sp = msg.transforms[0].rotation
+
+        # velocity and acceleration
+        self.velocity_ff = msg.velocities[0].linear
+        self.acceleration_ff = msg.accelerations[0].linear
 
     def cfg_callback(self, config, level):
         """
