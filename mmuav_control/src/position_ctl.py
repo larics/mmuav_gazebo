@@ -127,13 +127,6 @@ class PositionControl:
 
         self.t_old = 0
 
-        rospy.Subscriber('pose', PoseStamped, self.pose_cb)
-        rospy.Subscriber('odometry', Odometry, self.vel_cb)
-        rospy.Subscriber('vel_ref', Vector3, self.vel_ref_cb)
-        rospy.Subscriber('pose_ref', Pose, self.pose_ref_cb)
-        rospy.Subscriber('reset_controllers', Empty, self.reset_controllers_cb)
-        rospy.Subscriber('trajectory_point_ref', MultiDOFJointTrajectoryPoint, 
-            self.trajectory_point_ref_cb)
         self.pub_pid_x = rospy.Publisher('pid_x', PIDController, queue_size=1)
         self.pub_pid_vx = rospy.Publisher('pid_vx', PIDController, queue_size=1)
         self.pub_pid_y = rospy.Publisher('pid_y', PIDController, queue_size=1)
@@ -142,6 +135,13 @@ class PositionControl:
         self.pub_pid_vz = rospy.Publisher('pid_vz', PIDController, queue_size=1)
         self.mot_ref_pub = rospy.Publisher('mot_vel_ref', Float64, queue_size=1)
         self.euler_ref_pub = rospy.Publisher('euler_ref', Vector3, queue_size=1)
+        rospy.Subscriber('pose', PoseStamped, self.pose_cb)
+        rospy.Subscriber('odometry', Odometry, self.vel_cb)
+        rospy.Subscriber('vel_ref', Vector3, self.vel_ref_cb)
+        rospy.Subscriber('pose_ref', Pose, self.pose_ref_cb)
+        rospy.Subscriber('reset_controllers', Empty, self.reset_controllers_cb)
+        rospy.Subscriber('trajectory_point_ref', MultiDOFJointTrajectoryPoint, 
+            self.trajectory_point_ref_cb)
 
         #self.pub_gm_mot = rospy.Publisher('collectiveThrust', GmStatus, queue_size=1)       
         self.cfg_server = Server(PositionCtlParamsConfig, self.cfg_callback)
