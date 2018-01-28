@@ -37,6 +37,7 @@
   <xacro:property name="sin45" value="0.7071" />
   <xacro:property name="cos45" value="0.7071" />
   <xacro:property name="PI" value="3.1415926535897931" />
+  <xacro:property name="tilt_angle" value="0.0"/>
 
 
   <!-- Property Blocks -->
@@ -104,7 +105,7 @@
     rolling_moment_coefficient="${rolling_moment_coefficient}"
     color="Red">
     <!--<origin xyz="${cos45*arm_length} ${sin45*arm_length} ${rotor_offset_top}" rpy="0 0 0" />-->
-    <origin xyz="${1*arm_length} ${0*arm_length} ${rotor_offset_top}" rpy="0 0 0" />
+    <origin xyz="${1*arm_length} ${0*arm_length} ${rotor_offset_top}" rpy="0 ${-tilt_angle} 0" />
     <xacro:insert_block name="rotor_inertia" />
   </xacro:vertical_rotor>
 
@@ -125,7 +126,7 @@
     rolling_moment_coefficient="${rolling_moment_coefficient}"
     color="Blue">
     <!--<origin xyz="${cos45*arm_length} ${-sin45*arm_length} ${rotor_offset_top}" rpy="0 0 0" />-->
-    <origin xyz="${0*arm_length} ${-1*arm_length} ${rotor_offset_top}" rpy="0 0 0" />
+    <origin xyz="${0*arm_length} ${-1*arm_length} ${rotor_offset_top}" rpy="${-tilt_angle} 0 0" />
     <xacro:insert_block name="rotor_inertia" />
   </xacro:vertical_rotor>
 
@@ -146,7 +147,7 @@
     rolling_moment_coefficient="${rolling_moment_coefficient}"
     color="Blue">
     <!--<origin xyz="${-cos45*arm_length} ${sin45*arm_length} ${rotor_offset_top}" rpy="0 0 0" />-->
-    <origin xyz="${0*arm_length} ${1*arm_length} ${rotor_offset_top}" rpy="0 0 0" />
+    <origin xyz="${0*arm_length} ${1*arm_length} ${rotor_offset_top}" rpy="${tilt_angle} 0 0" />
     <xacro:insert_block name="rotor_inertia" />
   </xacro:vertical_rotor>
 
@@ -167,7 +168,7 @@
     rolling_moment_coefficient="${rolling_moment_coefficient}"
     color="Red">
     <!--<origin xyz="${-cos45*arm_length} ${-sin45*arm_length} ${rotor_offset_top}" rpy="0 0 0" />-->
-    <origin xyz="${-1*arm_length} ${0*arm_length} ${rotor_offset_top}" rpy="0 0 0" />
+    <origin xyz="${-1*arm_length} ${0*arm_length} ${rotor_offset_top}" rpy="0 ${tilt_angle} 0" />
     <xacro:insert_block name="rotor_inertia" />
   </xacro:vertical_rotor>
 
