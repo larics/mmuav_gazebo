@@ -47,10 +47,11 @@ class PositionControl:
         file_name = RosPack().get_path('mmuav_control') + '/config/' + file_name
         initial_params = yaml.load(file(file_name, 'r'))
 
-        #                              (m_uav + m_arms)/(C*4)
+        # (m_uav + m_other)/(C*4*cos(tilt_angle))
         self.g = 9.81
         self.mot_speed_hover = math.sqrt(self.g*(initial_params['mass'])/(
-            initial_params['rotor_c']*initial_params['rotor_num']))
+            initial_params['rotor_c']*initial_params['rotor_num']*
+            math.cos(initial_params['tilt_angle'])))
         self.Kff_v = initial_params['Kff_v']
         self.Kff_a = initial_params['Kff_a']
         # Delta omega(rotor speed) = self.z_ff_scaler*sqrt(a) where a is 
