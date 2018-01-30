@@ -1,0 +1,25 @@
+<?xml version="1.0" ?>
+
+<launch>
+  <arg name="namespace" default="mmcuav"/>
+  <arg name="rate" default="100"/>
+
+  <group ns="$(arg namespace)">
+    <!-- Attitude control -->
+    <node name="attitude_control" pkg="mmuav_control" type="attitude_control.py" output="screen">
+      <param name="rate" value="(arg rate)"/>
+    </node>
+
+    <!-- Height control -->
+    <node name="height_control" pkg="mmuav_control" type="height_ctl.py">
+      <param name="rate" value="(arg rate)"/>
+    </node>
+
+    <!-- Merge height and attitude control node -->
+    <node name="controller_outputs_to_motor_velocities" pkg="mmuav_control" type="controller_outputs_to_motor_velocities.py">
+      <param name="rate" value="(arg rate)"/>
+    </node>
+
+  </group>
+
+</launch>
