@@ -7,6 +7,8 @@ from pid import PID
 from geometry_msgs.msg import Vector3, PoseWithCovarianceStamped, PoseStamped, TwistStamped
 from nav_msgs.msg import Odometry
 from std_msgs.msg import Float64
+from tf import transformations
+import numpy
 from dynamic_reconfigure.server import Server
 from mmuav_control.cfg import UavZCtlParamsConfig
 from mmuav_msgs.msg import PIDController
@@ -51,30 +53,34 @@ class HeightControl:
         #########################################################
         #########################################################
         # Add parameters for z controller
-        self.pid_z.set_kp(10)
-        self.pid_z.set_ki(0.1)
-        self.pid_z.set_kd(0.2)
+        self.pid_z.set_kp(1.0)
+        self.pid_z.set_ki(0.0)
+        self.pid_z.set_kd(0.0)
 
         # Add parameters for vz controller
-        self.pid_vz.set_kp(1)#87.2)
-        self.pid_vz.set_ki(0.0)
-        self.pid_vz.set_kd(0)#10.89)
+        self.pid_vz.set_kp(100.0)#87.2)
+        self.pid_vz.set_ki(2.5)
+        self.pid_vz.set_kd(1.0)#10.89)
         #########################################################
         #########################################################
 
 
-        self.pid_z.set_lim_high(500)      # max vertical ascent speed
-        self.pid_z.set_lim_low(-500)      # max vertical descent speed
+        self.pid_z.set_lim_high(2.5)      # max vertical ascent speed
+        self.pid_z.set_lim_low(-2.5)      # max vertical descent speed
 
-        self.pid_vz.set_lim_high(500)   # max velocity of a motor
-        self.pid_vz.set_lim_low(-500)   # min velocity of a motor
+        self.pid_vz.set_lim_high(250)   # max velocity of a motor
+        self.pid_vz.set_lim_low(-250)   # min velocity of a motor
+
+        self.quaternion = numpy.empty((4, ), dtype=numpy.float64)
+        self.velocity_b = numpy.empty((3, ), dtype=numpy.float64)
+        self.velocity_i = numpy.empty((3, ), dtype=numpy.float64)
 
         self.mot_speed = 0              # referent motors velocity, computed by PID cascade
 
         self.t_old = 0
 
         rospy.Subscriber('pose', PoseStamped, self.pose_cb)
-        rospy.Subscriber('velocity', Odometry, self.vel_cb)
+        rospy.Subscriber('odometry', Odometry, self.vel_cb)
         rospy.Subscriber('vel_ref', Vector3, self.vel_ref_cb)
         rospy.Subscriber('pos_ref', Vector3, self.pos_ref_cb)
         self.pub_pid_z = rospy.Publisher('pid_z', PIDController, queue_size=1)
@@ -163,7 +169,24 @@ class HeightControl:
         '''
         #if not self.start_flag:
         #    self.start_flag = True
-        self.vz_mv = msg.twist.twist.linear.z
+        #self.vz_mv = msg.twist.twist.linear.z
+
+         # transform linear velocity from body frame to inertial frame
+        self.quaternion[0] = msg.pose.pose.orientation.x
+        self.quaternion[1] = msg.pose.pose.orientation.y
+        self.quaternion[2] = msg.pose.pose.orientation.z
+        self.quaternion[3] = msg.pose.pose.orientation.w
+
+        self.velocity_b[0] =  msg.twist.twist.linear.x
+        self.velocity_b[1] =  msg.twist.twist.linear.y
+        self.velocity_b[2] =  msg.twist.twist.linear.z
+
+        Rib = transformations.quaternion_matrix(self.quaternion)
+        Rv_b = transformations.translation_matrix(self.velocity_b)
+        Rv_i = numpy.dot(Rib, Rv_b)
+        self.velocity_i = transformations.translation_from_matrix(Rv_i)
+
+        self.vz_mv = self.velocity_i[2]
 
     def vel_ref_cb(self, msg):
         '''
