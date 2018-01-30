@@ -12,16 +12,16 @@ if __name__ == '__main__':
     euler_ref_msg = Vector3()
     euler_ref_msg.y = 0
     pub_euler_ref.publish(euler_ref_msg)
-    ref_seq_roll =  [0.0, 0.0, 0.2, 0.2, 0.0,  0.0, -0.2, -0.2, 0.0]
-    ref_seq_pitch = [0.0, 0.2, 0.2, 0.0, 0.0, -0.2, -0.2,  0.0, 0.0]# 0.2, 0, -0.2, 0]
+    ref_seq_roll =  [0.0, 0.0, 0.0, -0.2, 0.0, -0.2, 0.0]
+    ref_seq_pitch = [0.0, 0.2, 0.0, 0.0, 0.0, 0.2, 0.0]
     #ref_seq_roll = [0.0, 0.2, 0.0, -0.2]
     #ref_seq_pitch = [0.0, 0.2, 0.0, -0.2]
     i = 0
     #for ref in ref_seq:
     while not rospy.is_shutdown():
-        #euler_ref_msg.x = ref_seq_roll[i]
+        euler_ref_msg.x = ref_seq_roll[i]
         euler_ref_msg.y = ref_seq_pitch[i]
-        i = (i + 1) % 9
+        i = (i + 1) % len(ref_seq_pitch)
         pub_euler_ref.publish(euler_ref_msg)
         print "Published {}. reference".format(i)
         rospy.sleep(10)
