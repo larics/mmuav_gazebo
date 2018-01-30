@@ -133,23 +133,24 @@ int GazeboToArducopterSerial::SerialWrite(int m[4], unsigned char terminator)
     //if (terminator == 67) cout << "Writing motor references to serial port." << endl;
     //else if (terminator == 83) cout << "Writing parameters to serial port." << endl;
     unsigned char dataByte;
+    ssize_t temp;
     for (int i=0; i < 4; i++)
     {
         dataByte = m[i];
-        write(USB, &dataByte, 1);
+        temp = write(USB, &dataByte, 1);
         dataByte = m[i] >> 8;
-        write(USB, &dataByte, 1);
+        temp = write(USB, &dataByte, 1);
         dataByte = m[i] >> 16;
-        write(USB, &dataByte, 1);
+        temp = write(USB, &dataByte, 1);
         dataByte = m[i] >> 24;
-        write(USB, &dataByte, 1);
+        temp = write(USB, &dataByte, 1);
     }
     dataByte = terminator;
-    write(USB, &dataByte, 1);
+    temp = write(USB, &dataByte, 1);
     dataByte = 0;
-    write(USB, &dataByte, 1);
-    write(USB, &dataByte, 1);
-    write(USB, &dataByte, 1);
+    temp = write(USB, &dataByte, 1);
+    temp = write(USB, &dataByte, 1);
+    temp = write(USB, &dataByte, 1);
 
     return 1;
 }
