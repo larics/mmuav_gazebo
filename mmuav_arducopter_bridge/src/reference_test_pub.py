@@ -12,8 +12,8 @@ if __name__ == '__main__':
     euler_ref_msg = Vector3()
     euler_ref_msg.y = 0
     pub_euler_ref.publish(euler_ref_msg)
-    ref_seq_roll =  [0.0, 0.0, 0.0, -0.2, 0.0, -0.2, 0.0]
-    ref_seq_pitch = [0.0, 0.2, 0.0, 0.0, 0.0, 0.2, 0.0]
+    ref_seq_roll =  [0.0, 0.0, 0.0, 0.0, 0.0]#, 0.0, -0.2, 0.0]
+    ref_seq_pitch = [0.0, 0.2, 0.0, -0.2, 0.0] #,0.0, 0.0, 0.2, 0.0]
     #ref_seq_roll = [0.0, 0.2, 0.0, -0.2]
     #ref_seq_pitch = [0.0, 0.2, 0.0, -0.2]
     i = 0

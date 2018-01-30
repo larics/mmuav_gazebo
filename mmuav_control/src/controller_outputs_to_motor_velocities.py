@@ -26,7 +26,7 @@ class MergeControllerOutputs:
 
         self.attitude_command_received_flag = False
         self.mot_vel_ref_received_flag = False
-        self.mot_speed_limit = 1000
+        self.mot_speed_limit = 1470
 
         # Publisher for motor velocities
         self.mot_vel_pub = rospy.Publisher('/gazebo/command/motor_speed', 
