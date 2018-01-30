@@ -26,6 +26,7 @@ class MergeControllerOutputs:
 
         self.attitude_command_received_flag = False
         self.mot_vel_ref_received_flag = False
+        self.mot_speed_limit = 1000
 
         # Publisher for motor velocities
         self.mot_vel_pub = rospy.Publisher('/gazebo/command/motor_speed', 
@@ -72,6 +73,9 @@ class MergeControllerOutputs:
             mot_speed_msg = Actuators()
             mot_speed_msg.header.stamp = rospy.Time.now()
             mot_speed_msg.angular_velocities = [mot1, mot2, mot3, mot4]
+            for i in range(4):
+                if mot_speed_msg.angular_velocities[i] > self.mot_speed_limit:
+                    mot_speed_msg.angular_velocities[i] = self.mot_speed_limit
             self.mot_vel_pub.publish(mot_speed_msg)
 
             self.mass_front_pub.publish(Float64(moving_mass_front))
