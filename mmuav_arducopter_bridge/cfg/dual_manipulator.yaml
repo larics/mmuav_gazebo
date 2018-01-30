@@ -1,0 +1,35 @@
+Motor1:
+    motor:
+        id: 1
+        min: 0
+        init: 512
+        max: 1023
+    joint_speed: 0
+    topic_name: right1
+
+Motor2:
+    motor:
+        id: 2
+        min: 0
+        init: 512
+        max: 1023
+    joint_speed: 0
+    topic_name: right2
+
+Motor3:
+    motor:
+        id: 3
+        min: 0
+        init: 512
+        max: 1023
+    joint_speed: 0
+    topic_name: left1
+
+Motor4:
+    motor:
+        id: 4
+        min: 0
+        init: 512
+        max: 1023
+    joint_speed: 0
+    topic_name: left2
