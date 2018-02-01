@@ -16,7 +16,7 @@ mmuav:
   joint3_left_velocity_controller:
     type: effort_controllers/JointVelocityController
     joint: joint_gripper2_left
-    pid: {p: 0.003, i: 0.0, d: 0.0}
+    pid: {p: 0.008, i: 0.0, d: 0.0}
   joint1_right_velocity_controller:
     type: effort_controllers/JointVelocityController
     joint: joint_dynamixel1_right
@@ -28,4 +28,4 @@ mmuav:
   joint3_right_velocity_controller:
     type: effort_controllers/JointVelocityController
     joint: joint_gripper2_right
-    pid: {p: 0.003, i: 0.0, d: 0.0}
+    pid: {p: 0.008, i: 0.0, d: 0.0}

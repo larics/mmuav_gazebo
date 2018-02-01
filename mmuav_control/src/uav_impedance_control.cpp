@@ -55,7 +55,7 @@ ImpedanceControl::ImpedanceControl(int rate, int moving_average_sample_number)
 	clock_ros_sub_ = n_.subscribe("/clock", 1, &ImpedanceControl::clock_cb, this);
 
 	force_filtered_pub_ = n_.advertise<geometry_msgs::WrenchStamped>("/force_sensor/filtered_ft_sensor", 1);
-    position_commanded_pub_ = n_.advertise<geometry_msgs::Vector3Stamped>("position_control/position_ref", 1);
+    position_commanded_pub_ = n_.advertise<geometry_msgs::PoseStamped>("dual_arm_manipulator/set_point", 1);
     yaw_commanded_pub_ = n_.advertise<std_msgs::Float64>("position_control/yaw_ref", 1);
 
     force_z_offset_ = 0.0;
@@ -356,7 +356,7 @@ void ImpedanceControl::run()
 
 	rosgraph_msgs::Clock clock_old;
 	geometry_msgs::WrenchStamped filtered_ft_sensor_msg;
-    geometry_msgs::Vector3Stamped commanded_position_msg;
+    geometry_msgs::PoseStamped commanded_position_msg;
     std_msgs::Float64 commanded_yaw_msg;
 
 	int counter = 1;
@@ -446,9 +446,9 @@ void ImpedanceControl::run()
         	if (dt > 0.0)
 			{
                 fe_[2] = -(force_torque_ref_.wrench.force.z - getFilteredForceZ()); //ide -e iz razloga jer je force senzor rotiran s obzirom na koordinatni letjlice
-                fe_[3] = -(force_torque_ref_.wrench.torque.y - getFilteredTorqueY());
-                fe_[4] = -(force_torque_ref_.wrench.torque.x - getFilteredTorqueX());
-                fe_[5] = -(force_torque_ref_.wrench.torque.z - getFilteredTorqueZ());
+                fe_[3] = 0;//-(force_torque_ref_.wrench.torque.y - getFilteredTorqueY());
+                fe_[4] = 0;//-(force_torque_ref_.wrench.torque.x - getFilteredTorqueX());
+                fe_[5] = 0;//-(force_torque_ref_.wrench.torque.z - getFilteredTorqueZ());
 
                 vector_pose_ref[0] = pose_ref_.pose.position.x;
                 vector_pose_ref[1] = pose_ref_.pose.position.y;
@@ -462,10 +462,14 @@ void ImpedanceControl::run()
                 xc = impedanceFilter(fe_, xr);
 
                 commanded_position_msg.header.stamp = ros::Time::now();
-                commanded_position_msg.vector.x = xc[3];
-                commanded_position_msg.vector.y = xc[4];
-                commanded_position_msg.vector.z = xc[2];
-                //position_commanded_pub_.publish(commanded_position_msg);
+                commanded_position_msg.pose.position.x = xc[3];
+                commanded_position_msg.pose.position.y = xc[4];
+                commanded_position_msg.pose.position.z = xc[2];
+                commanded_position_msg.pose.orientation.x = 0;
+                commanded_position_msg.pose.orientation.y = 0;
+                commanded_position_msg.pose.orientation.z = 0.70711;
+                commanded_position_msg.pose.orientation.w = 0.70711;
+                position_commanded_pub_.publish(commanded_position_msg);
 
                 commanded_yaw_msg.data = xc[5];
                 yaw_commanded_pub_.publish(commanded_yaw_msg);

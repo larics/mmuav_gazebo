@@ -10,7 +10,7 @@ DualArmManipulatorControl::DualArmManipulatorControl()
 
 	T10_ = T01_.inverse();
 
-	rate_ = 100;
+	rate_ = 200;
 
 	left_q1_meas_ = 0;
 	left_q2_meas_ = 0;
@@ -22,6 +22,7 @@ DualArmManipulatorControl::DualArmManipulatorControl()
 
 	left_manipulator_position_sub_ros_ = n_.subscribe("left_manipulator/set_point", 1, &DualArmManipulatorControl::left_mapinulator_position_cb_ros, this);
 	right_manipulator_position_sub_ros_ = n_.subscribe("right_manipulator/set_point", 1, &DualArmManipulatorControl::right_mapinulator_position_cb_ros, this);
+	dual_arm_manipulator_end_effector_position_sub_ros_ = n_.subscribe("dual_arm_manipulator/set_point", 1, &DualArmManipulatorControl::dual_arm_manipulator_end_effector_position_cb_ros, this);
 	
 	joint1_left_state_sub_ros_ = n_.subscribe("joint1_left_position_controller/state", 1, &DualArmManipulatorControl::joint1_left_controller_state_cb_ros, this);
 	joint2_left_state_sub_ros_ = n_.subscribe("joint2_left_position_controller/state", 1, &DualArmManipulatorControl::joint2_left_controller_state_cb_ros, this);
@@ -45,8 +46,6 @@ DualArmManipulatorControl::DualArmManipulatorControl()
 
 	uav_position_commanded_pub_ = n_.advertise<geometry_msgs::Vector3Stamped>("position_control/position_ref", 1);
 
-	nesto = n_.advertise<geometry_msgs::Vector3Stamped>("nesto", 1);
-
 	Tworld_uav_origin_ << 1, 0, 0, 0,
 			  			  0, 1, 0, 0, 
 			  			  0, 0, 1, 0,
@@ -57,15 +56,12 @@ DualArmManipulatorControl::DualArmManipulatorControl()
 			  			  0, 0, 1, 0,
 			  			  0, 0, 0, 1;
 
-	Tworld_left_end_effector_ref_ << 1, 0, 0, 0,
-			  						 0, 1, 0, 0, 
-			  						 0, 0, 1, 0,
-			  						 0, 0, 0, 1;
+	Tworld_dual_arm_end_effector_ref_ << 1, 0, 0, 0,
+			  						     0, 1, 0, 0, 
+			  						     0, 0, 1, 0,
+			  						     0, 0, 0, 1;
 
-	Tworld_right_end_effector_ref_ << 1, 0, 0, 0,
-			  						  0, 1, 0, 0, 
-			  						  0, 0, 1, 0,
-			  						  0, 0, 0, 1;
+    set_dual_arm_manipulator_end_effector = true;
 
 }
 
@@ -114,26 +110,21 @@ void DualArmManipulatorControl::initialiceUavPositionFilter(void)
 
     for (i = 0; i < 2; i++)
 	{
-	    Guav_e_[i].reset();
-	    Guav_e_[i].setNumerator(1.0, 0.0, 0.0);
-	    Guav_e_[i].setDenominator(0, 0, 0);
-	    Guav_e_[i].c2d(samplingTime, "zoh");
-	       
 	    Guav_xr_[i].reset();
-	    Guav_xr_[i].setNumerator(0, 0.0, 0.0);
-	    Guav_xr_[i].setDenominator(0, 0, 0);
+	    Guav_xr_[i].setNumerator(1, 0.0, 0.0);
+	    Guav_xr_[i].setDenominator(1, 0.4, 0.04);
 	    Guav_xr_[i].c2d(samplingTime, "zoh");
 	}
 }
 
-float* DualArmManipulatorControl::uavPositionFilter(float *xr, float *e)
+float* DualArmManipulatorControl::uavPositionFilter(float *xr)
 {
 	float *Xc = (float * )malloc(sizeof(float)*2);
     int i;
 
     for (i = 0; i < 2; i++)
     {
-		Xc[i] = Guav_e_[i].getDiscreteOutput(e[i]) + Guav_xr_[i].getDiscreteOutput(xr[i]);
+		Xc[i] = Guav_xr_[i].getDiscreteOutput(xr[i]);
 	}
 
 	return Xc;
@@ -155,7 +146,10 @@ void DualArmManipulatorControl::start()
 	float orientationQuaternion_left[4], orientationQuaternion_right[4];
 	float q1_left[2], q2_left[2], q3_left[2], q1_right[2], q2_right[2], q3_right[2];
 	float Q_left[3], Q_right[3], *x_uav;
-	bool left_manipulator_solution = false, right_manipulator_solution = true;
+	float uav_ref[3] = {0};
+	bool left_manipulator_solution = false, right_manipulator_solution = false;
+
+	initialiceUavPositionFilter();
 
 	while (ros::ok())
 	{
@@ -194,65 +188,113 @@ void DualArmManipulatorControl::start()
 		right_manipulator_position_pub_ros_.publish(manipulator_pose);
 
 		//inverse kinematics
-		T13_left_ref = T10_ * Tuav_origin_left0_inv_ * Tuav_origin_world_ * Tworld_left_end_effector_ref_;
-		T13_right_ref = T10_ * Tuav_origin_right0_inv_ * Tuav_origin_world_ * Tworld_right_end_effector_ref_;
-
-		getAnglesFromRotationTranslationMatrix(T13_left_ref, orientationEuler_left);
-		getAnglesFromRotationTranslationMatrix(T13_right_ref, orientationEuler_right);
-
-		manipulator_inverse.ik_calculate(T13_left_ref(0,3), T13_left_ref(1,3), orientationEuler_left[2], q1_left, q2_left, q3_left);
-		manipulator_inverse.ik_calculate(T13_right_ref(0,3), T13_right_ref(1,3), orientationEuler_right[2], q1_right, q2_right, q3_right);
-
-		if (joint_criterion_function(q1_left, q2_left, q3_left, left_q1_meas_, left_q2_meas_, left_q3_meas_, Q_left)) left_manipulator_solution = true;
-		else left_manipulator_solution = false;
-
-		//if (joint_criterion_function(q1_right, q2_right, q3_right, right_q1_meas_, right_q2_meas_, right_q3_meas_, Q_right)) right_manipulator_solution = true;
-		//else right_manipulator_solution = false;
-
-		if (right_manipulator_solution && left_manipulator_solution)
+		if (set_dual_arm_manipulator_end_effector)
 		{
-			joint_setpoint.data = Q_left[0];
-			joint1_left_pub_ros_.publish(joint_setpoint);
-
-			joint_setpoint.data = Q_left[1];
-			joint2_left_pub_ros_.publish(joint_setpoint);
-
-			joint_setpoint.data = Q_left[2];
-			joint3_left_pub_ros_.publish(joint_setpoint);
-
-			/*joint_setpoint.data = Q_right[0];
-			joint1_right_pub_ros_.publish(joint_setpoint);
-
-			joint_setpoint.data = Q_right[1];
-			joint2_right_pub_ros_.publish(joint_setpoint);
-
-			joint_setpoint.data = Q_right[2];
-			joint3_right_pub_ros_.publish(joint_setpoint);*/
+			T13_left_ref = T10_ * Tuav_origin_left0_inv_ * Tuav_origin_world_ * Tworld_dual_arm_end_effector_ref_;
+			T13_right_ref = T10_ * Tuav_origin_right0_inv_ * Tuav_origin_world_ * Tworld_dual_arm_end_effector_ref_;
+		
+			getAnglesFromRotationTranslationMatrix(T13_left_ref, orientationEuler_left);
+			getAnglesFromRotationTranslationMatrix(T13_right_ref, orientationEuler_right);
+		
+			manipulator_inverse.ik_calculate(T13_left_ref(0,3), T13_left_ref(1,3), orientationEuler_left[2], q1_left, q2_left, q3_left);
+			manipulator_inverse.ik_calculate(T13_right_ref(0,3), T13_right_ref(1,3), orientationEuler_right[2]+3.14, q1_right, q2_right, q3_right);
+		
+			if (joint_criterion_function(q1_left, q2_left, q3_left, left_q1_meas_, left_q2_meas_, left_q3_meas_, Q_left)) left_manipulator_solution = true;
+			else left_manipulator_solution = false;
+	
+			if (joint_criterion_function(q1_right, q2_right, q3_right, right_q1_meas_, right_q2_meas_, right_q3_meas_, Q_right)) right_manipulator_solution = true;
+			else right_manipulator_solution = false;
+		
+			if (right_manipulator_solution && left_manipulator_solution)
+			{
+				joint_setpoint.data = Q_left[0];
+				joint1_left_pub_ros_.publish(joint_setpoint);
+		
+				joint_setpoint.data = Q_left[1];
+				joint2_left_pub_ros_.publish(joint_setpoint);
+	
+				joint_setpoint.data = Q_left[2];
+				joint3_left_pub_ros_.publish(joint_setpoint);
+		
+				joint_setpoint.data = Q_right[0];
+				joint1_right_pub_ros_.publish(joint_setpoint);
+		
+				joint_setpoint.data = Q_right[1];
+				joint2_right_pub_ros_.publish(joint_setpoint);
+		
+				joint_setpoint.data = Q_right[2];
+				joint3_right_pub_ros_.publish(joint_setpoint);
+			}
+			else
+			{
+				uav_ref[0] = Tworld_dual_arm_end_effector_ref_(0,3);
+				uav_ref[1] = Tworld_dual_arm_end_effector_ref_(1,3);
+			}
+		
+			x_uav = uavPositionFilter(uav_ref);
+		
+			uav_commanded_position_msg.header.stamp = ros::Time::now();
+			uav_commanded_position_msg.vector.x = x_uav[0]; 
+			uav_commanded_position_msg.vector.y = x_uav[1];
+	        uav_commanded_position_msg.vector.z = Tworld_dual_arm_end_effector_ref_(2,3);
+	        uav_position_commanded_pub_.publish(uav_commanded_position_msg);
+		
+	        free(x_uav);
 		}
-		else
-		{
-			uav_commanded_position_msg.vector.x = Tworld_left_end_effector_ref_(0,3);
-			uav_commanded_position_msg.vector.y = Tworld_left_end_effector_ref_(1,3);
-		}
-
-		//x_uav = uavPositionFilter();
-
-
-		uav_commanded_position_msg.header.stamp = ros::Time::now();
-        uav_commanded_position_msg.vector.z = Tworld_left_end_effector_ref_(2,3);
-        uav_position_commanded_pub_.publish(uav_commanded_position_msg);
-
-        nesto_msg.header.stamp = ros::Time::now();
-        nesto_msg.vector.x = Tworld_left_end_effector_ref_(0,3);
-        nesto.publish(nesto_msg);
-
-        free(x_uav);
 
 		loop_rate.sleep();
 	}
 }
 
 void DualArmManipulatorControl::left_mapinulator_position_cb_ros(const geometry_msgs::PoseStamped &msg)
+{
+	std_msgs::Float64 joint_setpoint;
+	float orientationEuler[3], position[3];
+	float q[4], q1[2], q2[2], q3[2];
+	float Q[3], yaw;
+	Eigen::Matrix4d Tuav, T03;
+
+	if (!set_dual_arm_manipulator_end_effector)
+	{
+		q[0] = msg.pose.orientation.w;
+		q[1] = msg.pose.orientation.x;
+		q[2] = msg.pose.orientation.y;
+		q[3] = msg.pose.orientation.z;
+
+		position[0] = msg.pose.position.x;
+		position[1] = msg.pose.position.y;
+		position[2] = msg.pose.position.z;
+
+		quaternion2euler(q, orientationEuler);
+		yaw = orientationEuler[2];
+		
+		getRotationTranslationMatrix(Tuav, orientationEuler, position);
+
+		T03 = T10_*Tuav_origin_left0_inv_*Tuav;
+
+		getAnglesFromRotationTranslationMatrix(T03, orientationEuler);
+
+		manipulator_inverse.ik_calculate(T03(0,3), T03(1,3), orientationEuler[2], q1, q2, q3);
+
+		if (joint_criterion_function(q1, q2, q3, left_q1_meas_, left_q2_meas_, left_q3_meas_, Q))
+		{
+			joint_setpoint.data = Q[0];
+			joint1_left_pub_ros_.publish(joint_setpoint);
+
+			joint_setpoint.data = Q[1];
+			joint2_left_pub_ros_.publish(joint_setpoint);
+
+			joint_setpoint.data = Q[2];
+			joint3_left_pub_ros_.publish(joint_setpoint);
+		}
+		else
+		{
+			ROS_WARN("LEFT_MANIPULATOR: There is no solution for point x: %.2f, y: %.2f, yaw: %.2f", position[0], position[1], yaw);
+		}
+	}
+}
+
+void DualArmManipulatorControl::dual_arm_manipulator_end_effector_position_cb_ros(const geometry_msgs::PoseStamped &msg)
 {
 	float orientationEuler[3], position[3];
 	float q[4];
@@ -268,7 +310,8 @@ void DualArmManipulatorControl::left_mapinulator_position_cb_ros(const geometry_
 
 	quaternion2euler(q, orientationEuler);
 
-	getRotationTranslationMatrix(Tworld_left_end_effector_ref_, orientationEuler, position);
+	getRotationTranslationMatrix(Tworld_dual_arm_end_effector_ref_, orientationEuler, position);
+
 }
 
 void DualArmManipulatorControl::right_mapinulator_position_cb_ros(const geometry_msgs::PoseStamped &msg)
@@ -279,45 +322,44 @@ void DualArmManipulatorControl::right_mapinulator_position_cb_ros(const geometry
 	float Q[3], yaw;
 	Eigen::Matrix4d Tuav, T03;
 
-	q[0] = msg.pose.orientation.w;
-	q[1] = msg.pose.orientation.x;
-	q[2] = msg.pose.orientation.y;
-	q[3] = msg.pose.orientation.z;
-
-	position[0] = msg.pose.position.x;
-	position[1] = msg.pose.position.y;
-	position[2] = msg.pose.position.z;
-
-	quaternion2euler(q, orientationEuler);
-
-	getRotationTranslationMatrix(Tworld_right_end_effector_ref_, orientationEuler, position);
-
-	/*quaternion2euler(q, orientationEuler);
-	yaw = orientationEuler[2];
-	
-	getRotationTranslationMatrix(Tuav, orientationEuler, position);
-
-	T03 = T10_*Tuav_origin_right0_inv_*Tuav;
-
-	getAnglesFromRotationTranslationMatrix(T03, orientationEuler);
-
-	manipulator_inverse.ik_calculate(T03(0,3), T03(1,3), orientationEuler[2], q1, q2, q3);
-
-	if (joint_criterion_function(q1, q2, q3, right_q1_meas_, right_q2_meas_, right_q3_meas_, Q))
+	if (!set_dual_arm_manipulator_end_effector)
 	{
-		joint_setpoint.data = Q[0];
-		joint1_right_pub_ros_.publish(joint_setpoint);
+		q[0] = msg.pose.orientation.w;
+		q[1] = msg.pose.orientation.x;
+		q[2] = msg.pose.orientation.y;
+		q[3] = msg.pose.orientation.z;
 
-		joint_setpoint.data = Q[1];
-		joint2_right_pub_ros_.publish(joint_setpoint);
+		position[0] = msg.pose.position.x;
+		position[1] = msg.pose.position.y;
+		position[2] = msg.pose.position.z;
 
-		joint_setpoint.data = Q[2];
-		joint3_right_pub_ros_.publish(joint_setpoint);
+		quaternion2euler(q, orientationEuler);
+		yaw = orientationEuler[2];
+		
+		getRotationTranslationMatrix(Tuav, orientationEuler, position);
+
+		T03 = T10_*Tuav_origin_right0_inv_*Tuav;
+
+		getAnglesFromRotationTranslationMatrix(T03, orientationEuler);
+
+		manipulator_inverse.ik_calculate(T03(0,3), T03(1,3), orientationEuler[2], q1, q2, q3);
+
+		if (joint_criterion_function(q1, q2, q3, right_q1_meas_, right_q2_meas_, right_q3_meas_, Q))
+		{
+			joint_setpoint.data = Q[0];
+			joint1_right_pub_ros_.publish(joint_setpoint);
+
+			joint_setpoint.data = Q[1];
+			joint2_right_pub_ros_.publish(joint_setpoint);
+
+			joint_setpoint.data = Q[2];
+			joint3_right_pub_ros_.publish(joint_setpoint);
+		}
+		else
+		{
+			ROS_WARN("RIGHT_MANIPULATOR: There is no solution for point x: %.2f, y: %.2f, yaw: %.2f", position[0], position[1], yaw);
+		}
 	}
-	else
-	{
-		ROS_WARN("RIGHT_MANIPULATOR: There is no solution for point x: %.2f, y: %.2f, yaw: %.2f", position[0], position[1], yaw);
-	}*/
 
 }
 
@@ -524,7 +566,7 @@ int main(int argc, char **argv)
 	DualArmManipulatorControl dam_control;
 
 	private_node_handle_.param("dh_parameters_file", dh_parameters_file, std::string("/config/dual_arm_manipulator_dh_parameters.yaml"));
-	private_node_handle_.param("rate", rate, int(50));
+	private_node_handle_.param("rate", rate, int(200));
 
 	dam_control.LoadParameters(path+dh_parameters_file);
 	dam_control.set_rate(rate);
