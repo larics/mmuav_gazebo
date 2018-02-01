@@ -160,7 +160,7 @@ void DualArmManipulatorControl::start()
 		T13_right_dk = manipulator_direct.dk_calculate(right_q1_meas_,right_q2_meas_,right_q3_meas_);
 
 		Tworld_end_effector_left_dk = Tworld_uav_origin_*Tuav_origin_left0_*T01_*T13_left_dk;
-		Tworld_end_effector_right_dk = Tworld_uav_origin_*Tuav_origin_right0_*T01_*T13_left_dk;
+		Tworld_end_effector_right_dk = Tworld_uav_origin_*Tuav_origin_right0_*T01_*T13_right_dk;
 
 		getAnglesFromRotationTranslationMatrix(Tworld_end_effector_left_dk, orientationEuler_left);
 		euler2quaternion(orientationEuler_left, orientationQuaternion_left);

@@ -1,0 +1,22 @@
+<launch>
+	<arg name="device" default="/dev/ttyACM0" />
+	<arg name="baudrate" default="1000000" />
+	<arg name="min_motor_id" default="1" />
+	<arg name="max_motor_id" default="25" />
+	<arg name="update_rate" default="50" />
+	<arg name="config_file" default="$(find mmuav_arducopter_bridge)/cfg/dual_manipulator.yaml"/>
+	<arg name="search_motors" default="false" />
+	<arg name="use_feedback" default="true" />
+	<arg name="namespace" default="xl320_controller" />
+
+	<node name="xl320_controller_node" pkg="dynamixel_xl320_interface" type="xl320_controller_node">
+		<param name="device" value="$(arg device)"/>
+		<param name="baudrate" value="$(arg baudrate)" />
+		<param name="min_motor_id" value="$(arg min_motor_id)" />
+		<param name="max_motor_id" value="$(arg max_motor_id)" />
+		<param name="update_rate" value="$(arg update_rate)" />
+		<param name="config_file" value="$(arg config_file)"/>
+		<param name="search_motors" value="$(arg search_motors)" />
+		<param name="use_feedback" value="$(arg use_feedback)" />
+	</node>
+</launch>
