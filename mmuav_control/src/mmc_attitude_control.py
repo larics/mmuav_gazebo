@@ -156,6 +156,8 @@ class AttitudeControl:
                 self.count += 1
                 print self.count, ' - ',  dt_clk
 
+            dt_clk = 0.01
+
             # Roll
             roll_rate_sv = self.pid_roll.compute(self.euler_sp.x, self.euler_mv.x, dt_clk)
             # roll rate pid compute

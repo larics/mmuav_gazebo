@@ -6,7 +6,7 @@ import rospy
 from pid import PID
 from geometry_msgs.msg import Vector3, Vector3Stamped, PoseWithCovarianceStamped
 from sensor_msgs.msg import Imu
-from std_msgs.msg import Float64
+from std_msgs.msg import Float64, Float64MultiArray
 import math
 from mav_msgs.msg import Actuators
 from datetime import datetime
@@ -25,7 +25,7 @@ class MergeControllerOutputs:
         self.mot_vel_ref = 0.0
 
         self.attitude_command_received_flag = False
-        self.mot_vel_ref_received_flag = False
+        self.mot_vel_ref_received_flag = True
 
         # Publisher for motor velocities
         self.mot_vel_pub = rospy.Publisher('/gazebo/command/motor_speed', 
@@ -36,6 +36,7 @@ class MergeControllerOutputs:
         self.mass_left_pub = rospy.Publisher('movable_mass_1_position_controller/command', Float64, queue_size=1)
         self.mass_back_pub = rospy.Publisher('movable_mass_2_position_controller/command', Float64, queue_size=1)
         self.mass_right_pub = rospy.Publisher('movable_mass_3_position_controller/command', Float64, queue_size=1)
+        self.mass_all_pub = rospy.Publisher('movable_mass_all/command', Float64MultiArray, queue_size=1)
 
         # Subscribers to height and attitude controllers
         rospy.Subscriber('attitude_command', Vector3Stamped, 
@@ -78,6 +79,9 @@ class MergeControllerOutputs:
             self.mass_back_pub.publish(Float64(moving_mass_back))
             self.mass_left_pub.publish(Float64(moving_mass_left))
             self.mass_right_pub.publish(Float64(moving_mass_right))
+            all_mass_msg = Float64MultiArray()
+            all_mass_msg.data = [moving_mass_front, moving_mass_left, moving_mass_back, moving_mass_right]
+            self.mass_all_pub.publish(all_mass_msg)
 
 
     def attitude_command_cb(self, msg):
