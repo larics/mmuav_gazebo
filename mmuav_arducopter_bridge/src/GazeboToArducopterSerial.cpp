@@ -209,7 +209,7 @@ int GazeboToArducopterSerial::SerialRead()
 
 void GazeboToArducopterSerial::allMassCallback(const std_msgs::Float64MultiArray &msg)
 {   
-    float scaler = 4500.0;
+    float scaler = 5066.0;
     int m[4] = {0,0,0,0};
     if (msg.data.size() < 4)
     {
@@ -220,14 +220,14 @@ void GazeboToArducopterSerial::allMassCallback(const std_msgs::Float64MultiArray
         for(int i = 0; i < msg.data.size(); i++)
         {
             m[i] = int(scaler*msg.data[i]);
-            if (msg.data[i] > 0.08) m[i] = int(scaler*0.08);
-            else if (msg.data[i] < -0.08) m[i] = int(-scaler*0.08);
+            if (msg.data[i] > 0.07) m[i] = int(scaler*0.07);
+            else if (msg.data[i] < -0.07) m[i] = int(-scaler*0.07);
         }
     }
 
     // Create big string
-    m[1]*=0.0;
-    m[3]*=0.0;
+    //m[1]*=0.0;
+    //m[3]*=0.0;
     SerialWrite(m, 67);
 }
 
