@@ -42,6 +42,11 @@ class PositionControl:
         self.start_flag = False         # indicates if we received the first measurement
         self.config_start = False       # flag indicates if the config callback is called for the first time
 
+        # Params
+        self.rate = rospy.get_param('rate', 100)
+        # 0 for simulation, 1 for optitrack
+        self.feedback_source('feedback', 0)
+
         # Load parameters from yaml file
         file_name = rospy.get_param('filename', 'PositionControl.yaml')
         file_name = RosPack().get_path('mmuav_control') + '/config/' + file_name
@@ -143,8 +148,17 @@ class PositionControl:
         self.pub_pid_vz = rospy.Publisher('pid_vz', PIDController, queue_size=1)
         self.mot_ref_pub = rospy.Publisher('mot_vel_ref', Float64, queue_size=1)
         self.euler_ref_pub = rospy.Publisher('euler_ref', Vector3, queue_size=1)
-        rospy.Subscriber('pose', PoseStamped, self.pose_cb)
-        rospy.Subscriber('odometry', Odometry, self.vel_cb)
+
+        # Set up feedback callbacks
+        if self.feedback_source == 0:
+            rospy.Subscriber('pose', PoseStamped, self.pose_cb)
+            rospy.Subscriber('odometry', Odometry, self.vel_cb)
+        elif self.feedback_source == 1:
+            rospy.Subscriber('optitrack/pose', PoseStamped, 
+                self.optitrack_pose_cb)
+            rospy.Subscriber('optitrack/velocity', TwistStamped, 
+                self.optitrack_velocity_cb)
+
         rospy.Subscriber('vel_ref', Vector3, self.vel_ref_cb)
         rospy.Subscriber('pose_ref', Pose, self.pose_ref_cb)
         rospy.Subscriber('reset_controllers', Empty, self.reset_controllers_cb)
@@ -153,7 +167,6 @@ class PositionControl:
 
         #self.pub_gm_mot = rospy.Publisher('collectiveThrust', GmStatus, queue_size=1)       
         self.cfg_server = Server(PositionCtlParamsConfig, self.cfg_callback)
-        self.rate = rospy.get_param('rate', 100)
         self.ros_rate = rospy.Rate(self.rate)                 # attitude control at 100 Hz
         self.t_start = rospy.Time.now()
 
@@ -307,6 +320,26 @@ class PositionControl:
         #    msg.pose.pose.orientation.y, msg.pose.pose.orientation.z,
         #    msg.pose.pose.orientation.w))
         #self.vel_mv = msg.twist.twist.linear
+
+    def optitrack_pose_cb(self, msg):
+        if not self.start_flag:
+            self.start_flag = True
+
+        self.pos_mv = msg.pose.position
+        self.orientation_mv = msg.pose.orientation
+        temp_euler = tf.transformations.euler_from_quaternion((self.orientation_mv.x,
+            self.orientation_mv.y, self.orientation_mv.z,
+            self.orientation_mv.w))
+        self.orientation_mv_euler.x = temp_euler[0]
+        self.orientation_mv_euler.y = temp_euler[1]
+        self.orientation_mv_euler.z = temp_euler[2]
+
+    def optitrack_velocity_cb(self, msg):
+        self.vel_mv.x = cos(self.orientation_mv_euler.z)*msg.twist.linear.x \
+            - sin(self.orientation_mv_euler.z)*msg.twist.linear.y
+        self.vel_mv.y = sin(self.orientation_mv_euler.z)*msg.twist.linear.x \
+            + cos(self.orientation_mv_euler.z)*msg.twist.linear.y
+        self.vel_mv.z = msg.twist.linear.z
 
     def qv_mult(self, q1, v1):
         #v1 = tf.transformations.unit_vector(v1)
