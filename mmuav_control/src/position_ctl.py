@@ -45,7 +45,8 @@ class PositionControl:
         # Params
         self.rate = rospy.get_param('rate', 100)
         # 0 for simulation, 1 for optitrack
-        self.feedback_source('feedback', 0)
+        self.feedback_source = rospy.get_param('~feedback', 0)
+        print self.feedback_source
 
         # Load parameters from yaml file
         file_name = rospy.get_param('filename', 'PositionControl.yaml')
@@ -178,7 +179,7 @@ class PositionControl:
         while not self.start_flag and not rospy.is_shutdown():
             print 'Waiting for pose measurements.'
             rospy.sleep(0.5)
-        print "Starting height control."
+        print "Starting position control."
 
         self.t_old = rospy.Time.now()
         #self.t_old = datetime.now()
@@ -303,7 +304,6 @@ class PositionControl:
         self.orientation_mv_euler.x = temp_euler[0]
         self.orientation_mv_euler.y = temp_euler[1]
         self.orientation_mv_euler.z = temp_euler[2]
-
 
         self.vel_mv.x = cos(self.orientation_mv_euler.z)*msg.twist.twist.linear.x \
             - sin(self.orientation_mv_euler.z)*msg.twist.twist.linear.y
