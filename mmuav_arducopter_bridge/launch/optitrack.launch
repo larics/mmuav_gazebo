@@ -26,6 +26,7 @@
   <group ns="$(arg namespace)">
     <node pkg="mmuav_arducopter_bridge" type="vrpn_transformer.py" name="vrpn_transformer" output="screen">
       <param name="topic_name" value="/vrpn_client_node/arducopter/pose" />
+      <param name="median_filter_length" value="5" />
     </node>
   </group>
 
