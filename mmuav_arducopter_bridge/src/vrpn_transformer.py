@@ -17,6 +17,8 @@ class VrpnTransform:
         '''
         Initialization of the class.
         '''
+        self.medfilt_len = rospy.get_param("~median_filter_length", 5);
+
         topic_name = rospy.get_param('~topic_name', '/vrpn_client_node/uav/pose')
         rospy.Subscriber(topic_name, PoseStamped, self.pose_cb)
         
@@ -35,7 +37,12 @@ class VrpnTransform:
         self.quat = Quaternion()
         self.euler = Quaternion()
 
-        self.filt_const = 0.75
+        self.filt_const = 1.0
+
+        self.vel_list_x = [0]*self.medfilt_len
+        self.vel_list_y = [0]*self.medfilt_len
+        self.vel_list_z = [0]*self.medfilt_len
+        
 
     def run(self):
 
@@ -69,16 +76,29 @@ class VrpnTransform:
             if dt < 0.001:
                 dt = 0.001
 
-            self.vel.x = (self.pos.x - self.pos_old.x ) / dt
-            if self.vel.x - self.vel_old.x > 2.0:
-                self.vel.x = self.vel_old.x + 2.0*dt
-            elif self.vel.x - self.vel_old.x < -2.0:
-                self.vel.x = self.vel_old.x - 2.0*dt
-            #self.vel.x = (self.pos.x - self.pos_old.x ) / dt #self.filt_const * (self.pos.x - self.pos_old.x ) / dt + (1.0 - self.filt_const) * self.vel_old.x
-            self.vel.y = (self.pos.x - self.pos_old.x ) / dt #self.filt_const * (self.pos.y - self.pos_old.y ) / dt + (1.0 - self.filt_const) * self.vel_old.y
-            self.vel.z = (self.pos.x - self.pos_old.x ) / dt #self.filt_const * (self.pos.z - self.pos_old.z ) / dt + (1.0 - self.filt_const) * self.vel_old.z
+            self.vel.x = self.filt_const * (self.pos.x - self.pos_old.x ) / dt #+ #(1.0 - self.filt_const) * self.vel_old.x
+            self.vel.y = self.filt_const * (self.pos.y - self.pos_old.y ) / dt #+ #(1.0 - self.filt_const) * self.vel_old.y
+            self.vel.z = self.filt_const * (self.pos.z - self.pos_old.z ) / dt #+ #(1.0 - self.filt_const) * self.vel_old.z
 
+            # Median filter
+            for i in range(self.medfilt_len-1):
+                self.vel_list_x[i] = self.vel_list_x[i+1]
+                self.vel_list_y[i] = self.vel_list_y[i+1]
+                self.vel_list_z[i] = self.vel_list_z[i+1]
+            self.vel_list_x[self.medfilt_len-1] = self.vel.x
+            self.vel_list_y[self.medfilt_len-1] = self.vel.y
+            self.vel_list_z[self.medfilt_len-1] = self.vel.z
+            vel_list_sorted_x = copy.deepcopy(self.vel_list_x)
+            vel_list_sorted_y = copy.deepcopy(self.vel_list_y)
+            vel_list_sorted_z = copy.deepcopy(self.vel_list_z)
+            vel_list_sorted_x.sort()
+            vel_list_sorted_y.sort()
+            vel_list_sorted_z.sort()
+            self.vel.x = vel_list_sorted_x[int(math.floor(self.medfilt_len/2))]
+            self.vel.y = vel_list_sorted_y[int(math.floor(self.medfilt_len/2))]
+            self.vel.z = vel_list_sorted_z[int(math.floor(self.medfilt_len/2))]
 
+            # Legacy, save old values
             self.vel_old = copy.deepcopy(self.vel)
             self.pos_old = copy.deepcopy(self.pos)
             
