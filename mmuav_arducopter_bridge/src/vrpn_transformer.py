@@ -9,6 +9,7 @@ import math
 from geometry_msgs.msg import Vector3, PoseWithCovarianceStamped, PoseStamped, TwistStamped, Quaternion
 from std_msgs.msg import Float32
 import tf
+from nav_msgs.msg import Odometry
 
 class VrpnTransform:
 
@@ -21,6 +22,7 @@ class VrpnTransform:
         
         self.pose_pub = rospy.Publisher('optitrack/pose', PoseStamped, queue_size=1)
         self.vel_pub = rospy.Publisher('optitrack/velocity', TwistStamped, queue_size=1)
+        self.odom_pub = rospy.Publisher('/odometry', Odometry, queue_size=1)
         self.first_pass = True
         self.t_old = rospy.Time.now()
 
@@ -61,14 +63,21 @@ class VrpnTransform:
             # compute velocity
             dt = msg.header.stamp.to_sec() - self.t_old.to_sec()
             self.t_old = msg.header.stamp
-            dt = 0.01
+            dt = 0.005
+            #print dt
 
             if dt < 0.001:
                 dt = 0.001
 
-            self.vel.x = self.filt_const * (self.pos.x - self.pos_old.x ) / dt + (1.0 - self.filt_const) * self.vel_old.x
-            self.vel.y = self.filt_const * (self.pos.y - self.pos_old.y ) / dt + (1.0 - self.filt_const) * self.vel_old.y
-            self.vel.z = self.filt_const * (self.pos.z - self.pos_old.z ) / dt + (1.0 - self.filt_const) * self.vel_old.z
+            self.vel.x = (self.pos.x - self.pos_old.x ) / dt
+            if self.vel.x - self.vel_old.x > 2.0:
+                self.vel.x = self.vel_old.x + 2.0*dt
+            elif self.vel.x - self.vel_old.x < -2.0:
+                self.vel.x = self.vel_old.x - 2.0*dt
+            #self.vel.x = (self.pos.x - self.pos_old.x ) / dt #self.filt_const * (self.pos.x - self.pos_old.x ) / dt + (1.0 - self.filt_const) * self.vel_old.x
+            self.vel.y = (self.pos.x - self.pos_old.x ) / dt #self.filt_const * (self.pos.y - self.pos_old.y ) / dt + (1.0 - self.filt_const) * self.vel_old.y
+            self.vel.z = (self.pos.x - self.pos_old.x ) / dt #self.filt_const * (self.pos.z - self.pos_old.z ) / dt + (1.0 - self.filt_const) * self.vel_old.z
+
 
             self.vel_old = copy.deepcopy(self.vel)
             self.pos_old = copy.deepcopy(self.pos)
@@ -100,12 +109,15 @@ class VrpnTransform:
             vel_msg.header.stamp = msg.header.stamp
             vel_msg.twist.linear = copy.deepcopy(self.vel)
 
+            # Set up odometry message
+            odom_msg = Odometry()
+            odom_msg.pose.pose = pose_msg.pose
+            odom_msg.twist.twist.linear = vel_msg.twist.linear
+            odom_msg.header.stamp = rospy.Time.now()
+
             self.pose_pub.publish(pose_msg)
             self.vel_pub.publish(vel_msg)
-
-
-        
-
+            self.odom_pub.publish(odom_msg)
    
 if __name__ == '__main__':
 
