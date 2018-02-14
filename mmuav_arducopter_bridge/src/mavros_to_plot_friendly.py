@@ -33,8 +33,8 @@ class PlotFriendly:
         self.plot_imu_euler_ref_pub = rospy.Publisher('/plot_friendly/euler_ref', 
             Vector3, queue_size=1)
 
-        rospy.Subscriber('/jeti/mavros/imu/data', Imu, self.imu_cb)
-        rospy.Subscriber('/jeti/mavros/rc/in', RCIn, self.rcin_cb)
+        rospy.Subscriber('mavros/imu/data', Imu, self.imu_cb)
+        rospy.Subscriber('mavros/rc/in', RCIn, self.rcin_cb)
 
 
     def run(self):
