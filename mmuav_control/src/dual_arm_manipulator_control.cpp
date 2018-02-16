@@ -44,7 +44,7 @@ DualArmManipulatorControl::DualArmManipulatorControl()
 	left_manipulator_position_pub_ros_ = n_.advertise<geometry_msgs::PoseStamped>("left_manipulator/position", 1);
 	right_manipulator_position_pub_ros_ = n_.advertise<geometry_msgs::PoseStamped>("right_manipulator/position", 1);
 
-	uav_position_commanded_pub_ = n_.advertise<geometry_msgs::Vector3Stamped>("position_control/position_ref", 1);
+	uav_position_commanded_pub_ = n_.advertise<geometry_msgs::PoseStamped>("position_control/position_ref", 1);
 
 	Tworld_uav_origin_ << 1, 0, 0, 0,
 			  			  0, 1, 0, 0, 
@@ -138,8 +138,7 @@ void DualArmManipulatorControl::start()
 	Eigen::Matrix4d Tworld_end_effector_left_dk, Tworld_end_effector_right_dk;
 
 	geometry_msgs::PoseStamped manipulator_pose;
-	geometry_msgs::Vector3Stamped uav_commanded_position_msg;
-	geometry_msgs::Vector3Stamped nesto_msg;
+	geometry_msgs::PoseStamped uav_commanded_position_msg;
 	std_msgs::Float64 joint_setpoint;
 
 	float orientationEuler_left[3], orientationEuler_right[3];
@@ -234,9 +233,9 @@ void DualArmManipulatorControl::start()
 			x_uav = uavPositionFilter(uav_ref);
 		
 			uav_commanded_position_msg.header.stamp = ros::Time::now();
-			uav_commanded_position_msg.vector.x = x_uav[0]; 
-			uav_commanded_position_msg.vector.y = x_uav[1];
-	        uav_commanded_position_msg.vector.z = Tworld_dual_arm_end_effector_ref_(2,3);
+			uav_commanded_position_msg.pose.position.x = x_uav[0]; 
+			uav_commanded_position_msg.pose.position.y = x_uav[1];
+	        uav_commanded_position_msg.pose.position.z = Tworld_dual_arm_end_effector_ref_(2,3);
 	        uav_position_commanded_pub_.publish(uav_commanded_position_msg);
 		
 	        free(x_uav);
