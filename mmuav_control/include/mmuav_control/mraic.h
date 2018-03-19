@@ -3,6 +3,8 @@
 
 #include <mmuav_control/diff2.h>
 #include <mmuav_control/Tf1.h>
+#include <mmuav_msgs/MRAIController.h>
+#include <mmuav_control/median_filter.h>
 #include <stdint.h>
 
 class mraic{
@@ -16,8 +18,10 @@ class mraic{
 		float a_[2], b_[2], c_[2], sigma_[2];
 		float g0_, kp0_, kd0_, wp_, wd_;
 		float kp_, kd_, g_, e_[2], de_;
+		float q_, ym_[2], u_;
 		uint8_t rm_type_;
-		bool reference_model_init_;
+		bool reference_model_init_, impact_;
+		median_filter error_median;
 		diff2 Ym_;
 		Tf1 Gg, Gd, Gp;
 
@@ -31,6 +35,7 @@ class mraic{
 		float getAdaptiveProportionalGainKp(void);
 		float getAdaptiveDerivativeGainKd(void);
 		float getReferencePositionSignal(void);
+		void create_msg(mmuav_msgs::MRAIController &msg);
 		void setWeightingFactors(float wp, float wd);
 		float compute(float dt, float e);
 };

@@ -241,8 +241,17 @@
   <gazebo reference="link_screw">
     <gravity>true</gravity>
     <self_collide>true</self_collide>
-    <mu1>0</mu1>
-    <mu2>0</mu2>
+    <mu1>1</mu1>
+    <mu2>1</mu2>
+    <maxContacts>1</maxContacts>
+    <fdir1 value = "1 0 0"/>
+  </gazebo>
+
+  <gazebo reference="link_force_sensor_top_mount">
+    <gravity>true</gravity>
+    <self_collide>true</self_collide>
+    <mu1>1</mu1>
+    <mu2>1</mu2>
     <maxContacts>1</maxContacts>
     <fdir1 value = "1 0 0"/>
   </gazebo>

@@ -44,6 +44,8 @@ ImpedanceControl::ImpedanceControl(int rate, int moving_average_sample_number)
         zeta_[i] = 0;
     }
 
+    force_z_median.init(9);
+
 	start_flag_ = false;
     force_sensor_calibration_flag_ = false;
 	moving_average_sample_number_ = moving_average_sample_number;
@@ -57,6 +59,7 @@ ImpedanceControl::ImpedanceControl(int rate, int moving_average_sample_number)
 	force_filtered_pub_ = n_.advertise<geometry_msgs::WrenchStamped>("/force_sensor/filtered_ft_sensor", 1);
     position_commanded_pub_ = n_.advertise<geometry_msgs::PoseStamped>("dual_arm_manipulator/set_point", 1);
     yaw_commanded_pub_ = n_.advertise<std_msgs::Float64>("position_control/yaw_ref", 1);
+    mraic_status_pub_ = n_.advertise<mmuav_msgs::MRAIController>("impedance_control/mraic/force_z/status", 1);
 
     force_z_offset_ = 0.0;
     force_x_offset_ = 0.0;
@@ -67,6 +70,7 @@ ImpedanceControl::ImpedanceControl(int rate, int moving_average_sample_number)
 
     impact_flag_ = false;
     collision_ = false;
+    ref_flag_ = false;
 
 }
 
@@ -178,13 +182,33 @@ float* ImpedanceControl::impedanceFilter(float *e, float *Xr)
     return Xc;
 }
 
+void ImpedanceControl::publishMRAICstatus(void)
+{
+    int i;
+    mmuav_msgs::MRAIController mraic_status_msg;
+
+    //for (i = 0; i < 6; i++)
+    mraic_[2].create_msg(mraic_status_msg);
+    mraic_status_pub_.publish(mraic_status_msg);
+}
+
 float* ImpedanceControl::modelReferenceAdaptiveImpedanceControl(float dt, float *e, float *g0)
 {
     float *Xr = (float * )malloc(sizeof(float)*6);
+    static bool impact_set = false;
     bool impact = false;
     int i;
 
     impact = check_impact();
+
+    if (impact_set) impact = false;
+
+    if (impact_set & ref_flag_)
+    { 
+        impact = true;
+        ref_flag_ = false;
+    }
+
 
     for (i = 0; i < 6; i++)
     {
@@ -192,6 +216,8 @@ float* ImpedanceControl::modelReferenceAdaptiveImpedanceControl(float dt, float 
         mraic_[i].setImpact(impact);
         Xr[i] = mraic_[i].compute(dt, e[i]);
     }
+
+    if (impact) impact_set = true;
 
     return Xr;
 }
@@ -216,7 +242,7 @@ void ImpedanceControl::force_measurement_cb(const geometry_msgs::WrenchStamped &
         torque_z_meas_[i] = torque_z_meas_[i+1];
     }
 
-	force_z_meas_[moving_average_sample_number_-1] = msg.wrench.force.z;
+	force_z_meas_[moving_average_sample_number_-1] = force_z_median.filter(msg.wrench.force.z);
     force_x_meas_[moving_average_sample_number_-1] = msg.wrench.force.x;
     force_y_meas_[moving_average_sample_number_-1] = msg.wrench.force.y;
     torque_x_meas_[moving_average_sample_number_-1] = msg.wrench.torque.x;
@@ -242,6 +268,7 @@ void ImpedanceControl::pose_ref_cb(const geometry_msgs::PoseStamped &msg)
 
 void ImpedanceControl::force_torque_cb(const geometry_msgs::WrenchStamped &msg)
 {
+    ref_flag_ = true;
     force_torque_ref_ = msg;
 }
 
@@ -249,7 +276,7 @@ bool ImpedanceControl::check_collision(void)
 {
     bool collision;
 
-    if (getFilteredForceZ() > 0.05) collision = true;
+    if (fabs(getFilteredForceZ()) > 0.1) collision = true;
     else collision = false;
 
     return collision;
@@ -482,6 +509,8 @@ void ImpedanceControl::run()
                 filtered_ft_sensor_msg.wrench.torque.y = getFilteredTorqueY();
                 filtered_ft_sensor_msg.wrench.torque.z = getFilteredTorqueZ();
 				force_filtered_pub_.publish(filtered_ft_sensor_msg);
+
+                publishMRAICstatus();
 
                 free(xc);
                 free(xr);

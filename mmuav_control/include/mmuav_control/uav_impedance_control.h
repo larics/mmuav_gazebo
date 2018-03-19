@@ -11,6 +11,8 @@
 #include <geometry_msgs/Vector3Stamped.h>
 #include <std_msgs/Float64.h>
 #include <mmuav_control/mraic.h>
+#include <mmuav_msgs/MRAIController.h>
+#include <mmuav_control/median_filter.h>
 
 #define MAX_MOVING_AVARAGE_SAMPLES_NUM	100
 
@@ -30,13 +32,14 @@ class ImpedanceControl{
 		float getFilteredTorqueZ(void);
 		bool check_collision(void);
 		bool check_impact(void);
+		void publishMRAICstatus(void);
 		float* impedanceFilter(float *e, float *Xr);
 		float* modelReferenceAdaptiveImpedanceControl(float dt, float *e, float *g0);
 		void quaternion2euler(float *quaternion, float *euler);
 		void initializeMRACControl(void);
 
 		volatile bool start_flag_, force_sensor_calibration_flag_;
-		bool impact_flag_, collision_;
+		bool impact_flag_, collision_, ref_flag_;
 		float force_x_meas_[MAX_MOVING_AVARAGE_SAMPLES_NUM];
 		float force_z_meas_[MAX_MOVING_AVARAGE_SAMPLES_NUM];
 		float force_y_meas_[MAX_MOVING_AVARAGE_SAMPLES_NUM];
@@ -50,6 +53,8 @@ class ImpedanceControl{
 		float torque_y_offset_, torque_x_offset_, torque_z_offset_;
 		int rate_, moving_average_sample_number_, targetImpedanceType_;
 
+		median_filter force_z_median;
+
 		rosgraph_msgs::Clock clock_;
 		geometry_msgs::PoseStamped pose_ref_;
 		geometry_msgs::WrenchStamped force_torque_ref_;
@@ -61,6 +66,7 @@ class ImpedanceControl{
 		ros::Subscriber force_torque_ref_ros_sub_, pose_ref_ros_sub_;
 
 		ros::Publisher force_filtered_pub_, position_commanded_pub_, yaw_commanded_pub_;
+		ros::Publisher mraic_status_pub_;
 
 		Tf2 Ge_[6], Gxr_[6];
 		mraic mraic_[6];

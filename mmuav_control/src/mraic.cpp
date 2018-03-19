@@ -17,14 +17,22 @@ mraic::mraic(void)
     kp_ = 0.0;
     kd_ = 0.0;
     g_ = 0.0;
+    q_ = 0.0;
+    u_ = 0.0;
 
     e_[0] = 0.0;
     e_[1] = 0.0;
     de_ = 0.0;
 
+    ym_[0] = 0.0;
+    ym_[1] = 0.0;
+
+    error_median.init(5);
+
     samplingTime_ = 1.0;
 
 	reference_model_init_ = false;
+    impact_ = false;
 }
 
 void mraic::initializeReferenceModel(float zeta, float omega)
@@ -62,11 +70,7 @@ void mraic::setReferenceModelInitialConditions(float ym0, float dym0)
 
 void mraic::setImpact(bool impact)
 {
-    if (impact)
-    {
-        time_ = 0.0;
-        setReferenceModelInitialConditions(e_[0], de_);
-    }
+    impact_ = impact;
 }
 
 void mraic::setAdaptiveParameterInitialValues(float g0, float kp0, float kd0)
@@ -131,8 +135,7 @@ float mraic::getReferencePositionSignal(void)
 
 float mraic::compute(float dt, float e)
 {
-    float cond[2], u = 0.0;
-    float q;
+    float cond[2];
     float *ym;
 
     if (reference_model_init_)
@@ -142,21 +145,44 @@ float mraic::compute(float dt, float e)
 
     	time_ += dt;
 
-        de_ = (e_[0] - e_[1]) / dt;
+        de_ = error_median.filter((e_[0] - e_[1]) / dt);
+
+        if (impact_)
+        {
+            time_ = 0.0;
+            setReferenceModelInitialConditions(e_[0], 0);
+        }
 
     	cond[0] = ym0_;
         cond[1] = dym0_;
         ym = Ym_.dsolve(time_, cond);
+        ym_[0] = ym[0];
+        ym_[1] = ym[1];
 
-        q = wp_ * (ym[0] - e) + wd_ * (ym[1] - de_);
-        kp_ = calculateAdaptiveProportionalGainKp(q, e_[0], de_);
-        kd_ = calculateAdaptiveDerivativeGainKd(q, e_[0], de_);
-        g_ = calculateReferencePositionSignal(q);
+        q_ = wp_ * (ym[0] - e) + wd_ * (ym[1] - de_);
+        kp_ = calculateAdaptiveProportionalGainKp(q_, e_[0], de_);
+        kd_ = calculateAdaptiveDerivativeGainKd(q_, e_[0], de_);
+        g_ = calculateReferencePositionSignal(q_);
 
-        u = g_ + kp_ * e_[0] + kd_ * de_;
+        u_ = g_ + kp_ * e_[0] + kd_ * de_;
     }
 
     free(ym);
 
-    return u;
+    return u_;
+}
+
+void mraic::create_msg(mmuav_msgs::MRAIController &msg)
+{
+    /* Returns ros message of type MARIController */
+    msg.q = q_;
+    msg.kp = kp_;
+    msg.kd = kd_;
+    msg.g = g_;
+    msg.ym = ym_[0];
+    msg.dym = ym_[1];
+    msg.e = e_[0];
+    msg.de = de_;
+    msg.u = u_;
+    msg.header.stamp = ros::Time::now();
 }

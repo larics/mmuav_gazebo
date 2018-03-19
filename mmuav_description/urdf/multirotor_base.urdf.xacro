@@ -559,7 +559,7 @@
       <visual>
         <origin xyz="-0.01903 -0.01661 -0.05153" rpy="0 0 0" />
         <geometry>
-          <mesh filename="package://mmuav_description/meshes/forcesensor_mount_top.dae"
+          <mesh filename="package://mmuav_description/meshes/forcesensor_mount_top_without_hole.dae"
             scale="1 1 1" />
         </geometry>
       </visual>
@@ -567,7 +567,7 @@
       <collision name='collision'>
         <origin xyz="-0.01903 -0.01661 -0.05153" rpy="0 0 0"/>
         <geometry>
-          <mesh filename="package://mmuav_description/meshes/forcesensor_mount_top.dae"
+          <mesh filename="package://mmuav_description/meshes/forcesensor_mount_top_without_hole.dae"
             scale="1 1 1" />
         </geometry>
       </collision>
