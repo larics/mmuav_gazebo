@@ -50,6 +50,7 @@ catkin build
 Finally, clone mmuav_gazebo repository:
 
 ```
+cd ~/catkin_ws/src
 git clone https://github.com/larics/mmuav_gazebo.git
 catkin build
 ```
