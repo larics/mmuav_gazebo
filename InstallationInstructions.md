@@ -32,6 +32,7 @@ cd ~/catkin_ws/src
 git clone https://github.com/ethz-asl/rotors_simulator.git 
 cd rotors_simulator
 git checkout 97b3da2d02ab498b0c9d7a15d0297e72fe6b6482
+cd ~/catkin_ws/src
 git clone https://github.com/ethz-asl/mav_comm.git
 cd mav_comm
 git checkout de1b6294fa30f2c5fb892831bc86bd7ec8c08d00
@@ -42,13 +43,14 @@ Before you build, install following dependencies:
 
 ```
 sudo apt-get install libopencv-dev
-sudo apt-get install ros-kinetic-joy ros-kinetic-octomap-ros ros-kinetic-mavlink python-wstool python-catkin-tools protobuf-compiler libgoogle-glog-dev ros-kinetic-control-toolbox ros-kinetic-mavros ros-kinetic-effort-controllers ros-kinetic-position-controllers ros-kinetic-robot-controllers ros-kinetic-joint-state-controller ros-kinetic-controller-manager ros-kinetic-gazebo-ros-control
+sudo apt-get install ros-kinetic-joy ros-kinetic-octomap-ros ros-kinetic-mavlink python-wstool python-catkin-tools protobuf-compiler libgoogle-glog-dev ros-kinetic-control-toolbox ros-kinetic-mavros ros-kinetic-effort-controllers ros-kinetic-position-controllers ros-kinetic-robot-controllers ros-kinetic-joint-state-controller ros-kinetic-controller-manager ros-kinetic-gazebo-ros-control ros-kinetic-hector-gazebo-plugins
 catkin build
 ```
 
 Finally, clone mmuav_gazebo repository:
 
 ```
+cd ~/catkin_ws/src
 git clone https://github.com/larics/mmuav_gazebo.git
 catkin build
 ```

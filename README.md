@@ -9,10 +9,10 @@ Package ```mmuav_arducopter_bridge``` is used for controlling the UAV in real wo
 - [Basic usage](#BasicUsage)
   * [Running the simulation](#Running)
     * [Mmuav](#Mmuav)
-    * [VpcMmc UAV](#MMCUAV)
+    * [VpcMmc UAV](#VPCMMCUAV)
 
 ## <a name="Installation"></a> Installation
-Detailed installation instructions can be found in InstallationInstructions.md
+Detailed installation instructions can be found in [InstallationInstructions.md](https://github.com/larics/mmuav_gazebo/blob/master/InstallationInstructions.md)
 
 ## <a name="BasicUsage"></a> Basic Usage
 This section describes how to run the simulation and lists topis of interest.
