@@ -80,8 +80,8 @@ class AttitudeControl:
         self.pid_roll_rate.set_kp(20)
         self.pid_roll_rate.set_ki(20)
         self.pid_roll_rate.set_kd(2)
-        self.pid_roll_rate.set_lim_high(0.08)
-        self.pid_roll_rate.set_lim_low(-0.08)
+        self.pid_roll_rate.set_lim_high(1475)
+        self.pid_roll_rate.set_lim_low(-1475)
 
         self.pid_pitch.set_kp(0.5)
         self.pid_pitch.set_ki(0.1)
@@ -90,8 +90,8 @@ class AttitudeControl:
         self.pid_pitch_rate.set_kp(20)
         self.pid_pitch_rate.set_ki(20.0)
         self.pid_pitch_rate.set_kd(2.0)
-        self.pid_pitch_rate.set_lim_high(0.08)
-        self.pid_pitch_rate.set_lim_low(-0.08)
+        self.pid_pitch_rate.set_lim_high(1475)
+        self.pid_pitch_rate.set_lim_low(-1475)
 
         self.pid_yaw.set_kp(1.0)
         self.pid_yaw.set_ki(0.001)
@@ -100,6 +100,8 @@ class AttitudeControl:
         self.pid_yaw_rate.set_kp(200.0)
         self.pid_yaw_rate.set_ki(0)
         self.pid_yaw_rate.set_kd(0)
+        self.pid_yaw_rate.set_lim_high(1475)
+        self.pid_yaw_rate.set_lim_low(-1475)
 
         # Filter parameters
         self.rate_mv_filt_K = 1.0
