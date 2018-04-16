@@ -175,7 +175,7 @@
   <!-- <xacro:camera_macro robot_namespace="${namespace}">
   </xacro:camera_macro> -->
 
-  <xacro:transmisija
+  <!--xacro:transmisija
     trans_number="0"
     joint_name="stick_to_movable_mass_0">
   </xacro:transmisija>
@@ -193,5 +193,5 @@
   <xacro:transmisija
     trans_number="3"
     joint_name="stick_to_movable_mass_3">
-  </xacro:transmisija>
+  </xacro:transmisija-->
 </robot>
