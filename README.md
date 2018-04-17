@@ -45,6 +45,10 @@ To run simulation for UAV with moving mass controller launch:
 
 ```roslaunch mmuav_gazebo vpc_mmcuav_attitude_height.launch ```
 
+To run simulation for UAV with moving mass controller launch and position controller(this simulation supports trajectory following):
+
+```roslaunch mmuav_gazebo vpc_mmcuav_attitude_position.launch ```
+
 Alternatively, one can run simulation with a **rope** attached to the UAV:
 
 ```roslaunch mmuav_gazebo vpc_mmcuav_attitude_height.launch model_type:=mmcuav_rope```
@@ -53,11 +57,13 @@ After running the command above, the UAV will hover at 1m height. You can contro
 
 **Subscriptions:**
 
-- ``` /mmuav/euler_ref``` -> Desired euler angle reference here to move the UAV.
-- ``` /mmuav/vel_ref``` -> Desired height of the UAV.
+- ``` /vpc_mmcuav/euler_ref``` -> Desired euler angle reference here to move the UAV.
+- ``` /vpc_mmcuav/vel_ref``` -> Desired height of the UAV.
+- ``` /vpc_mmcuav/pose_ref`` -> Position and orientation reference
+- ``` /vpc_mmcuav/multi_dof_trajectory``` -> Send trajectory to this topic
 
 **Published topics:**
 
-- ``` /mmuav/imu``` -> Imu data from the UAV
-- ``` /mmuav/odometry ``` -> Provides position, orientation, linear velocities and angular velocities of the UAV
-- ``` /mmuav/pid_*``` -> All topics starting with ```pid_``` are publishing controller status
+- ``` /vpc_mmcuav/imu``` -> Imu data from the UAV
+- ``` /vpc_mmcuav/odometry ``` -> Provides position, orientation, linear velocities and angular velocities of the UAV
+- ``` /vpc_mmcuav/pid_*``` -> All topics starting with ```pid_``` are publishing controller status
