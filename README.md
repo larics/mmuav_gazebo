@@ -59,7 +59,7 @@ After running the command above, the UAV will hover at 1m height. You can contro
 
 - ``` /vpc_mmcuav/euler_ref``` -> Desired euler angle reference here to move the UAV.
 - ``` /vpc_mmcuav/vel_ref``` -> Desired height of the UAV.
-- ``` /vpc_mmcuav/pose_ref`` -> Position and orientation reference
+- ``` /vpc_mmcuav/pose_ref``` -> Position and orientation reference
 - ``` /vpc_mmcuav/multi_dof_trajectory``` -> Send trajectory to this topic
 
 **Published topics:**
