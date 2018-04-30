@@ -186,7 +186,7 @@ class PositionControl:
             temp_euler_ref.x = self.pid_vy.compute(vy_ref, self.vy_mv, dt)
 
             #                              (m_uav + m_arms)/(C*4)
-            self.mot_speed_hover = math.sqrt(9.81*(2.083+0.208*4+0.6)/(8.54858e-06*4.0))
+            self.mot_speed_hover = math.sqrt(9.81*(2.083)/(8.54858e-06*4.0))
             # prefilter for reference
             #a = 0.1
             #self.z_ref_filt = (1-a) * self.z_ref_filt  + a * self.z_sp
@@ -333,7 +333,7 @@ class PositionControl:
 
 if __name__ == '__main__':
 
-    rospy.init_node('vpc_mmcuav_position_controller')
+    rospy.init_node('uav_position_controller')
     position_ctl = PositionControl()
     position_ctl.run()
 

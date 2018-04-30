@@ -212,6 +212,6 @@ class HeightControl:
 
 if __name__ == '__main__':
 
-    rospy.init_node('vpc_mmcuav_z_controller')
+    rospy.init_node('uav_z_controller')
     height_ctl = HeightControl()
     height_ctl.run()
