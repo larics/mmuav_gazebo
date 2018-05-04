@@ -52,10 +52,10 @@ class MergeControllerOutputs:
             self.ros_rate.sleep()
 
             # Compute motor velocities, + configuration
-            mot1 = self.mot_vel_ref + self.yaw_command - self.pitch_command
-            mot2 = self.mot_vel_ref - self.yaw_command + self.roll_command
-            mot3 = self.mot_vel_ref + self.yaw_command + self.pitch_command
-            mot4 = self.mot_vel_ref - self.yaw_command - self.roll_command
+            mot1 = saturate(self.mot_vel_ref + self.yaw_command - self.pitch_command, 0.0, 1450.0)
+            mot2 = saturate(self.mot_vel_ref - self.yaw_command + self.roll_command, 0.0, 1450.0)
+            mot3 = saturate(self.mot_vel_ref + self.yaw_command + self.pitch_command, 0.0, 1450.0)
+            mot4 = saturate(self.mot_vel_ref - self.yaw_command - self.roll_command, 0.0, 1450.0)
 
             # Publish everything
             mot_speed_msg = Actuators()
@@ -76,6 +76,14 @@ class MergeControllerOutputs:
     def motor_velocity_ref_cb(self, msg):
         self.mot_vel_ref = msg.data
         self.mot_vel_ref_received_flag = True
+
+def saturate(value, minval, maxval):
+    if value < minval:
+        value = minval
+    elif value > maxval:
+        value = maxval
+
+    return value
 
 
 if __name__ == "__main__":

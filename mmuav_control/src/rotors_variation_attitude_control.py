@@ -73,25 +73,25 @@ class AttitudeControl:
         ##################################################################
         # Add your PID params here
 
-        self.pid_roll.set_kp(8.0)
+        self.pid_roll.set_kp(7.0)
         self.pid_roll.set_ki(1.0)
         self.pid_roll.set_kd(0.0)
 
-        self.pid_roll_rate.set_kp(300.0)
-        self.pid_roll_rate.set_ki(10.0)
+        self.pid_roll_rate.set_kp(250.0)
+        self.pid_roll_rate.set_ki(20.0)
         self.pid_roll_rate.set_kd(3.0)
-        self.pid_roll_rate.set_lim_high(1475)
-        self.pid_roll_rate.set_lim_low(-1475)
+        self.pid_roll_rate.set_lim_high(1450.0)
+        self.pid_roll_rate.set_lim_low(-1450.0)
 
-        self.pid_pitch.set_kp(8.0)
+        self.pid_pitch.set_kp(7.0)
         self.pid_pitch.set_ki(1.0)
         self.pid_pitch.set_kd(0.0)
 
-        self.pid_pitch_rate.set_kp(300.0)
-        self.pid_pitch_rate.set_ki(10.0)
+        self.pid_pitch_rate.set_kp(250.0)
+        self.pid_pitch_rate.set_ki(20.0)
         self.pid_pitch_rate.set_kd(3.0)
-        self.pid_pitch_rate.set_lim_high(1475)
-        self.pid_pitch_rate.set_lim_low(-1475)
+        self.pid_pitch_rate.set_lim_high(1450.0)
+        self.pid_pitch_rate.set_lim_low(-1450.0)
 
         self.pid_yaw.set_kp(1.0)
         self.pid_yaw.set_ki(0.001)
@@ -100,8 +100,8 @@ class AttitudeControl:
         self.pid_yaw_rate.set_kp(200.0)
         self.pid_yaw_rate.set_ki(0)
         self.pid_yaw_rate.set_kd(0)
-        self.pid_yaw_rate.set_lim_high(1475)
-        self.pid_yaw_rate.set_lim_low(-1475)
+        self.pid_yaw_rate.set_lim_high(1450.0)
+        self.pid_yaw_rate.set_lim_low(-1450.0)
 
         # Filter parameters
         self.rate_mv_filt_K = 1.0
