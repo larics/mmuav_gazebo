@@ -8,6 +8,7 @@ from geometry_msgs.msg import Transform
 from geometry_msgs.msg import Twist
 from geometry_msgs.msg import PoseStamped
 from std_msgs.msg import Header
+from rospkg import RosPack
 import copy
 
 
@@ -76,7 +77,8 @@ if __name__== '__main__':
         print "generating trajectory"
         rospy.sleep(5)
         generate=reference_gen()
-        generate.pubtrajectory("/home/ne_pitaj/catkin_ws/src/mmuav_gazebo/mmuav_control/src/4seg.txt")
+        file_name = RosPack().get_path('mmuav_control') + '/src/4seg.txt'
+        generate.pubtrajectory(file_name)
 
     except rospy.ROSInterruptException:
         pass
