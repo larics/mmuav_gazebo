@@ -77,7 +77,7 @@ if __name__== '__main__':
         print "generating trajectory"
         rospy.sleep(5)
         generate=reference_gen()
-        file_name = RosPack().get_path('mmuav_control') + '/src/4seg.txt'
+        file_name = RosPack().get_path('mmuav_control') + '/resources/4seg.txt'
         generate.pubtrajectory(file_name)
 
     except rospy.ROSInterruptException:
