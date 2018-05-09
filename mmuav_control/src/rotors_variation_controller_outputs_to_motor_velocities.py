@@ -15,7 +15,7 @@ from rosgraph_msgs.msg import Clock
 class MergeControllerOutputs:
 
     def __init__(self):
-        self.rate = rospy.get_param('rate', 100)
+        self.rate = rospy.get_param('~rate', 100)
         self.ros_rate = rospy.Rate(self.rate)
 
         self.roll_command = 0.0
