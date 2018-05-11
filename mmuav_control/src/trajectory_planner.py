@@ -193,7 +193,7 @@ class trajectory_planner():
                 deltadQiRow=deltadQiRow+self.polyorder+1
                 dQi=np.vstack((dQi,np.zeros((sizedQ-deltadQiRow,self.polyorder+1))))
                 dQ=np.hstack((dQ,dQi))
-        print dQ
+        return dQ
 
     def gen_T(self,Points):     #approximate segment times based on distance
         T=np.zeros(self.segments)
