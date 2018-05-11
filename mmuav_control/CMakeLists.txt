@@ -35,8 +35,8 @@ include_directories(
   ${catkin_INCLUDE_DIRS}
 )
 
-add_executable(UavGeometricControl src/UavGeometricControl.cpp)
-target_link_libraries(UavGeometricControl ${catkin_LIBRARIES})
+add_executable(UavGeometryControl src/UavGeometryControl.cpp)
+target_link_libraries(UavGeometryControl ${catkin_LIBRARIES})
 
 #install(DIRECTORY config
 #  DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION})

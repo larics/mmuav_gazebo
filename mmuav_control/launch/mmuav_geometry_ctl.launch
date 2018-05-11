@@ -11,7 +11,7 @@
     <arg name="namespace" default="mmuav"/>
     <arg name="rate" default="100"/>
     
-    <node name="geometric_control_node" pkg="mmuav_control" type="UavGeometricControl"
+    <node name="geometric_control" pkg="mmuav_control" type="UavGeometryControl"
         output="screen">
       <param name="rate" value="(arg rate)"/>
     </node>
