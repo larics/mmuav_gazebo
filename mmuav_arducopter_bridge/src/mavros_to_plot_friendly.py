@@ -55,7 +55,7 @@ class PlotFriendly:
 
     def rcin_cb(self, msg):
         self.plot_imu_euler_ref.x = (msg.channels[1]-1500)*0.3/500
-        self.plot_imu_euler_ref.y = (msg.channels[0]-1500)*0.3/500
+        self.plot_imu_euler_ref.y = -(msg.channels[0]-1500)*0.3/500
         self.plot_imu_euler_ref.z = (msg.channels[3]-1500)*0.3/500
 
 if __name__ == '__main__':

@@ -30,8 +30,7 @@
     <arg name="model_type" value="$(arg model_type)" />
   </include>
 
-
   <!-- Start attitude height control -->
-  <include file="$(find mmuav_control)/launch/rotors_variation_attitude_height_control.launch"/>
+  <include file="$(find mmuav_control)/launch/rotors_variation_trajectory_test.launch"/>
 
 </launch>

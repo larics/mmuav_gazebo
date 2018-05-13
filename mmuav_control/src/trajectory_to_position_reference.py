@@ -6,15 +6,17 @@ import math
 import time
 
 from trajectory_msgs.msg import MultiDOFJointTrajectory
-from geometry_msgs.msg import Vector3
+from geometry_msgs.msg import Pose
 
 
 class TrajectoryToPositionReference():
 
     def __init__(self):
-        rospy.Subscriber('/euroc3/command/trajectory', MultiDOFJointTrajectory, 
+        self.rate = rospy.get_param("~rate", 100)
+        print "----------------------RATE-------------------_", self.rate
+        rospy.Subscriber('multi_dof_trajectory', MultiDOFJointTrajectory, 
             self.trajectory_callback, queue_size=1)
-        self.position_ref_pub = rospy.Publisher('pos_ref', Vector3, queue_size=1)
+        self.pose_ref_pub = rospy.Publisher('pose_ref', Pose, queue_size=1)
 
     def run(self):
         rospy.spin()
@@ -23,14 +25,19 @@ class TrajectoryToPositionReference():
         trajectory = msg
 
         print "Trajectory received, length:", len(trajectory.points)
-        rate = rospy.Rate(100)
-        position_ref = Vector3()
+        rate = rospy.Rate(float(self.rate))
+        pose_ref = Pose()
         for i in range(len(trajectory.points)):
             rate.sleep()
-            position_ref.x = trajectory.points[i].transforms[0].translation.x
-            position_ref.y = trajectory.points[i].transforms[0].translation.y
-            position_ref.z = trajectory.points[i].transforms[0].translation.z
-            self.position_ref_pub.publish(position_ref)
+            pose_ref.position.x = trajectory.points[i].transforms[0].translation.x
+            pose_ref.position.y = trajectory.points[i].transforms[0].translation.y
+            pose_ref.position.z = trajectory.points[i].transforms[0].translation.z
+            pose_ref.orientation.x = trajectory.points[i].transforms[0].rotation.x
+            pose_ref.orientation.y = trajectory.points[i].transforms[0].rotation.y
+            pose_ref.orientation.z = trajectory.points[i].transforms[0].rotation.z
+            pose_ref.orientation.w = trajectory.points[i].transforms[0].rotation.w
+
+            self.pose_ref_pub.publish(pose_ref)
 
 if __name__=="__main__":
     rospy.init_node("TrajectoryToPositionReference")

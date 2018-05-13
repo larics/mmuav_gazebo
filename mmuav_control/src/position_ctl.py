@@ -5,6 +5,7 @@ __author__ = 'aivanovic'
 import rospy, math
 from math import sin, cos
 from pid import PID
+from sensor_msgs.msg import Imu
 from geometry_msgs.msg import Vector3, PoseWithCovarianceStamped, PoseStamped, \
     TwistStamped, Pose, Point, Quaternion
 from nav_msgs.msg import Odometry
@@ -43,13 +44,13 @@ class PositionControl:
         self.config_start = False       # flag indicates if the config callback is called for the first time
 
         # Params
-        self.rate = rospy.get_param('rate', 100)
+        self.rate = rospy.get_param('~rate', 100)
         # 0 for simulation, 1 for optitrack
         self.feedback_source = rospy.get_param('~feedback', 0)
         print self.feedback_source
 
         # Load parameters from yaml file
-        file_name = rospy.get_param('filename', 'PositionControl.yaml')
+        file_name = rospy.get_param('~filename', 'PositionControl.yaml')
         file_name = RosPack().get_path('mmuav_control') + '/config/' + file_name
         initial_params = yaml.load(file(file_name, 'r'))
 
@@ -74,6 +75,7 @@ class PositionControl:
         self.orientation_sp = Quaternion()
         self.velocity_ff = Vector3()
         self.acceleration_ff = Vector3()
+        self.euler_mv=Vector3()
 
         # X controller
         self.pid_x = PID()
@@ -165,6 +167,8 @@ class PositionControl:
         rospy.Subscriber('reset_controllers', Empty, self.reset_controllers_cb)
         rospy.Subscriber('trajectory_point_ref', MultiDOFJointTrajectoryPoint, 
             self.trajectory_point_ref_cb)
+        rospy.Subscriber('imu', Imu, self.ahrs_cb)
+
 
         #self.pub_gm_mot = rospy.Publisher('collectiveThrust', GmStatus, queue_size=1)       
         self.cfg_server = Server(PositionCtlParamsConfig, self.cfg_callback)
@@ -223,11 +227,11 @@ class PositionControl:
                 self.vel_mv.y, dt) + self.Kff_a*self.acceleration_ff.y/self.g
             # z
             vz_ref = self.pid_z.compute(self.pos_sp.z, self.pos_mv.z, dt)
-            self.mot_speed = self.mot_speed_hover + \
-                        self.pid_vz.compute(vz_ref + self.Kff_v*self.velocity_ff.z, 
+            self.mot_speed = self.mot_speed_hover/(cos(0.0*self.euler_mv.x)*cos(0.0*self.euler_mv.y)) + \
+                        (self.pid_vz.compute(vz_ref + self.Kff_v*self.velocity_ff.z, 
                         self.vel_mv.z, dt) + \
-                        self.Kff_a*self.z_ff_scaler*self.acceleration_ff.z
-            #print "mot_speed", self.mot_speed
+                        self.Kff_a*self.z_ff_scaler*self.acceleration_ff.z)
+            #print 1/(cos(self.euler_mv.x)*cos(self.euler_mv.y))
 
             ########################################################
             ########################################################
@@ -320,6 +324,23 @@ class PositionControl:
         #    msg.pose.pose.orientation.y, msg.pose.pose.orientation.z,
         #    msg.pose.pose.orientation.w))
         #self.vel_mv = msg.twist.twist.linear
+    def ahrs_cb(self, msg):
+        '''
+        AHRS callback. Used to extract roll, pitch, yaw and their rates.
+        We used the following order of rotation - 1)yaw, 2) pitch, 3) roll
+        :param msg: Type sensor_msgs/Imu
+        '''
+
+        qx = msg.orientation.x
+        qy = msg.orientation.y
+        qz = msg.orientation.z
+        qw = msg.orientation.w
+
+        # conversion quaternion to euler (yaw - pitch - roll)
+        self.euler_mv.x = math.atan2(2 * (qw * qx + qy * qz), qw * qw - qx * qx - qy * qy + qz * qz)
+        self.euler_mv.y = math.asin(2 * (qw * qy - qx * qz))
+        self.euler_mv.z = math.atan2(2 * (qw * qz + qx * qy), qw * qw + qx * qx - qy * qy - qz * qz)
+
 
     def optitrack_pose_cb(self, msg):
         if not self.start_flag:
@@ -389,7 +410,7 @@ class PositionControl:
         """
         Callback for dynamically reconfigurable parameters (P,I,D gains for height and velocity controller)
         """
-        #print "CFG callback"
+        print "CFG callback", config.x_kp
 
         if not self.config_start:
             # callback is called for the first time. Use this to set the new params to the config server

@@ -21,6 +21,16 @@
       <param name="rate" value="$(arg rate)"/>
     </node>
 
+    <!-- Trajectory to trajectory points -->
+    <node name="trajectory_to_trajectory_point" pkg="mmuav_control" type="trajectory_to_trajectory_point.py" output="screen">
+      <param name="rate" value="$(arg rate)"/>
+    </node>
+
+    <!-- Trajectory publish -->
+    <node name="trajectory_publish" pkg="mmuav_control" type="trajectory_publish.py" output="screen">
+      <param name="rate" value="$(arg rate)"/>
+    </node>
+
   </group>
 
 </launch>

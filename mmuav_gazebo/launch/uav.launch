@@ -13,8 +13,6 @@
   <arg name="enable_ground_truth" default="true"/>
   <arg name="log_file" default="uav"/>
 
-  <arg name="model_type" default="uav" />
-
 
   <!-- Launch gazebo -->
   <include file="$(find gazebo_ros)/launch/empty_world.launch">
@@ -26,12 +24,9 @@
     <arg name="headless" value="$(arg headless)"/>
   </include>
 
-  <include file="$(find mmuav_description)/launch/spawn_uav.launch">
-    <arg name="model_type" value="$(arg model_type)" />
-  </include>
+  <include file="$(find mmuav_description)/launch/spawn_uav.launch" />
 
-
-  <!-- Start attitude height control -->
-  <include file="$(find mmuav_control)/launch/rotors_variation_attitude_height_control.launch"/>
+  <!-- Start control -->
+  <include file="$(find mmuav_control)/launch/rotors_variation_control.launch"/>
 
 </launch>
