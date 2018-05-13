@@ -1,6 +1,6 @@
 <?xml version="1.0"?>
 
-<robot name="mmcuav" xmlns:xacro="http://ros.org/wiki/xacro">
+<robot name="uav" xmlns:xacro="http://ros.org/wiki/xacro">
   <!-- Properties -->
   <xacro:property name="rotor_velocity_slowdown_sim" value="15" />
   <xacro:property name="mesh_file" value="3DR_Arducopter.dae" />
@@ -45,34 +45,25 @@
   <!--<inertia ixx="0.00528525" ixy="0.0" ixz="0.0" iyy="0.00528250" iyz="0.0" izz="0.0104" />  [kg*m^2] [kg*m^2] [kg*m^2] [kg*m^2] [kg*m^2] [kg*m^2] -->
     <inertia ixx="0.0826944" ixy="0.0" ixz="0.0" iyy="0.0826944" iyz="0.0" izz="0.0104" /> <!-- [kg*m^2] [kg*m^2] [kg*m^2] [kg*m^2] [kg*m^2] [kg*m^2] identificirani Ixx Iyy-->
   </xacro:property>
-  
+
   <!-- inertia of a single rotor, assuming it is a cuboid. Height=5mm, width=31mm -->
   <xacro:property name="rotor_inertia">
-    <inertia 
-    ixx="${1/12 * mass_rotor * (0.031 * 0.031 + 0.005 * 0.005) * rotor_velocity_slowdown_sim}" 
-    iyy="${1/12 * mass_rotor * (4 * radius_rotor * radius_rotor + 0.005 * 0.005) * rotor_velocity_slowdown_sim}" 
-    izz="${1/12 * mass_rotor * (4 * radius_rotor * radius_rotor + 0.031 * 0.031) * rotor_velocity_slowdown_sim}" 
+    <inertia
+    ixx="${1/12 * mass_rotor * (0.031 * 0.031 + 0.005 * 0.005) * rotor_velocity_slowdown_sim}"
+    iyy="${1/12 * mass_rotor * (4 * radius_rotor * radius_rotor + 0.005 * 0.005) * rotor_velocity_slowdown_sim}"
+    izz="${1/12 * mass_rotor * (4 * radius_rotor * radius_rotor + 0.031 * 0.031) * rotor_velocity_slowdown_sim}"
     ixy="0.0" ixz="0.0"  iyz="0.0" /> <!-- [kg*m^2] [kg*m^2] [kg*m^2] [kg*m^2] [kg*m^2] [kg*m^2] -->
   </xacro:property>
 
   <!-- Included URDF Files -->
   <xacro:include filename="$(find mmuav_description)/urdf/multirotor_base.urdf.xacro" />
 
-  <!-- Moving mass inertia block -->
-  <xacro:property name="movable_mass_inertia">
-     <inertia 
-     ixx="${mm_mass * (mm_path_len/2 * mm_path_len/2)}" 
-     iyy="${mm_mass * (mm_path_len/2 * mm_path_len/2)}" 
-     izz="${mm_mass * (mm_path_len/2 * mm_path_len/2)}" 
-     ixy="0.0" ixz="0.0"  iyz="0.0" /> <!-- [kg*m^2] [kg*m^2] [kg*m^2] [kg*m^2] [kg*m^2] [kg*m^2] -->
-  </xacro:property>
-
   <!-- IMU inertia (Pixhawk) -->
   <xacro:property name="imu_inertia">
-    <inertia 
-    ixx="${(imu_mass * imu_size * imu_size)/6}" 
-    iyy="${(imu_mass * imu_size * imu_size)/6}" 
-    izz="${(imu_mass * imu_size * imu_size)/6}" 
+    <inertia
+    ixx="${(imu_mass * imu_size * imu_size)/6}"
+    iyy="${(imu_mass * imu_size * imu_size)/6}"
+    izz="${(imu_mass * imu_size * imu_size)/6}"
     ixy="0.0" ixz="0.0"  iyz="0.0" /> <!-- [kg*m^2] [kg*m^2] [kg*m^2] [kg*m^2] [kg*m^2] [kg*m^2] -->
   </xacro:property>
 
@@ -172,7 +163,146 @@
     <xacro:insert_block name="rotor_inertia" />
   </xacro:vertical_rotor>
 
-  <!-- <xacro:camera_macro robot_namespace="${namespace}">
-  </xacro:camera_macro> -->
+  <link name='link01'>
+    <inertial>
+      <mass value="0.001" />
+      <origin xyz="0 0 -0.03" rpy="0 0 0"/>
+      <inertia
+        ixx="0.05" ixy="0" ixz="0"
+        iyx="0" iyy="0.05" iyz="0"
+        izx="0" izy="0" izz="0.05"/>
+    </inertial>
+
+    <visual>
+      <origin xyz="0 0 -0.03" rpy="0 0 0" />
+      <geometry>
+        <cylinder length="0.08" radius="0.015"/>
+      </geometry>
+    </visual>
+  </link>
+
+
+  <link name='con1'>
+    <inertial>
+      <mass value="0.001" />
+      <origin xyz="0 0 -0.07" rpy="0 0 0"/>
+      <inertia
+        ixx="0.05" ixy="0" ixz="0"
+        iyx="0" iyy="0.05" iyz="0"
+        izx="0" izy="0" izz="0.05"/>
+    </inertial>
+
+    <visual>
+      <origin xyz="0 0 -0.07" rpy="0 0 0" />
+      <geometry>
+        <sphere radius="0.015"/>
+      </geometry>
+    </visual>
+  </link>
+
+  <link name='link12'>
+    <inertial>
+      <mass value="0.001" />
+      <origin xyz="-0.113137 0.113137 -0.07" rpy="0 0 0"/>
+      <inertia
+        ixx="0.05" ixy="0" ixz="0"
+        iyx="0" iyy="0.05" iyz="0"
+        izx="0" izy="0" izz="0.05"/>
+    </inertial>
+
+    <visual>
+      <origin xyz="-0.113137 0.113137 -0.07" rpy="0.758398 1.5708 0" />
+      <geometry>
+        <cylinder length="0.32" radius="0.015"/>
+      </geometry>
+    </visual>
+  </link>
+
+  <link name='con2'>
+    <inertial>
+      <mass value="0.001" />
+      <origin xyz="-0.226274 0.226274 -0.07" rpy="0 0 0"/>
+      <inertia
+        ixx="0.5" ixy="0" ixz="0"
+        iyx="0" iyy="0.5" iyz="0"
+        izx="0" izy="0" izz="0.5"/>
+    </inertial>
+
+    <visual>
+      <origin xyz="-0.226274 0.226274 -0.07" rpy="0 0 0" />
+      <geometry>
+        <sphere radius="0.015"/>
+      </geometry>
+    </visual>
+  </link>
+
+  <link name='link23'>
+    <inertial>
+      <mass value="0.001" />
+      <origin xyz="-0.282843 0.282843 -0.07" rpy="0 0 0"/>
+      <inertia
+        ixx="0.5" ixy="0" ixz="0"
+        iyx="0" iyy="0.5" iyz="0"
+        izx="0" izy="0" izz="0.5"/>
+    </inertial>
+
+    <visual>
+      <origin xyz="-0.282843 0.282843 -0.07" rpy="0.758398 1.5708 0" />
+      <geometry>
+        <cylinder length="0.16" radius="0.015"/>
+      </geometry>
+    </visual>
+  </link>
+
+
+  <joint name="base_to_link01" type="fixed">
+    <parent link="base_link"/>
+    <child link="link01"/>
+  </joint>
+
+  <joint name="link01_to_con1" type="fixed">
+    <parent link="link01"/>
+    <child link="con1"/>
+  </joint>
+
+  <joint name="con1_to_link12" type="continuous">
+    <parent link="con1"/>
+    <child link="link12"/>
+    <limit upper="3.14" lower="-3.14" effort="10000000" velocity="20"/>
+    <axis xyz="0 0 1" />
+    <dynamics damping="0.07" friction="0.0"/>
+  </joint>
+
+  <joint name="link12_to_con2" type="fixed">
+    <parent link="link12"/>
+    <child link="con2"/>
+  </joint>
+
+  <joint name="con2_to_link23" type="continuous">
+    <parent link="con2"/>
+    <child link="link23"/>
+    <origin xyz="0 0 0" rpy="0 0 0"/>
+    <limit upper="3.14" lower="-3.14" effort="10000000" velocity="20"/>
+    <axis xyz="0 0 1" />
+    <dynamics damping="0.07" friction="0.0"/>
+  </joint>
+
+  <!--
+  <origin xyz="0 0 -0.3" rpy="0 0 0"/>
+  <origin xyz="0 0 -0.07" rpy="0 0 0"/>
+  <origin xyz="0 0 -0.07" rpy="0 0 0"/>
+  <origin xyz="-0.226274 0.226274 -0.07" rpy="0 0 -0.07"/>
+  <origin xyz="-0.226274 0.226274 -0.07" rpy="0 0 0"/>
+  -->
+
+  <xacro:transmisija
+    trans_number="0"
+    joint_name="con1_to_link12">
+  </xacro:transmisija>
+
+  <xacro:transmisija
+    trans_number="1"
+    joint_name="con2_to_link23">
+  </xacro:transmisija>
 
 </robot>

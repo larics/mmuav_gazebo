@@ -1,7 +1,7 @@
 <?xml version="1.0" ?>
 
 <launch>
-  <arg name="namespace" default="vpc_mmcuav"/>
+  <arg name="namespace" default="uav"/>
   <arg name="rate" default="100"/>
 
   <group ns="$(arg namespace)">

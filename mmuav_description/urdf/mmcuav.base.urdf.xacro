@@ -45,13 +45,13 @@
   <!--<inertia ixx="0.00528525" ixy="0.0" ixz="0.0" iyy="0.00528250" iyz="0.0" izz="0.0104" />  [kg*m^2] [kg*m^2] [kg*m^2] [kg*m^2] [kg*m^2] [kg*m^2] -->
     <inertia ixx="0.0826944" ixy="0.0" ixz="0.0" iyy="0.0826944" iyz="0.0" izz="0.0104" /> <!-- [kg*m^2] [kg*m^2] [kg*m^2] [kg*m^2] [kg*m^2] [kg*m^2] identificirani Ixx Iyy-->
   </xacro:property>
-  
+
   <!-- inertia of a single rotor, assuming it is a cuboid. Height=5mm, width=31mm -->
   <xacro:property name="rotor_inertia">
-    <inertia 
-    ixx="${1/12 * mass_rotor * (0.031 * 0.031 + 0.005 * 0.005) * rotor_velocity_slowdown_sim}" 
-    iyy="${1/12 * mass_rotor * (4 * radius_rotor * radius_rotor + 0.005 * 0.005) * rotor_velocity_slowdown_sim}" 
-    izz="${1/12 * mass_rotor * (4 * radius_rotor * radius_rotor + 0.031 * 0.031) * rotor_velocity_slowdown_sim}" 
+    <inertia
+    ixx="${1/12 * mass_rotor * (0.031 * 0.031 + 0.005 * 0.005) * rotor_velocity_slowdown_sim}"
+    iyy="${1/12 * mass_rotor * (4 * radius_rotor * radius_rotor + 0.005 * 0.005) * rotor_velocity_slowdown_sim}"
+    izz="${1/12 * mass_rotor * (4 * radius_rotor * radius_rotor + 0.031 * 0.031) * rotor_velocity_slowdown_sim}"
     ixy="0.0" ixz="0.0"  iyz="0.0" /> <!-- [kg*m^2] [kg*m^2] [kg*m^2] [kg*m^2] [kg*m^2] [kg*m^2] -->
   </xacro:property>
 
@@ -60,19 +60,19 @@
 
   <!-- Moving mass inertia block -->
   <xacro:property name="movable_mass_inertia">
-     <inertia 
-     ixx="${mm_mass * (mm_path_len/2 * mm_path_len/2)}" 
-     iyy="${mm_mass * (mm_path_len/2 * mm_path_len/2)}" 
-     izz="${mm_mass * (mm_path_len/2 * mm_path_len/2)}" 
+     <inertia
+     ixx="${mm_mass * (mm_path_len/2 * mm_path_len/2)}"
+     iyy="${mm_mass * (mm_path_len/2 * mm_path_len/2)}"
+     izz="${mm_mass * (mm_path_len/2 * mm_path_len/2)}"
      ixy="0.0" ixz="0.0"  iyz="0.0" /> <!-- [kg*m^2] [kg*m^2] [kg*m^2] [kg*m^2] [kg*m^2] [kg*m^2] -->
   </xacro:property>
 
   <!-- IMU inertia (Pixhawk) -->
   <xacro:property name="imu_inertia">
-    <inertia 
-    ixx="${(imu_mass * imu_size * imu_size)/6}" 
-    iyy="${(imu_mass * imu_size * imu_size)/6}" 
-    izz="${(imu_mass * imu_size * imu_size)/6}" 
+    <inertia
+    ixx="${(imu_mass * imu_size * imu_size)/6}"
+    iyy="${(imu_mass * imu_size * imu_size)/6}"
+    izz="${(imu_mass * imu_size * imu_size)/6}"
     ixy="0.0" ixz="0.0"  iyz="0.0" /> <!-- [kg*m^2] [kg*m^2] [kg*m^2] [kg*m^2] [kg*m^2] [kg*m^2] -->
   </xacro:property>
 
@@ -177,7 +177,7 @@
 
   <!-- Instantinate movable mass 0 -->
   <xacro:movable_mass
-    mass_number="0" 
+    mass_number="0"
     parent="base_link"
     mass="${mm_mass}"
     dimension="${mm_dimension}"
@@ -193,8 +193,8 @@
   </xacro:movable_mass>
 
   <!-- Instantiate movable mass 1 -->
-  <xacro:movable_mass 
-    mass_number="1" 
+  <xacro:movable_mass
+    mass_number="1"
     parent="base_link"
     mass="${mm_mass}"
     dimension="${mm_dimension}"
@@ -211,8 +211,8 @@
 
 
   <!-- Instantiate movable mass 2-->
-  <xacro:movable_mass 
-    mass_number="2" 
+  <xacro:movable_mass
+    mass_number="2"
     parent="base_link"
     mass="${mm_mass}"
     dimension="${mm_dimension}"
@@ -229,8 +229,8 @@
 
 
   <!-- Instantiate movable mass 3 -->
-  <xacro:movable_mass 
-    mass_number="3" 
+  <xacro:movable_mass
+    mass_number="3"
     parent="base_link"
     mass="${mm_mass}"
     dimension="${mm_dimension}"

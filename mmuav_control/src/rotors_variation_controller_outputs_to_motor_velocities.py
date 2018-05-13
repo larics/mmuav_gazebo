@@ -21,8 +21,7 @@ class MergeControllerOutputs:
         self.roll_command = 0.0
         self.pitch_command = 0.0
         self.yaw_command = 0.0
-        self.vpc_roll_command = 0.0
-        self.vpc_pitch_command = 0.0
+
 
         self.mot_vel_ref = 0.0
 
@@ -30,13 +29,13 @@ class MergeControllerOutputs:
         self.mot_vel_ref_received_flag = False
 
         # Publisher for motor velocities
-        self.mot_vel_pub = rospy.Publisher('/gazebo/command/motor_speed', 
+        self.mot_vel_pub = rospy.Publisher('/gazebo/command/motor_speed',
             Actuators, queue_size=1)
 
         # Subscribers to height and attitude controllers
-        rospy.Subscriber('attitude_command', Float64MultiArray, 
+        rospy.Subscriber('attitude_command', Float64MultiArray,
             self.attitude_command_cb, queue_size=1)
-        rospy.Subscriber('mot_vel_ref', Float64, 
+        rospy.Subscriber('mot_vel_ref', Float64,
             self.motor_velocity_ref_cb, queue_size=1)
 
     def run(self):
@@ -54,10 +53,10 @@ class MergeControllerOutputs:
             self.ros_rate.sleep()
 
             # Compute motor velocities, + configuration
-            mot1 = self.mot_vel_ref + self.yaw_command - self.vpc_pitch_command
-            mot2 = self.mot_vel_ref - self.yaw_command + self.vpc_roll_command
-            mot3 = self.mot_vel_ref + self.yaw_command + self.vpc_pitch_command
-            mot4 = self.mot_vel_ref - self.yaw_command - self.vpc_roll_command
+            mot1 = self.mot_vel_ref + self.yaw_command - self.pitch_command
+            mot2 = self.mot_vel_ref - self.yaw_command + self.roll_command
+            mot3 = self.mot_vel_ref + self.yaw_command + self.pitch_command
+            mot4 = self.mot_vel_ref - self.yaw_command - self.roll_command
 
             # Publish everything
             mot_speed_msg = Actuators()
@@ -71,8 +70,7 @@ class MergeControllerOutputs:
             self.roll_command = msg.data[0]
             self.pitch_command = msg.data[1]
             self.yaw_command = msg.data[2]
-            self.vpc_roll_command = msg.data[3]
-            self.vpc_pitch_command = msg.data[4]
+
             self.attitude_command_received_flag = True
         except:
             print "Not enough data. Length of data array: ", len(msg.data)

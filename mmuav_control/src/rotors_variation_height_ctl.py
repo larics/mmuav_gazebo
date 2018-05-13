@@ -22,12 +22,10 @@ class HeightControl:
         /morus/velocity   - used to extract vz of the vehicle
         /morus/pos_ref    - used to set the reference for z-position
         /morus/vel_ref    - used to set the reference for vz-position (useful for testing velocity controller)
-
     Publishes:
         /morus/mot_vel_ref  - referent value for thrust in terms of motor velocity (rad/s)
         /morus/pid_z        - publishes PID-z data - referent value, measured value, P, I, D and total component (useful for tuning params)
         /morus/pid_vz        - publishes PID-vz data - referent value, measured value, P, I, D and total component (useful for tuning params)
-
     Dynamic reconfigure is used to set controller params online.
     '''
 
@@ -81,7 +79,7 @@ class HeightControl:
         self.pub_pid_vz = rospy.Publisher('pid_vz', PIDController, queue_size=1)
         self.mot_ref_pub = rospy.Publisher('mot_vel_ref', Float64, queue_size=1)
         self.pub_mot = rospy.Publisher('/gazebo/command/motor_speed', Actuators, queue_size=1)
-        #self.pub_gm_mot = rospy.Publisher('collectiveThrust', GmStatus, queue_size=1)       
+        #self.pub_gm_mot = rospy.Publisher('collectiveThrust', GmStatus, queue_size=1)
         self.cfg_server = Server(VpcMmcuavZCtlParamsConfig, self.cfg_callback)
         self.rate = rospy.get_param('rate', 100)
         self.ros_rate = rospy.Rate(self.rate)                 # attitude control at 100 Hz
@@ -215,4 +213,3 @@ if __name__ == '__main__':
     rospy.init_node('vpc_mmcuav_z_controller')
     height_ctl = HeightControl()
     height_ctl.run()
-

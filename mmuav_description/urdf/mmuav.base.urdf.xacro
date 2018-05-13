@@ -11,7 +11,7 @@
   <xacro:property name="body_height" value="0.3158" /> <!-- [m] -->
   <xacro:property name="mass_rotor" value="0.01" /> <!-- [kg] -->
   <xacro:property name="arm_length" value="0.314" /> <!-- [m] -->
-  
+
   <xacro:property name="rotor_offset_top" value="0.04579" /> <!-- [m] -->
   <xacro:property name="radius_rotor" value="0.1524" /> <!-- [m] -->
   <xacro:property name="motor_constant" value="8.54858e-06" /> <!-- [kg*m/s^2] -->
@@ -39,32 +39,32 @@
 
   <!-- Property Blocks -->
   <xacro:property name="body_inertia">
-    <inertia 
-      ixx="0.05197456" ixy="-0.00278118" ixz="-0.00000212" 
+    <inertia
+      ixx="0.05197456" ixy="-0.00278118" ixz="-0.00000212"
       iyx="-0.00278118" iyy="0.05197467" iyz="-0.00000110"
       izx="-0.00000212" izy="-0.00000110" izz="0.09682843" /> <!-- [kg*m^2] [kg*m^2] [kg*m^2] [kg*m^2] [kg*m^2] [kg*m^2] -->
   </xacro:property>
 
   <!-- inertia of a single rotor, assuming it is a cuboid. Height=5mm, width=31mm -->
   <xacro:property name="rotor_inertia">
-    <inertia 
-    ixx="${1/12 * mass_rotor * (0.031 * 0.031 + 0.005 * 0.005) * rotor_velocity_slowdown_sim}" 
-    iyy="${1/12 * mass_rotor * (4 * radius_rotor * radius_rotor + 0.005 * 0.005) * rotor_velocity_slowdown_sim}" 
-    izz="${1/12 * mass_rotor * (4 * radius_rotor * radius_rotor + 0.031 * 0.031) * rotor_velocity_slowdown_sim}" 
+    <inertia
+    ixx="${1/12 * mass_rotor * (0.031 * 0.031 + 0.005 * 0.005) * rotor_velocity_slowdown_sim}"
+    iyy="${1/12 * mass_rotor * (4 * radius_rotor * radius_rotor + 0.005 * 0.005) * rotor_velocity_slowdown_sim}"
+    izz="${1/12 * mass_rotor * (4 * radius_rotor * radius_rotor + 0.031 * 0.031) * rotor_velocity_slowdown_sim}"
     ixy="0.0" ixz="0.0"  iyz="0.0" /> <!-- [kg*m^2] [kg*m^2] [kg*m^2] [kg*m^2] [kg*m^2] [kg*m^2] -->
   </xacro:property>
 
   <xacro:property name="imu_inertia">
-    <inertia 
-    ixx="${(imu_mass * imu_size * imu_size)/6}" 
-    iyy="${(imu_mass * imu_size * imu_size)/6}" 
-    izz="${(imu_mass * imu_size * imu_size)/6}" 
+    <inertia
+    ixx="${(imu_mass * imu_size * imu_size)/6}"
+    iyy="${(imu_mass * imu_size * imu_size)/6}"
+    izz="${(imu_mass * imu_size * imu_size)/6}"
     ixy="0.0" ixz="0.0"  iyz="0.0" /> <!-- [kg*m^2] [kg*m^2] [kg*m^2] [kg*m^2] [kg*m^2] [kg*m^2] -->
   </xacro:property>
 
   <!-- Included URDF Files -->
   <xacro:include filename="$(find mmuav_description)/urdf/multirotor_base.urdf.xacro" />
-  
+
   <!-- Instantiate multirotor_base_macro once-->
   <xacro:multirotor_base_macro
     robot_namespace="$(arg name)"
@@ -213,34 +213,34 @@
     <origin xyz="0 -0.158342 -0.07349" rpy="-1.57079632679 0 0"/>
   </xacro:manipulator>
 
-  <!-- Add transmission for joints--> 
-  <xacro:transmisija 
-    trans_number="0" 
+  <!-- Add transmission for joints-->
+  <xacro:transmisija
+    trans_number="0"
     joint_name="joint_q1_left">
-  </xacro:transmisija>    
+  </xacro:transmisija>
 
-  <xacro:transmisija 
+  <xacro:transmisija
     trans_number="3"
     joint_name="joint_q1_right">
   </xacro:transmisija>
 
-  <xacro:transmisija 
+  <xacro:transmisija
     trans_number="1"
     joint_name="joint_q2_left">
   </xacro:transmisija>
 
-  <xacro:transmisija 
+  <xacro:transmisija
     trans_number="4"
     joint_name="joint_q2_right">
   </xacro:transmisija>
 
-  <xacro:transmisija 
-    trans_number="5" 
+  <xacro:transmisija
+    trans_number="5"
     joint_name="joint_q3_passive_left">
   </xacro:transmisija >
 
 
-  <xacro:transmisija 
+  <xacro:transmisija
     trans_number="6"
     joint_name="joint_q3_passive_right">
   </xacro:transmisija>
