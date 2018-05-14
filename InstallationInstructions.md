@@ -43,7 +43,7 @@ Before you build, install following dependencies:
 
 ```
 sudo apt-get install libopencv-dev
-sudo apt-get install ros-kinetic-joy ros-kinetic-octomap-ros ros-kinetic-mavlink python-wstool python-catkin-tools protobuf-compiler libgoogle-glog-dev ros-kinetic-control-toolbox ros-kinetic-mavros ros-kinetic-effort-controllers ros-kinetic-position-controllers ros-kinetic-robot-controllers ros-kinetic-joint-state-controller ros-kinetic-controller-manager ros-kinetic-gazebo-ros-control ros-kinetic-hector-gazebo-plugins
+sudo apt-get install ros-kinetic-joy ros-kinetic-octomap-ros ros-kinetic-mavlink python-wstool python-catkin-tools protobuf-compiler libgoogle-glog-dev ros-kinetic-control-toolbox ros-kinetic-mavros ros-kinetic-effort-controllers ros-kinetic-position-controllers ros-kinetic-robot-controllers ros-kinetic-joint-state-controller ros-kinetic-controller-manager ros-kinetic-gazebo-ros-control ros-kinetic-hector-gazebo-plugins ros-kinetic-xacro ros-kinetic-robot-state-publisher
 catkin build
 ```
 
