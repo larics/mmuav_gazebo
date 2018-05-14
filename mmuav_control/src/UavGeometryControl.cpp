@@ -12,10 +12,24 @@ UavGeometryControl::UavGeometryControl(int rate)
 	// Initialize controller variables
 	controller_rate_ = rate;
 	sleep_duration_ = 0.5;
+	start_flag_ = false;
+
+	// Initialize desired position and orientation values
+	x_d_(0, 0) = 0;
+	x_d_(1, 0) = 0;
+	x_d_(2, 0) = 0;
+
+	b1_d_(0, 0) = 0;
+	b1_d_(1, 0) = 0;
+	b1_d_(2, 0) = 1;
 
 	// Initialize subscribers and publishers
 	imu_ros_sub_ = node_handle_.subscribe(
-			"imu", 1, &UavGeometryControl::imu_cb, this);
+			"/mmuav/imu", 1, &UavGeometryControl::imu_cb, this);
+	xd_ros_sub_ = node_handle_.subscribe(
+			"/mmuav/x_desired", 1, &UavGeometryControl::xd_cb, this);
+	b1d_ros_sub_ = node_handle_.subscribe(
+			"/mmuav/b1_desired", 1, &UavGeometryControl::b1d_cb, this);
 }
 
 UavGeometryControl::~UavGeometryControl()
@@ -54,6 +68,20 @@ void UavGeometryControl::run()
 	{
 		// Do the control...
 	}
+}
+
+void UavGeometryControl::xd_cb(const geometry_msgs::Vector3 &msg)
+{
+	x_d_(0, 0) = msg.x;
+	x_d_(1, 0) = msg.y;
+	x_d_(2, 0) = msg.z;
+}
+
+void UavGeometryControl::b1d_cb(const geometry_msgs::Vector3 &msg)
+{
+	b1_d_(0, 0) = msg.x;
+	b1_d_(1, 0) = msg.y;
+	b1_d_(2, 0) = msg.z;
 }
 
 void UavGeometryControl::imu_cb (const sensor_msgs::Imu &msg)

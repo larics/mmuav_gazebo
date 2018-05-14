@@ -15,6 +15,9 @@
 
 #include "ros/ros.h"
 #include <sensor_msgs/Imu.h>
+#include <eigen3/Eigen/Dense>
+
+using namespace Eigen;
 
 class UavGeometryControl
 {
@@ -40,12 +43,9 @@ class UavGeometryControl
 
 	private:
 
-		/**
-		 * IMU topic callback function.
-		 * Following convention is used:
-		 * 	1)yaw, 2) pitch, 3) roll
-		 */
 		void imu_cb(const sensor_msgs::Imu &msg);
+		void xd_cb(const geometry_msgs::Vector3 &msg);
+		void b1d_cb(const geometry_msgs::Vector3 &msg);
 
 		/**
 		 * Perform quaternion to euler transformation.
@@ -61,32 +61,42 @@ class UavGeometryControl
 		ros::NodeHandle node_handle_;
 
 		/**
-		 * Subscriber handle for the IMU topic.
+		 * Subscriber handle for the IMU topic,
+		 * desired position (x_D) topic and
+		 * desired direction of the first body axis b1_D respectively.
 		 */
-		ros::Subscriber imu_ros_sub_;
+		ros::Subscriber imu_ros_sub_, xd_ros_sub_, b1d_ros_sub_;
 
 		/**
-		 * Messages containing angle measured values, angle setpoints
-		 * and angle rate measured values respectively.
+		 * Messages containing angle measured values and
+		 * angle rate measured values respectively.
 		 */
-		geometry_msgs::Vector3 euler_mv_, euler_sp_, euler_rate_mv_;
+		geometry_msgs::Vector3 euler_mv_, euler_rate_mv_;
+
+		/**
+		 * CONTROLLER INPUT REFERENCES(initialized from appropriate subscriber
+		 * callback functions):
+		 * 	- desired position x_D
+		 * 	- desired direction of the first body axis b1_D
+		 */
+		Matrix<float, 3, 1> x_d_, b1_d_;
 
 		/**
 		 * Controller rate. Frequency at which the loop in run method
 		 * will be executed.
 		 */
-		int controller_rate_ = -1;
+		int controller_rate_;
 
 		/**
 		 * Sleep duration used while performing checks before starting the
 		 * run() loop.
 		 */
-		float sleep_duration_ = -1.0;
+		float sleep_duration_;
 
 		/**
 		 * True when first callback function occurred otherwise false.
 		 */
-		bool start_flag_ = false;
+		bool start_flag_;
 };
 
 #endif /* UAV_GEOMETRY_CONTROL_H */
