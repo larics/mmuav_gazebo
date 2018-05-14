@@ -23,13 +23,14 @@ class trajectory_planner():
         deq=self.gen_deq(Points)
         Q=self.gen_Q(self.gen_T(Points))
         dQ=self.gen_dQ(self.gen_T(Points))
+        print Aeq.shape, deq.shape
 
-    def gen_Aeq(self,T):      #calculating matrix of equality constraints
+
+    def gen_Aeq(self,T,derivation_order=4):      #calculating matrix of equality constraints
 
         # initializing basic polynome of a given order
 
         polynom=np.poly1d(np.ones(self.polyorder+1))
-        derivation_order=4
 
         #calculating coeffitients of polynom derivatives
 
@@ -97,28 +98,44 @@ class trajectory_planner():
                 Aeq=np.hstack((Aeq,Aj))
         return Aeq
 
-    def gen_deq(self,Points):
+    def gen_deq(self,Points,derivation_order=4):
 
         d1=np.array([])
-        for i in range(self.segments-1):
-            if i==0:
-                dx=np.transpose(np.matrix([Points[i].x, 0, 0, Points[i+1].x, 0, 0, 0, 0]))
-                dy=np.transpose(np.matrix([Points[i].y, 0, 0, Points[i+1].y, 0, 0, 0, 0]))
-                dz=np.transpose(np.matrix([Points[i].z, 0, 0, Points[i+1].z, 0, 0, 0, 0]))
+        for i in range(self.segments):
+            zeros=np.zeros(derivation_order)
+            if self.polyorder >=9:
+                if i==0:
+                    dx=np.transpose(np.matrix(np.hstack(([Points[i].x], zeros,[Points[i+1].x], zeros))))
+                    dy=np.transpose(np.matrix(np.hstack(([Points[i].y], zeros,[Points[i+1].y], zeros))))
+                    dz=np.transpose(np.matrix(np.hstack(([Points[i].z], zeros,[Points[i+1].z], zeros))))
+
+                else:
+                    dx=np.vstack((dx,np.transpose(np.matrix(np.hstack(([Points[i].x],[Points[i+1].x], zeros))))))
+                    dy=np.vstack((dy,np.transpose(np.matrix(np.hstack(([Points[i].x],[Points[i+1].x], zeros))))))
+                    dz=np.vstack((dz,np.transpose(np.matrix(np.hstack(([Points[i].x],[Points[i+1].x], zeros))))))
             else:
-                dx=np.vstack((dx,np.transpose(np.matrix([Points[i].x, Points[i+1].x, 0, 0, 0, 0]))))
-                dy=np.vstack((dy,np.transpose(np.matrix([Points[i].y, Points[i+1].y, 0, 0, 0, 0]))))
-                dz=np.vstack((dz,np.transpose(np.matrix([Points[i].z, Points[i+1].z, 0, 0, 0, 0]))))
+                if i==0:
+                    dx=np.transpose(np.matrix(np.hstack(([Points[i].x, 0, 0,Points[i+1].x], zeros))))
+                    dy=np.transpose(np.matrix(np.hstack(([Points[i].y, 0, 0,Points[i+1].y], zeros))))
+                    dz=np.transpose(np.matrix(np.hstack(([Points[i].z, 0, 0,Points[i+1].z], zeros))))
+                elif i==self.segments-1:
+                    dx=np.vstack((dx,np.transpose(np.matrix([Points[i].x, Points[i+1].x, 0, 0]))))
+                    dy=np.vstack((dy,np.transpose(np.matrix([Points[i].y, Points[i+1].y, 0, 0]))))
+                    dz=np.vstack((dz,np.transpose(np.matrix([Points[i].z, Points[i+1].z, 0, 0]))))
+                else:
+                    dx=np.vstack((dx,np.transpose(np.matrix(np.hstack(([Points[i].x],[Points[i+1].x], zeros))))))
+                    dy=np.vstack((dy,np.transpose(np.matrix(np.hstack(([Points[i].x],[Points[i+1].x], zeros))))))
+                    dz=np.vstack((dz,np.transpose(np.matrix(np.hstack(([Points[i].x],[Points[i+1].x], zeros))))))
 
         deq=np.vstack((dx,dy,dz))
         return deq
 
-    def gen_Q(self,T): #cost function
+    def gen_Q(self,T,derivation_order=4): #cost function
 
         # initializing basic polynom of a given order
 
         polynom=np.poly1d(np.ones(self.polyorder+1))
-        derivation_order=4
+
         for n in range(1, derivation_order+1):
             polynom=np.polyder(polynom)
 
@@ -134,6 +151,8 @@ class trajectory_planner():
         sizeQ = deltaQiRow * self.segments
 
         for i in range(self.segments):
+
+
             #T matrix to be used for Hadamard product
 
             Qi=np.matmul(np.transpose(polynom),polynom)
@@ -153,13 +172,11 @@ class trajectory_planner():
                 Q=np.hstack((Q,Qi))
         return Q
 
-
-    def gen_dQ(self,T):
+    def gen_dQ(self,T,derivation_order=4):
 
         # initializing basic polynom of a given order
 
         polynom=np.poly1d(np.ones(self.polyorder+1))
-        derivation_order=4
 
         for n in range(1, derivation_order+2):
             polynom=np.polyder(polynom)
@@ -205,9 +222,9 @@ class trajectory_planner():
         return T
 
 if __name__=='__main__':
-    Points=np.array([Vector3(0,0,0)])
-    Points=np.append(Points,Vector3(0,.5,0))
-    Points=np.append(Points,Vector3(.5,.5,0))
-    Points=np.append(Points,Vector3(.5,0,0))
-    Points=np.append(Points,Vector3(0,0,0))
-    trajectory=trajectory_planner(Points,7)
+    Points=np.array([Vector3(1,0,0)])
+    Points=np.append(Points,Vector3(2,.5,0))
+    Points=np.append(Points,Vector3(3,.5,0))
+    Points=np.append(Points,Vector3(4,0,0))
+    Points=np.append(Points,Vector3(5,0,0))
+    trajectory=trajectory_planner(Points,9)
