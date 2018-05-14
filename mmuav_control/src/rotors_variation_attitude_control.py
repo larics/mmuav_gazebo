@@ -33,6 +33,7 @@ class AttitudeControl:
         /morus/pid_pitch_rate     - publishes PID-pitch_rate data - referent value, measured value, P, I, D and total component (useful for tuning params)
         /morus/pid_yaw            - publishes PID-yaw data - referent value, measured value, P, I, D and total component (useful for tuning params)
         /morus/pid_yaw_rate       - publishes PID-yaw_rate data - referent value, measured value, P, I, D and total component (useful for tuning params)
+
     Dynamic reconfigure is used to set controllers param online.
     '''
 
@@ -64,45 +65,43 @@ class AttitudeControl:
         self.pid_yaw = PID()                            # yaw controller
         self.pid_yaw_rate = PID()                       # yaw rate (wz) controller
 
-
+        # Adding VPC controllers for roll and pitch
+        self.pid_vpc_roll = PID()
+        self.pid_vpc_pitch = PID()
 
         ##################################################################
         ##################################################################
         # Add your PID params here
 
-        self.pid_roll.set_kp(0.5)
-        #self.pid_roll.set_kp(3.0)
-        self.pid_roll.set_ki(0.1)
+        self.pid_roll.set_kp(7.0)
+        self.pid_roll.set_ki(1.0)
         self.pid_roll.set_kd(0.0)
 
-        self.pid_roll_rate.set_kp(20)
-        self.pid_roll_rate.set_ki(20)
-        self.pid_roll_rate.set_kd(2)
-        self.pid_roll_rate.set_lim_high(1475)
-        self.pid_roll_rate.set_lim_low(-1475)
+        self.pid_roll_rate.set_kp(250.0)
+        self.pid_roll_rate.set_ki(20.0)
+        self.pid_roll_rate.set_kd(3.0)
+        self.pid_roll_rate.set_lim_high(1450.0)
+        self.pid_roll_rate.set_lim_low(-1450.0)
 
-        #self.pid_pitch.set_kp(3.0)
-        self.pid_pitch.set_kp(0.5)
-        self.pid_pitch.set_ki(0.1)
+        self.pid_pitch.set_kp(7.0)
+        self.pid_pitch.set_ki(1.0)
         self.pid_pitch.set_kd(0.0)
 
-        self.pid_pitch_rate.set_kp(20)
-        self.pid_pitch_rate.set_ki(20)
-        self.pid_pitch_rate.set_kd(2)
-        self.pid_pitch_rate.set_lim_high(1475)
-        self.pid_pitch_rate.set_lim_low(-1475)
+        self.pid_pitch_rate.set_kp(250.0)
+        self.pid_pitch_rate.set_ki(20.0)
+        self.pid_pitch_rate.set_kd(3.0)
+        self.pid_pitch_rate.set_lim_high(1450.0)
+        self.pid_pitch_rate.set_lim_low(-1450.0)
 
         self.pid_yaw.set_kp(1.0)
         self.pid_yaw.set_ki(0.001)
         self.pid_yaw.set_kd(0.1)
 
-        self.pid_yaw_rate.set_kp(200)
+        self.pid_yaw_rate.set_kp(200.0)
         self.pid_yaw_rate.set_ki(0)
         self.pid_yaw_rate.set_kd(0)
-        self.pid_yaw_rate.set_lim_high(1475)
-        self.pid_yaw_rate.set_lim_low(-1475)
-
-
+        self.pid_yaw_rate.set_lim_high(1450.0)
+        self.pid_yaw_rate.set_lim_low(-1450.0)
 
         # Filter parameters
         self.rate_mv_filt_K = 1.0
@@ -133,6 +132,10 @@ class AttitudeControl:
         rospy.Subscriber('/clock', Clock, self.clock_cb)
         rospy.Subscriber('reset_controllers', Empty, self.reset_controllers_cb)
 
+        #self.pub_mass0 = rospy.Publisher('movable_mass_0_position_controller/command', Float64, queue_size=1)
+        #self.pub_mass1 = rospy.Publisher('movable_mass_1_position_controller/command', Float64, queue_size=1)
+        #self.pub_mass2 = rospy.Publisher('movable_mass_2_position_controller/command', Float64, queue_size=1)
+        #self.pub_mass3 = rospy.Publisher('movable_mass_3_position_controller/command', Float64, queue_size=1)
         self.attitude_pub = rospy.Publisher('attitude_command', Float64MultiArray, queue_size=1)
         self.pub_pid_roll = rospy.Publisher('pid_roll', PIDController, queue_size=1)
         self.pub_pid_roll_rate = rospy.Publisher('pid_roll_rate', PIDController, queue_size=1)
@@ -140,7 +143,6 @@ class AttitudeControl:
         self.pub_pid_pitch_rate = rospy.Publisher('pid_pitch_rate', PIDController, queue_size=1)
         self.pub_pid_yaw = rospy.Publisher('pid_yaw', PIDController, queue_size=1)
         self.pub_pid_yaw_rate = rospy.Publisher('pid_yaw_rate', PIDController, queue_size=1)
-
         self.cfg_server = Server(VpcMmcuavAttitudeCtlParamsConfig, self.cfg_callback)
 
     def run(self):
@@ -213,6 +215,19 @@ class AttitudeControl:
             yaw_rate_output = self.pid_yaw_rate.compute(yaw_rate_sv, self.euler_rate_mv.z, dt_clk)
 
 
+            # Publish mass position
+            #mass0_command_msg = Float64()
+            #mass0_command_msg.data = dx_pitch
+            #mass2_command_msg = Float64()
+            #mass2_command_msg.data = -dx_pitch
+            #mass1_command_msg = Float64()
+            #mass1_command_msg.data = -dy_roll
+            #mass3_command_msg = Float64()
+            #mass3_command_msg.data = dy_roll
+            #self.pub_mass0.publish(mass0_command_msg)
+            #self.pub_mass1.publish(mass1_command_msg)
+            #self.pub_mass2.publish(mass2_command_msg)
+            #self.pub_mass3.publish(mass3_command_msg)
 
             # Publish attitude
             attitude_output = Float64MultiArray()
@@ -227,7 +242,6 @@ class AttitudeControl:
             self.pub_pid_pitch_rate.publish(self.pid_pitch_rate.create_msg())
             self.pub_pid_yaw.publish(self.pid_yaw.create_msg())
             self.pub_pid_yaw_rate.publish(self.pid_yaw_rate.create_msg())
-
 
     def mot_vel_ref_cb(self, msg):
         '''
@@ -244,7 +258,6 @@ class AttitudeControl:
         self.pid_roll_rate.reset()
         self.pid_yaw.reset()
         self.pid_yaw_rate.reset()
-
         rospy.Subscriber('imu', Imu, self.ahrs_cb)
 
     def ahrs_cb(self, msg):
@@ -336,7 +349,6 @@ class AttitudeControl:
             config.yaw_r_kd = self.pid_yaw_rate.get_kd()
 
 
-
             # Rate filter
             config.rate_mv_filt_K = self.rate_mv_filt_K
             config.rate_mv_filt_T = self.rate_mv_filt_T
@@ -377,8 +389,6 @@ class AttitudeControl:
             self.pid_yaw_rate.set_kp(config.yaw_r_kp)
             self.pid_yaw_rate.set_ki(config.yaw_r_ki)
             self.pid_yaw_rate.set_kd(config.yaw_r_kd)
-
-
 
             # Rate filter
             self.rate_mv_filt_K = config.rate_mv_filt_K
