@@ -57,6 +57,20 @@ class UavGeometryControl
 		void quaternion2euler(float *quaternion, float *euler);
 
 		/**
+		 * Perform hat operator on given vector components.
+		 *
+		 * @param x - x vector component
+		 * @param y - y vector component
+		 * @param z - z vector component
+		 *
+		 * @return - Matrix of the following form:
+		 * 	[ 0  -z,  y]
+		 * 	[ z,  0, -x]
+		 * 	[-y,  x,  0]
+		 */
+		Matrix<double, 3, 3> hatOperator(double x, double y, double z);
+
+		/**
 		 * Node handle used for setting up subscribers and publishers.
 		 */
 		ros::NodeHandle node_handle_;
@@ -80,7 +94,12 @@ class UavGeometryControl
 		 * 	- desired position x_D
 		 * 	- desired direction of the first body axis b1_D
 		 */
-		Matrix<float, 3, 1> x_d_, b1_d_;
+		Matrix<double, 3, 1> x_d_, b1_d_;
+
+		/**
+		 * Angular velocity in matrix form.
+		 */
+		Matrix<double, 3, 3> omega_hat_;
 
 		/**
 		 * Variable used for calculating time intervals in the controller loop.

@@ -17,13 +17,10 @@ UavGeometryControl::UavGeometryControl(int rate)
 	start_flag_ = false;
 
 	// Initialize desired position and orientation values
-	x_d_(0, 0) = 0;
-	x_d_(1, 0) = 0;
-	x_d_(2, 0) = 0;
-
-	b1_d_(0, 0) = 0;
-	b1_d_(1, 0) = 0;
-	b1_d_(2, 0) = 1;
+	x_d_.setZero(3,1);
+	b1_d_.setZero(3,1);
+	b1_d_(2,0) = 1;			// Initial heading is (0, 0, 1)
+	omega_hat_.setZero(3,3);
 
 	// Initialize subscribers and publishers
 	imu_ros_sub_ = node_handle_.subscribe(
@@ -82,8 +79,6 @@ void UavGeometryControl::run()
 
 		// Update old time
 		t_old_ = ros::Time::now();
-
-		// TODO(lmark): Implement control loop here.
 	}
 }
 
@@ -134,6 +129,20 @@ void UavGeometryControl::imu_cb (const sensor_msgs::Imu &msg)
     euler_rate_mv_.z = sx / cy * q + cx / cy * r;
 }
 
+Matrix<double, 3, 3> UavGeometryControl::hatOperator(
+		double x, double y, double z)
+{
+	Matrix<double, 3, 3> hat_matrix;
+	hat_matrix.setZero(3,3);
+	hat_matrix(0, 1) = -z;
+	hat_matrix(0, 2) =  y;
+	hat_matrix(1, 0) =  z;
+	hat_matrix(1, 2) = -x;
+	hat_matrix(2, 0) = -y;
+	hat_matrix(2, 1) =  x;
+	return hat_matrix;
+}
+
 void UavGeometryControl::quaternion2euler(float *quaternion, float *euler)
 {
   euler[0] = atan2(2 * (quaternion[0] * quaternion[1] +
@@ -156,7 +165,7 @@ int main(int argc, char** argv)
 	// Initialize controller rate
 	int rate;
 	ros::NodeHandle private_node_handle_("~");
-	private_node_handle_.param("rate", rate, int(100));
+	private_node_handle_.param("rate", rate, int(10));
 
 	// Start the control algorithm
 	UavGeometryControl geometric_control(rate);
