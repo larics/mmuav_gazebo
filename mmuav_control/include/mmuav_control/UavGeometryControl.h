@@ -14,6 +14,7 @@
 #define UAV_GEOMETRY_CONTROL_H
 
 #include "ros/ros.h"
+#include <rosgraph_msgs/Clock.h>
 #include <sensor_msgs/Imu.h>
 #include <eigen3/Eigen/Dense>
 
@@ -80,6 +81,11 @@ class UavGeometryControl
 		 * 	- desired direction of the first body axis b1_D
 		 */
 		Matrix<float, 3, 1> x_d_, b1_d_;
+
+		/**
+		 * Variable used for calculating time intervals in the controller loop.
+		 */
+		ros::Time t_old_;
 
 		/**
 		 * Controller rate. Frequency at which the loop in run method

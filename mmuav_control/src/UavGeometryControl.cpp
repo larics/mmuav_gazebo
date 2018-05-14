@@ -7,6 +7,8 @@
 
 #include <mmuav_control/UavGeometryControl.h>
 
+using namespace std;
+
 UavGeometryControl::UavGeometryControl(int rate)
 {
 	// Initialize controller variables
@@ -39,7 +41,8 @@ UavGeometryControl::~UavGeometryControl()
 
 void UavGeometryControl::run()
 {
-	ros::Rate loop_rate(controller_rate_);
+	// Loop time interval check
+	double dt;
 
 	// Wait for the ROS time server
 	while (ros::Time::now().toSec() == 0 && ros::ok())
@@ -50,8 +53,6 @@ void UavGeometryControl::run()
 	ROS_INFO("UavGeometricControl::run() - "
 			"Received first clock message");
 
-	// TODO(lmark): Activate start flag first callback
-	// TODO(lmark): IMU plugin missing
 	// Wait for start flag from IMU callback
 	while (!start_flag_ && ros::ok())
 	{
@@ -63,10 +64,26 @@ void UavGeometryControl::run()
 	ROS_INFO("UavGeometricControl::run() - "
 			"Starting geometric control.");
 
+	t_old_ = ros::Time::now();
+
 	// Start the control loop.
 	while (ros::ok())
 	{
-		// Do the control...
+		// Do 1 round of callbacks
+		ros::spinOnce();
+
+		// Calculate time difference
+		double current_time = ros::Time::now().toSec();
+		dt = current_time - t_old_.toSec();
+
+		// Check if time is right
+		if (dt < 1.0 / controller_rate_)
+			continue;
+
+		// Update old time
+		t_old_ = ros::Time::now();
+
+		// TODO(lmark): Implement control loop here.
 	}
 }
 
