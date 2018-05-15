@@ -230,10 +230,11 @@ class PositionControl:
                 self.vel_mv.y, dt) + self.Kff_a*self.acceleration_ff.y/self.g
             # z
             vz_ref = self.pid_z.compute(self.pos_sp.z, self.pos_mv.z, dt)
-            self.mot_speed = self.mot_speed_hover + \
+            self.mot_speed = (self.mot_speed_hover + \
                         (self.pid_vz.compute(vz_ref + self.Kff_v*self.velocity_ff.z,
                         self.vel_mv.z, dt) + \
-                        self.Kff_a*self.z_ff_scaler*self.acceleration_ff.z)
+                        self.Kff_a*self.z_ff_scaler*self.acceleration_ff.z)) / \
+                        (cos(self.euler_mv.x)*cos(self.euler_mv.y))
             """(cos(0.0*self.euler_mv.x)*cos(0.0*self.euler_mv.y))"""
             #print 1/(cos(self.euler_mv.x)*cos(self.euler_mv.y))
 
@@ -426,7 +427,6 @@ class PositionControl:
         """
         Callback for dynamically reconfigurable parameters (P,I,D gains for height and velocity controller)
         """
-        print "CFG callback", config.x_kp
 
         if not self.config_start:
             # callback is called for the first time. Use this to set the new params to the config server
