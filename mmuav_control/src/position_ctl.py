@@ -17,6 +17,7 @@ from mmuav_msgs.msg import PIDController
 import tf
 from rospkg import RosPack
 import yaml
+import time
 
 class PositionControl:
     '''
@@ -61,7 +62,7 @@ class PositionControl:
             math.cos(initial_params['tilt_angle'])))
         self.Kff_v = initial_params['Kff_v']
         self.Kff_a = initial_params['Kff_a']
-        # Delta omega(rotor speed) = self.z_ff_scaler*sqrt(a) where a is 
+        # Delta omega(rotor speed) = self.z_ff_scaler*sqrt(a) where a is
         # acceleration from trajectory
         self.z_ff_scaler = math.sqrt((initial_params['mass'])/(
             initial_params['rotor_c']*initial_params['rotor_num']))
@@ -154,23 +155,24 @@ class PositionControl:
 
         # Set up feedback callbacks
         if self.feedback_source == 0:
-            rospy.Subscriber('pose', PoseStamped, self.pose_cb)
-            rospy.Subscriber('odometry', Odometry, self.vel_cb)
+            rospy.Subscriber('pose', PoseStamped, self.pose_cb, queue_size=1)
+            #rospy.Subscriber('odometry', Odometry, self.vel_cb, queue_size=1)
+            rospy.Subscriber('velocity_relative', TwistStamped, self.vel_cb, queue_size=1)
         elif self.feedback_source == 1:
-            rospy.Subscriber('optitrack/pose', PoseStamped, 
-                self.optitrack_pose_cb)
-            rospy.Subscriber('optitrack/velocity', TwistStamped, 
-                self.optitrack_velocity_cb)
+            rospy.Subscriber('optitrack/pose', PoseStamped,
+                self.optitrack_pose_cb, queue_size=1)
+            rospy.Subscriber('optitrack/velocity', TwistStamped,
+                self.optitrack_velocity_cb, queue_size=1)
 
-        rospy.Subscriber('vel_ref', Vector3, self.vel_ref_cb)
-        rospy.Subscriber('pose_ref', Pose, self.pose_ref_cb)
-        rospy.Subscriber('reset_controllers', Empty, self.reset_controllers_cb)
-        rospy.Subscriber('trajectory_point_ref', MultiDOFJointTrajectoryPoint, 
+        rospy.Subscriber('vel_ref', Vector3, self.vel_ref_cb, queue_size=1)
+        rospy.Subscriber('pose_ref', Pose, self.pose_ref_cb, queue_size=1)
+        rospy.Subscriber('reset_controllers', Empty, self.reset_controllers_cb, queue_size=1)
+        rospy.Subscriber('trajectory_point_ref', MultiDOFJointTrajectoryPoint,
             self.trajectory_point_ref_cb)
-        rospy.Subscriber('imu', Imu, self.ahrs_cb)
+        #rospy.Subscriber('imu', Imu, self.ahrs_cb, queue_size=1)
 
 
-        #self.pub_gm_mot = rospy.Publisher('collectiveThrust', GmStatus, queue_size=1)       
+        #self.pub_gm_mot = rospy.Publisher('collectiveThrust', GmStatus, queue_size=1)
         self.cfg_server = Server(PositionCtlParamsConfig, self.cfg_callback)
         self.ros_rate = rospy.Rate(self.rate)                 # attitude control at 100 Hz
         self.t_start = rospy.Time.now()
@@ -194,7 +196,8 @@ class PositionControl:
                 print 'Waiting for pose measurements.'
                 rospy.sleep(0.5)
 
-            rospy.sleep(1.0/float(self.rate))
+            #rospy.sleep(1.0/float(self.rate))
+            self.ros_rate.sleep()
 
             ########################################################
             ########################################################
@@ -219,18 +222,19 @@ class PositionControl:
             temp_euler_ref = Vector3()
             # x
             vx_ref = self.pid_x.compute(self.pos_sp.x, self.pos_mv.x, dt)
-            vx_output = self.pid_vx.compute(vx_ref + self.Kff_v*self.velocity_ff.x, 
+            vx_output = self.pid_vx.compute(vx_ref + self.Kff_v*self.velocity_ff.x,
                 self.vel_mv.x, dt) + self.Kff_a*self.acceleration_ff.x/self.g
             # y
             vy_ref = self.pid_y.compute(self.pos_sp.y, self.pos_mv.y, dt)
-            vy_output = self.pid_vy.compute(vy_ref + self.Kff_v*self.velocity_ff.y, 
+            vy_output = self.pid_vy.compute(vy_ref + self.Kff_v*self.velocity_ff.y,
                 self.vel_mv.y, dt) + self.Kff_a*self.acceleration_ff.y/self.g
             # z
             vz_ref = self.pid_z.compute(self.pos_sp.z, self.pos_mv.z, dt)
-            self.mot_speed = self.mot_speed_hover/(cos(0.0*self.euler_mv.x)*cos(0.0*self.euler_mv.y)) + \
-                        (self.pid_vz.compute(vz_ref + self.Kff_v*self.velocity_ff.z, 
+            self.mot_speed = self.mot_speed_hover + \
+                        (self.pid_vz.compute(vz_ref + self.Kff_v*self.velocity_ff.z,
                         self.vel_mv.z, dt) + \
                         self.Kff_a*self.z_ff_scaler*self.acceleration_ff.z)
+            """(cos(0.0*self.euler_mv.x)*cos(0.0*self.euler_mv.y))"""
             #print 1/(cos(self.euler_mv.x)*cos(self.euler_mv.y))
 
             ########################################################
@@ -243,12 +247,12 @@ class PositionControl:
                 + cos(self.orientation_mv_euler.z)*vx_output;
 
 
-            euler_sp = tf.transformations.euler_from_quaternion((self.orientation_sp.x, 
+            euler_sp = tf.transformations.euler_from_quaternion((self.orientation_sp.x,
                 self.orientation_sp.y, self.orientation_sp.z, self.orientation_sp.w))
             temp_euler_ref.z = euler_sp[2]
             #euler_ref_decoupled = self.qv_mult((self.orientation_mv.x,
             #self.orientation_mv.y, self.orientation_mv.z,
-            #self.orientation_mv.w), (temp_euler_ref.y, 
+            #self.orientation_mv.w), (temp_euler_ref.y,
             #temp_euler_ref.x, temp_euler_ref.z))
             #temp_euler_ref.x = euler_ref_decoupled[1]
             #temp_euler_ref.y = euler_ref_decoupled[0]
@@ -278,8 +282,9 @@ class PositionControl:
         self.pid_z.reset()
         #self.pid_z.ui_old = 22.0
         self.pid_vz.reset()
-        rospy.Subscriber('odometry', Odometry, self.vel_cb)
-        rospy.Subscriber('pose', PoseStamped, self.pose_cb)
+        #rospy.Subscriber('odometry', Odometry, self.vel_cb)
+        rospy.Subscriber('velocity', TwistStamped, self.vel_cb, queue_size=1)
+        rospy.Subscriber('pose', PoseStamped, self.pose_cb, queue_size=1)
 
     def pose_cb(self, msg):
         '''
@@ -288,7 +293,7 @@ class PositionControl:
         '''
         if not self.start_flag:
             self.start_flag = True
-        
+
         self.pos_mv = msg.pose.position
 
     def vel_cb(self, msg):
@@ -300,9 +305,9 @@ class PositionControl:
         #    self.start_flag = True
         #mv = self.qv_mult((msg.pose.pose.orientation.x,
         #    msg.pose.pose.orientation.y, msg.pose.pose.orientation.z,
-        #    msg.pose.pose.orientation.w), (msg.twist.twist.linear.x, 
+        #    msg.pose.pose.orientation.w), (msg.twist.twist.linear.x,
         #    msg.twist.twist.linear.y, msg.twist.twist.linear.z))
-        temp_euler = tf.transformations.euler_from_quaternion((msg.pose.pose.orientation.x,
+        """temp_euler = tf.transformations.euler_from_quaternion((msg.pose.pose.orientation.x,
             msg.pose.pose.orientation.y, msg.pose.pose.orientation.z,
             msg.pose.pose.orientation.w))
         self.orientation_mv_euler.x = temp_euler[0]
@@ -315,6 +320,13 @@ class PositionControl:
             + cos(self.orientation_mv_euler.z)*msg.twist.twist.linear.y
         self.vel_mv.z = msg.twist.twist.linear.z
         self.orientation_mv = msg.pose.pose.orientation
+        """
+        self.vel_mv.x = cos(self.orientation_mv_euler.z)*msg.twist.linear.x \
+            - sin(self.orientation_mv_euler.z)*msg.twist.linear.y
+        self.vel_mv.y = sin(self.orientation_mv_euler.z)*msg.twist.linear.x \
+            + cos(self.orientation_mv_euler.z)*msg.twist.linear.y
+        self.vel_mv.z = msg.twist.linear.z
+
         #temp_mv = Vector3()
         #temp_mv.x = mv[0]
         #temp_mv.y = mv[1]
@@ -340,6 +352,10 @@ class PositionControl:
         self.euler_mv.x = math.atan2(2 * (qw * qx + qy * qz), qw * qw - qx * qx - qy * qy + qz * qz)
         self.euler_mv.y = math.asin(2 * (qw * qy - qx * qz))
         self.euler_mv.z = math.atan2(2 * (qw * qz + qx * qy), qw * qw + qx * qx - qy * qy - qz * qz)
+
+        self.orientation_mv_euler.x = self.euler_mv.x
+        self.orientation_mv_euler.y = self.euler_mv.y
+        self.orientation_mv_euler.z = self.euler_mv.z
 
 
     def optitrack_pose_cb(self, msg):
@@ -367,7 +383,7 @@ class PositionControl:
         q2 = list(v1)
         q2.append(0.0)
         return tf.transformations.quaternion_multiply(
-            tf.transformations.quaternion_multiply(q1, q2), 
+            tf.transformations.quaternion_multiply(q1, q2),
             tf.transformations.quaternion_conjugate(q1)
         )[:3]
 
@@ -473,4 +489,3 @@ if __name__ == '__main__':
     rospy.init_node('position_controller')
     position_ctl = PositionControl()
     position_ctl.run()
-
