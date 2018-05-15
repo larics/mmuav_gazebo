@@ -29,13 +29,13 @@ Next, clone and checkout following packages in `src` folder:
 
 ```
 cd ~/catkin_ws/src
-git clone https://github.com/ethz-asl/rotors_simulator.git 
+git clone https://github.com/larics/rotors_simulator
 cd rotors_simulator
-git checkout 97b3da2d02ab498b0c9d7a15d0297e72fe6b6482
+git checkout larics_master
 cd ~/catkin_ws/src
-git clone https://github.com/ethz-asl/mav_comm.git
+git clone https://github.com/larics/mav_comm
 cd mav_comm
-git checkout de1b6294fa30f2c5fb892831bc86bd7ec8c08d00
+git checkout larics_master
 ```
 
 
