@@ -163,10 +163,28 @@
     <xacro:insert_block name="rotor_inertia" />
   </xacro:vertical_rotor>
 
-  <link name='link01'>
+    <link name='connector1'>
+      <inertial>
+        <mass value="0.001" />
+        <origin xyz="0 0 -0.04" rpy="0 0 0"/>
+        <inertia
+          ixx="0.05" ixy="0" ixz="0"
+          iyx="0" iyy="0.05" iyz="0"
+          izx="0" izy="0" izz="0.05"/>
+      </inertial>
+
+      <visual>
+        <origin xyz="0 0 -0.04" rpy="0 0 0" />
+        <geometry>
+          <cylinder length="0.1" radius="0.02"/>
+        </geometry>
+      </visual>
+    </link>
+
+  <link name='link1'>
     <inertial>
       <mass value="0.001" />
-      <origin xyz="0 0 -0.03" rpy="0 0 0"/>
+      <origin xyz="-0.09899494936 0.09899494936 -0.01" rpy="0 0 0"/>
       <inertia
         ixx="0.05" ixy="0" ixz="0"
         iyx="0" iyy="0.05" iyz="0"
@@ -174,135 +192,87 @@
     </inertial>
 
     <visual>
-      <origin xyz="0 0 -0.03" rpy="0 0 0" />
+      <origin xyz="-0.09899494936 0.09899494936 -0.01" rpy="0.758398 1.5708 0" />
       <geometry>
-        <cylinder length="0.08" radius="0.015"/>
+        <box size="0.02 0.04 0.32"/>
       </geometry>
     </visual>
   </link>
 
+    <link name='connector2'>
+      <inertial>
+        <mass value="0.001" />
+        <origin xyz="0 0 0" rpy="0 0 0"/>
+        <inertia
+          ixx="0.05" ixy="0" ixz="0"
+          iyx="0" iyy="0.05" iyz="0"
+          izx="0" izy="0" izz="0.05"/>
+      </inertial>
 
-  <link name='con1'>
-    <inertial>
-      <mass value="0.001" />
-      <origin xyz="0 0 -0.07" rpy="0 0 0"/>
-      <inertia
-        ixx="0.05" ixy="0" ixz="0"
-        iyx="0" iyy="0.05" iyz="0"
-        izx="0" izy="0" izz="0.05"/>
-    </inertial>
+      <visual>
+        <origin xyz="0 0 -0.02" rpy="0 0 0" />
+        <geometry>
+          <cylinder length="0.02" radius="0.02"/>
+        </geometry>
+      </visual>
+    </link>
 
-    <visual>
-      <origin xyz="0 0 -0.07" rpy="0 0 0" />
-      <geometry>
-        <sphere radius="0.015"/>
-      </geometry>
-    </visual>
-  </link>
+    <link name='link2'>
+      <inertial>
+        <mass value="0.001" />
+        <origin xyz="-0.09899494936 0.09899494936 -0.02" rpy="0 0 0"/>
+        <inertia
+          ixx="0.05" ixy="0" ixz="0"
+          iyx="0" iyy="0.05" iyz="0"
+          izx="0" izy="0" izz="0.05"/>
+      </inertial>
 
-  <link name='link12'>
-    <inertial>
-      <mass value="0.001" />
-      <origin xyz="-0.113137 0.113137 -0.07" rpy="0 0 0"/>
-      <inertia
-        ixx="0.05" ixy="0" ixz="0"
-        iyx="0" iyy="0.05" iyz="0"
-        izx="0" izy="0" izz="0.05"/>
-    </inertial>
+      <visual>
+        <origin xyz="-0.09899494936 0.09899494936 -0.02" rpy="0.758398 1.5708 0" />
+        <geometry>
+          <box size="0.02 0.04 0.32"/>
+        </geometry>
+      </visual>
+    </link>
 
-    <visual>
-      <origin xyz="-0.113137 0.113137 -0.07" rpy="0.758398 1.5708 0" />
-      <geometry>
-        <cylinder length="0.32" radius="0.015"/>
-      </geometry>
-    </visual>
-  </link>
+    <joint name="base_to_connector1" type="fixed">
+      <parent link="base_link"/>
+      <child link="connector1"/>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+    </joint>
 
-  <link name='con2'>
-    <inertial>
-      <mass value="0.001" />
-      <origin xyz="-0.226274 0.226274 -0.07" rpy="0 0 0"/>
-      <inertia
-        ixx="0.5" ixy="0" ixz="0"
-        iyx="0" iyy="0.5" iyz="0"
-        izx="0" izy="0" izz="0.5"/>
-    </inertial>
+    <joint name="connecto1_to_link1" type="continuous">
+      <parent link="connector1"/>
+      <child link="link1"/>
+      <origin xyz="0 0 -0.09" rpy="0 0 0"/>
+      <limit upper="3.14" lower="-3.14" effort="10000000" velocity="20"/>
+      <axis xyz="0 0 1" />
+      <dynamics damping="0.07" friction="0.0"/>
+    </joint>
 
-    <visual>
-      <origin xyz="-0.226274 0.226274 -0.07" rpy="0 0 0" />
-      <geometry>
-        <sphere radius="0.015"/>
-      </geometry>
-    </visual>
-  </link>
+    <joint name="link1_to_connector2" type="fixed">
+      <parent link="link1"/>
+      <child link="connector2"/>
+      <origin xyz="-0.19798989873 0.19798989873 -0.01" rpy="0 0 0"/>
+    </joint>
 
-  <link name='link23'>
-    <inertial>
-      <mass value="0.001" />
-      <origin xyz="-0.282843 0.282843 -0.07" rpy="0 0 0"/>
-      <inertia
-        ixx="0.5" ixy="0" ixz="0"
-        iyx="0" iyy="0.5" iyz="0"
-        izx="0" izy="0" izz="0.5"/>
-    </inertial>
+    <joint name="connector2_to_link2" type="continuous">
+      <parent link="connector2"/>
+      <child link="link2"/>
+      <origin xyz="0 0 -0.02" rpy="0 0 0"/>
+      <limit upper="3.14" lower="-3.14" effort="10000000" velocity="20"/>
+      <axis xyz="0 0 1" />
+      <dynamics damping="0.07" friction="0.0"/>
+    </joint>
 
-    <visual>
-      <origin xyz="-0.282843 0.282843 -0.07" rpy="0.758398 1.5708 0" />
-      <geometry>
-        <cylinder length="0.16" radius="0.015"/>
-      </geometry>
-    </visual>
-  </link>
+    <xacro:transmisija
+      trans_number="0"
+      joint_name="connecto1_to_link1">
+    </xacro:transmisija>
 
-
-  <joint name="base_to_link01" type="fixed">
-    <parent link="base_link"/>
-    <child link="link01"/>
-  </joint>
-
-  <joint name="link01_to_con1" type="fixed">
-    <parent link="link01"/>
-    <child link="con1"/>
-  </joint>
-
-  <joint name="con1_to_link12" type="continuous">
-    <parent link="con1"/>
-    <child link="link12"/>
-    <limit upper="3.14" lower="-3.14" effort="10000000" velocity="20"/>
-    <axis xyz="0 0 1" />
-    <dynamics damping="0.07" friction="0.0"/>
-  </joint>
-
-  <joint name="link12_to_con2" type="fixed">
-    <parent link="link12"/>
-    <child link="con2"/>
-  </joint>
-
-  <joint name="con2_to_link23" type="continuous">
-    <parent link="con2"/>
-    <child link="link23"/>
-    <origin xyz="0 0 0" rpy="0 0 0"/>
-    <limit upper="3.14" lower="-3.14" effort="10000000" velocity="20"/>
-    <axis xyz="0 0 1" />
-    <dynamics damping="0.07" friction="0.0"/>
-  </joint>
-
-  <!--
-  <origin xyz="0 0 -0.3" rpy="0 0 0"/>
-  <origin xyz="0 0 -0.07" rpy="0 0 0"/>
-  <origin xyz="0 0 -0.07" rpy="0 0 0"/>
-  <origin xyz="-0.226274 0.226274 -0.07" rpy="0 0 -0.07"/>
-  <origin xyz="-0.226274 0.226274 -0.07" rpy="0 0 0"/>
-  -->
-
-  <xacro:transmisija
-    trans_number="0"
-    joint_name="con1_to_link12">
-  </xacro:transmisija>
-
-  <xacro:transmisija
-    trans_number="1"
-    joint_name="con2_to_link23">
-  </xacro:transmisija>
+    <xacro:transmisija
+      trans_number="1"
+      joint_name="connector2_to_link2">
+    </xacro:transmisija>
 
 </robot>
