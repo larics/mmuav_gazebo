@@ -2,6 +2,7 @@
 import rospy
 import numpy as np
 import tf
+from scipy.linalg import block_diag
 from trajectory_msgs.msg import MultiDOFJointTrajectory
 from trajectory_msgs.msg import MultiDOFJointTrajectoryPoint
 from geometry_msgs.msg import Quaternion
@@ -14,13 +15,12 @@ class TrajectoryPlanner():
 
     def __init__(self, polyorder):
 
-        self.keyframes=[];
+        self.keyframes=[]
         self.segments=0
+        self.polyorder=polyorder
+        self.T=[]
         rospy.Subscriber(   'multi_dof_trajectory', MultiDOFJointTrajectory,\
                             self.keyframes_callback,queue_size=1)
-        self.polyorder=polyorder
-
-
 
     def generate_Aeq(self,T,derivation_order=4):     # equality constraints matrix
 
@@ -137,7 +137,6 @@ class TrajectoryPlanner():
         #constructing C matrix
         for i in range(self.segments):
 
-
             if self.polyorder >=9:
                 if i==0:
                     deltaCiRow = derivation_order + 2 #difference between rows of adjacent Ci, C(i+1) matrices
@@ -185,9 +184,35 @@ class TrajectoryPlanner():
                     dC=np.vstack((zeros,dC,np.zeros((sizeC-deltaCiRow-2,2))))
                     deltaCiRow=deltaCiRow+derivation_order+2
                     C=np.hstack((C,dC))
+            if i==0:
+                deltaC_yaw_iRow = derivation_order_yaw + 2 #difference between rows of adjacent Ci, C(i+1) matrices for yaw
+                sizeC_yaw = derivation_order_yaw + deltaC_yaw_iRow * (self.segments) #expected size of C matrix for yaw
+                dCyaw=np.eye(deltaC_yaw_iRow)
+                zeros=np.zeros((sizeC_yaw-deltaC_yaw_iRow,deltaC_yaw_iRow))
+                Cyaw=np.vstack((dCyaw,zeros))
+                deltaC_yaw_iRow=deltaC_yaw_iRow+derivation_order_yaw
 
+            elif i==self.segments-1:
+
+                zeros=np.zeros((deltaC_yaw_iRow,derivation_order_yaw+2))
+                deltaC_yaw_iRow=deltaC_yaw_iRow+derivation_order_yaw+2
+                dCyaw=np.eye(derivation_order_yaw+2)
+                dCyaw=np.vstack((zeros,dCyaw,np.zeros((sizeC_yaw-deltaC_yaw_iRow,derivation_order_yaw+2))))
+                Cyaw=np.hstack((Cyaw,dCyaw))
+
+            else:
+
+                zeros=np.zeros((deltaC_yaw_iRow,2))
+                dCyaw=np.eye(2)
+                dCyaw=np.vstack((zeros,dCyaw,np.zeros((sizeC_yaw-deltaC_yaw_iRow-2,2))))
+                deltaC_yaw_iRow=deltaC_yaw_iRow+derivation_order_yaw+2
+                Cyaw=np.hstack((Cyaw,dCyaw))
+
+
+
+        C=block_diag(C,C,C,Cyaw)
         (rows,columns)=C.shape
-        C=np.hstack((C,np.zeros((rows,sizeC-columns))))
+        C=np.hstack((C,np.zeros((rows,3*sizeC+sizeC_yaw-columns))))
         return C
 
     def generate_Q(self,T,derivation_order=4): #cost matrix
@@ -233,11 +258,11 @@ class TrajectoryPlanner():
 
         polynom=np.poly1d(np.ones(self.polyorder+1))
 
-        for n in range(1, derivation_order+2):
+        for n in range(derivation_order):
             polynom=np.polyder(polynom)
 
         polynom=np.matrix(polynom.coef)
-        polynom=np.hstack((polynom,[np.zeros(derivation_order+1)]))
+        polynom=np.hstack((polynom,[np.zeros(derivation_order)]))
 
         #constructing matrix dQi(T)
 
@@ -249,10 +274,10 @@ class TrajectoryPlanner():
         for i in range(self.segments):
             dQi=np.matmul(np.transpose(polynom),polynom)
             #T matrix to be used for Hadamard product
-            polynomT=np.hstack(([np.ones(self.polyorder-derivation_order)],[np.zeros(derivation_order+1)]))
+            polynomT=np.hstack(([np.ones(self.polyorder-derivation_order+1)],[np.zeros(derivation_order)]))
 
-            for j in range(self.polyorder-derivation_order):
-                polynomT[0,j]=polynomT[0,j]*T[i]**(self.polyorder-j-derivation_order-1)
+            for j in range(self.polyorder-derivation_order+1):
+                polynomT[0,j]=polynomT[0,j]*T[i]**(self.polyorder-j-derivation_order)
 
 
             matrixT=np.matmul(np.transpose(polynomT),polynomT)
@@ -294,6 +319,7 @@ class TrajectoryPlanner():
                         data.points[i].transforms[0].rotation.w  )
             euler=tf.transformations.euler_from_quaternion(quaternion)
             dkeyframe[3]=euler[2] #yaw
+            dkeyframe[3]=0.1*(i+1)
             if i==0:
                 keyframes=np.copy(dkeyframe)
             else:
@@ -304,9 +330,17 @@ class TrajectoryPlanner():
 
         print "Keyframes received, segments: ", self.segments
 
+        """
+        self.T=self.generate_T(self.keyframes)
+        C=self.generate_C()
+        d=self.generate_deq(self.keyframes)
+        print np.dot(np.transpose(d),C)
+        """
+
     def run(self):
         rospy.spin()
 
+
 if __name__=='__main__':
     rospy.init_node('trajectory_planner')
-    trajectory=TrajectoryPlanner(7).run()
+    trajectory=TrajectoryPlanner(9).run()
