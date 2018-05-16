@@ -4,11 +4,8 @@ import numpy as np
 import tf
 from trajectory_msgs.msg import MultiDOFJointTrajectory
 from trajectory_msgs.msg import MultiDOFJointTrajectoryPoint
-from geometry_msgs.msg import Vector3
 from geometry_msgs.msg import Quaternion
 from geometry_msgs.msg import Transform
-from geometry_msgs.msg import Twist
-from geometry_msgs.msg import PoseStamped
 from std_msgs.msg import Header
 from rospkg import RosPack
 import copy
@@ -19,18 +16,11 @@ class TrajectoryPlanner():
 
         self.keyframes=[];
         self.segments=0
-        rospy.Subscriber('multi_dof_trajectory', MultiDOFJointTrajectory,self.keyframes_callback,queue_size=1)
+        rospy.Subscriber(   'multi_dof_trajectory', MultiDOFJointTrajectory,\
+                            self.keyframes_callback,queue_size=1)
         self.polyorder=polyorder
 
-        """Aeq=self.gen_Aeq(self.gen_T(Points))
-        deq=self.gen_deq(Points)
-        Q=self.gen_Q(self.gen_T(Points))
-        dQ=self.gen_dQ(self.gen_T(Points))
-        print Aeq.shape
-        C=self.gen_C()
-        Z=np.zeros((C.shape))
-        Cuk=np.asarray(np.bmat([[C, Z, Z],[Z, C, Z],[Z, Z, C]]))
-        print np.dot(np.transpose(deq),Cuk)"""
+
 
     def generate_Aeq(self,T,derivation_order=4):     # equality constraints matrix
 
@@ -104,38 +94,45 @@ class TrajectoryPlanner():
                 Aeq=np.hstack((Aeq,Aj))
         return Aeq
 
-    def generate_deq(self,Points,derivation_order=4):
+    def generate_deq(self,keyframes,derivation_order=4,derivation_order_yaw=2):
 
         for i in range(self.segments):
             zeros=np.zeros(derivation_order)
+            zeros_yaw=np.zeros(derivation_order_yaw)
             if self.polyorder >=9:
                 if i==0:
-                    dx=np.transpose(np.matrix(np.hstack(([Points[i].x], zeros,[Points[i+1].x], zeros))))
-                    dy=np.transpose(np.matrix(np.hstack(([Points[i].y], zeros,[Points[i+1].y], zeros))))
-                    dz=np.transpose(np.matrix(np.hstack(([Points[i].z], zeros,[Points[i+1].z], zeros))))
+                    dx=np.transpose(np.matrix(np.hstack(([keyframes[0,i]], zeros,[keyframes[0,i+1]], zeros))))
+                    dy=np.transpose(np.matrix(np.hstack(([keyframes[1,i]], zeros,[keyframes[1,i+1]], zeros))))
+                    dz=np.transpose(np.matrix(np.hstack(([keyframes[2,i]], zeros,[keyframes[2,i+1]], zeros))))
+                    dyaw=np.transpose(np.matrix(np.hstack(([keyframes[3,i]], zeros_yaw,[keyframes[3,i+1]],zeros_yaw))))
 
                 else:
-                    dx=np.vstack((dx,np.transpose(np.matrix(np.hstack(([Points[i].x],[Points[i+1].x], zeros))))))
-                    dy=np.vstack((dy,np.transpose(np.matrix(np.hstack(([Points[i].y],[Points[i+1].y], zeros))))))
-                    dz=np.vstack((dz,np.transpose(np.matrix(np.hstack(([Points[i].z],[Points[i+1].z], zeros))))))
+                    dx=np.vstack((dx,np.transpose(np.matrix(np.hstack(([keyframes[0,i]],[keyframes[0,i+1]], zeros))))))
+                    dy=np.vstack((dy,np.transpose(np.matrix(np.hstack(([keyframes[1,i]],[keyframes[1,i+1]], zeros))))))
+                    dz=np.vstack((dz,np.transpose(np.matrix(np.hstack(([keyframes[2,i]],[keyframes[2,i+1]], zeros))))))
+                    dyaw=np.vstack((dyaw,np.transpose(np.matrix(np.hstack(([keyframes[3,i]], [keyframes[3,i+1]],zeros_yaw))))))
+
             else:
                 if i==0:
-                    dx=np.transpose(np.matrix(np.hstack(([Points[i].x, 0, 0,Points[i+1].x], zeros))))
-                    dy=np.transpose(np.matrix(np.hstack(([Points[i].y, 0, 0,Points[i+1].y], zeros))))
-                    dz=np.transpose(np.matrix(np.hstack(([Points[i].z, 0, 0,Points[i+1].z], zeros))))
+                    dx=np.transpose(np.matrix(np.hstack(([keyframes[0,i], 0, 0,keyframes[0,i+1]], zeros))))
+                    dy=np.transpose(np.matrix(np.hstack(([keyframes[1,i], 0, 0,keyframes[1,i+1]], zeros))))
+                    dz=np.transpose(np.matrix(np.hstack(([keyframes[2,i], 0, 0,keyframes[2,i+1]], zeros))))
+                    dyaw=np.transpose(np.matrix(np.hstack(([keyframes[3,i]], zeros_yaw,[keyframes[3,i+1]],zeros_yaw))))
                 elif i==self.segments-1:
-                    dx=np.vstack((dx,np.transpose(np.matrix([Points[i].x, Points[i+1].x, 0, 0]))))
-                    dy=np.vstack((dy,np.transpose(np.matrix([Points[i].y, Points[i+1].y, 0, 0]))))
-                    dz=np.vstack((dz,np.transpose(np.matrix([Points[i].z, Points[i+1].z, 0, 0]))))
+                    dx=np.vstack((dx,np.transpose(np.matrix(np.hstack(([keyframes[0,i]],[keyframes[0,i+1]], 0, 0))))))
+                    dy=np.vstack((dy,np.transpose(np.matrix(np.hstack(([keyframes[1,i]],[keyframes[1,i+1]], 0, 0))))))
+                    dz=np.vstack((dz,np.transpose(np.matrix(np.hstack(([keyframes[2,i]],[keyframes[2,i+1]], 0, 0))))))
+                    dyaw=np.vstack((dyaw,np.transpose(np.matrix(np.hstack(([keyframes[3,i]], [keyframes[3,i+1]],zeros_yaw))))))
                 else:
-                    dx=np.vstack((dx,np.transpose(np.matrix(np.hstack(([Points[i].x],[Points[i+1].x], zeros))))))
-                    dy=np.vstack((dy,np.transpose(np.matrix(np.hstack(([Points[i].y],[Points[i+1].y], zeros))))))
-                    dz=np.vstack((dz,np.transpose(np.matrix(np.hstack(([Points[i].z],[Points[i+1].z], zeros))))))
+                    dx=np.vstack((dx,np.transpose(np.matrix(np.hstack(([keyframes[0,i]],[keyframes[0,i+1]], zeros))))))
+                    dy=np.vstack((dy,np.transpose(np.matrix(np.hstack(([keyframes[1,i]],[keyframes[1,i+1]], zeros))))))
+                    dz=np.vstack((dz,np.transpose(np.matrix(np.hstack(([keyframes[2,i]],[keyframes[2,i+1]], zeros))))))
+                    dyaw=np.vstack((dyaw,np.transpose(np.matrix(np.hstack(([keyframes[3,i]], [keyframes[3,i+1]],zeros_yaw))))))
 
-        deq=np.vstack((dx,dy,dz))
+        deq=np.vstack((dx,dy,dz,dyaw))
         return deq #equality constraints
 
-    def generate_C(self,derivation_order=4):    #permutation matrix for equality constraints
+    def generate_C(self,derivation_order=4,derivation_order_yaw=2):    #permutation matrix for equality constraints
 
         #constructing C matrix
         for i in range(self.segments):
@@ -193,7 +190,7 @@ class TrajectoryPlanner():
         C=np.hstack((C,np.zeros((rows,sizeC-columns))))
         return C
 
-    def generate_Q(self,T,derivation_order=4): #cost function
+    def generate_Q(self,T,derivation_order=4): #cost matrix
 
         # initializing basic polynom of a given order
 
@@ -215,16 +212,11 @@ class TrajectoryPlanner():
 
         for i in range(self.segments):
 
-
-            #T matrix to be used for Hadamard product
-
             Qi=np.matmul(np.transpose(polynom),polynom)
-            polynomT=np.hstack(([np.ones(self.polyorder+1-derivation_order)],[np.zeros(derivation_order)]))
-            for j in range(self.polyorder+1-derivation_order):
-                polynomT[0,j]=polynomT[0,j]*T[i]**(self.polyorder-j-derivation_order)
-
-            matrixT=np.matmul(np.transpose(polynomT),polynomT)
-            Qi=np.multiply(matrixT,Qi)
+            for j in range(self.polyorder - derivation_order+1):
+                for k in range(self.polyorder - derivation_order+1):
+                    exponent=2*(self.polyorder - derivation_order)
+                    Qi[j,k]=Qi[j,k]*T[i]**(exponent-j-k+1)/(exponent-j-k+1)
             if i==0:
                 Qi=np.vstack((Qi,np.zeros((sizeQ-deltaQiRow,self.polyorder+1))))
                 Q=np.copy(Qi)
@@ -235,7 +227,7 @@ class TrajectoryPlanner():
                 Q=np.hstack((Q,Qi))
         return Q
 
-    def generate_dQ(self,T,derivation_order=4):
+    def generate_dQ(self,T,derivation_order=4): #cost matrix derivative
 
         # initializing basic polynom of a given order
 
@@ -275,13 +267,14 @@ class TrajectoryPlanner():
                 dQ=np.hstack((dQ,dQi))
         return dQ   #cost function derivative
 
-    def generate_T(self,Points):     #approximate segment times based on distance
+    def generate_T(self,keyframes):     #approximate segment times based on distance
         T=np.zeros(self.segments)
         for i in range(self.segments):
-            tx=float(abs(Points[i].x-Points[i+1].x))
-            ty=float(abs(Points[i].y-Points[i+1].y))
-            tz=float(abs(Points[i].z-Points[i+1].z))
-            T[i]=max(tx,ty,tz)
+            tx=float(abs(keyframes[0,i]-keyframes[0,i+1]))
+            ty=float(abs(keyframes[1,i]-keyframes[1,i+1]))
+            tz=float(abs(keyframes[2,i]-keyframes[2,i+1]))
+            tyaw=float(abs(keyframes[3,i]-keyframes[3,i+1]))
+            T[i]=max(tx,ty,tz,tyaw)
         return T
 
     def keyframes_callback(self,data):
@@ -295,8 +288,10 @@ class TrajectoryPlanner():
             dkeyframe[1]=data.points[i].transforms[0].translation.y
             dkeyframe[2]=data.points[i].transforms[0].translation.z
 
-            quaternion=(data.points[i].transforms[0].rotation.x,data.points[i].transforms[0].rotation.y, \
-                        data.points[i].transforms[0].rotation.z,data.points[i].transforms[0].rotation.w)
+            quaternion=(data.points[i].transforms[0].rotation.x, \
+                        data.points[i].transforms[0].rotation.y, \
+                        data.points[i].transforms[0].rotation.z, \
+                        data.points[i].transforms[0].rotation.w  )
             euler=tf.transformations.euler_from_quaternion(quaternion)
             dkeyframe[3]=euler[2] #yaw
             if i==0:
@@ -308,15 +303,10 @@ class TrajectoryPlanner():
         self.keyframes=np.copy(keyframes)
 
         print "Keyframes received, segments: ", self.segments
+
     def run(self):
         rospy.spin()
 
 if __name__=='__main__':
     rospy.init_node('trajectory_planner')
-    """ Points=np.array([Vector3(1,0,0)])
-    Points=np.append(Points,Vector3(2,.5,0))
-    Points=np.append(Points,Vector3(3,.5,0))
-    Points=np.append(Points,Vector3(4,0,0))
-    Points=np.append(Points,Vector3(5,0,0))
-    """
     trajectory=TrajectoryPlanner(7).run()
