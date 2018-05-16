@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 import rospy
 import numpy as np
+import tf
 from trajectory_msgs.msg import MultiDOFJointTrajectory
 from trajectory_msgs.msg import MultiDOFJointTrajectoryPoint
 from geometry_msgs.msg import Vector3
@@ -12,21 +13,26 @@ from std_msgs.msg import Header
 from rospkg import RosPack
 import copy
 
-class trajectory_planner():
+class TrajectoryPlanner():
 
-    def __init__(self,Points, polyorder):
+    def __init__(self, polyorder):
 
-        self.Points=Points
+        self.keyframes=[];
+        self.segments=0
+        rospy.Subscriber('multi_dof_trajectory', MultiDOFJointTrajectory,self.keyframes_callback,queue_size=1)
         self.polyorder=polyorder
-        self.segments=Points.size-1
-        Aeq=self.gen_Aeq(self.gen_T(Points))
+
+        """Aeq=self.gen_Aeq(self.gen_T(Points))
         deq=self.gen_deq(Points)
         Q=self.gen_Q(self.gen_T(Points))
         dQ=self.gen_dQ(self.gen_T(Points))
-        print Aeq.shape, deq.shape
+        print Aeq.shape
+        C=self.gen_C()
+        Z=np.zeros((C.shape))
+        Cuk=np.asarray(np.bmat([[C, Z, Z],[Z, C, Z],[Z, Z, C]]))
+        print np.dot(np.transpose(deq),Cuk)"""
 
-
-    def gen_Aeq(self,T,derivation_order=4):      #calculating matrix of equality constraints
+    def generate_Aeq(self,T,derivation_order=4):     # equality constraints matrix
 
         # initializing basic polynome of a given order
 
@@ -98,9 +104,8 @@ class trajectory_planner():
                 Aeq=np.hstack((Aeq,Aj))
         return Aeq
 
-    def gen_deq(self,Points,derivation_order=4):
+    def generate_deq(self,Points,derivation_order=4):
 
-        d1=np.array([])
         for i in range(self.segments):
             zeros=np.zeros(derivation_order)
             if self.polyorder >=9:
@@ -111,8 +116,8 @@ class trajectory_planner():
 
                 else:
                     dx=np.vstack((dx,np.transpose(np.matrix(np.hstack(([Points[i].x],[Points[i+1].x], zeros))))))
-                    dy=np.vstack((dy,np.transpose(np.matrix(np.hstack(([Points[i].x],[Points[i+1].x], zeros))))))
-                    dz=np.vstack((dz,np.transpose(np.matrix(np.hstack(([Points[i].x],[Points[i+1].x], zeros))))))
+                    dy=np.vstack((dy,np.transpose(np.matrix(np.hstack(([Points[i].y],[Points[i+1].y], zeros))))))
+                    dz=np.vstack((dz,np.transpose(np.matrix(np.hstack(([Points[i].z],[Points[i+1].z], zeros))))))
             else:
                 if i==0:
                     dx=np.transpose(np.matrix(np.hstack(([Points[i].x, 0, 0,Points[i+1].x], zeros))))
@@ -124,13 +129,71 @@ class trajectory_planner():
                     dz=np.vstack((dz,np.transpose(np.matrix([Points[i].z, Points[i+1].z, 0, 0]))))
                 else:
                     dx=np.vstack((dx,np.transpose(np.matrix(np.hstack(([Points[i].x],[Points[i+1].x], zeros))))))
-                    dy=np.vstack((dy,np.transpose(np.matrix(np.hstack(([Points[i].x],[Points[i+1].x], zeros))))))
-                    dz=np.vstack((dz,np.transpose(np.matrix(np.hstack(([Points[i].x],[Points[i+1].x], zeros))))))
+                    dy=np.vstack((dy,np.transpose(np.matrix(np.hstack(([Points[i].y],[Points[i+1].y], zeros))))))
+                    dz=np.vstack((dz,np.transpose(np.matrix(np.hstack(([Points[i].z],[Points[i+1].z], zeros))))))
 
         deq=np.vstack((dx,dy,dz))
-        return deq
+        return deq #equality constraints
 
-    def gen_Q(self,T,derivation_order=4): #cost function
+    def generate_C(self,derivation_order=4):    #permutation matrix for equality constraints
+
+        #constructing C matrix
+        for i in range(self.segments):
+
+
+            if self.polyorder >=9:
+                if i==0:
+                    deltaCiRow = derivation_order + 2 #difference between rows of adjacent Ci, C(i+1) matrices
+                    sizeC = derivation_order + deltaCiRow * (self.segments) #expected size of C matrix
+                    dC=np.eye(deltaCiRow)
+                    zeros=np.zeros((sizeC-deltaCiRow,deltaCiRow))
+                    C=np.vstack((dC,zeros))
+                    deltaCiRow=deltaCiRow+derivation_order
+
+                elif i==self.segments-1:
+
+                    zeros=np.zeros((deltaCiRow,derivation_order+2))
+                    deltaCiRow=deltaCiRow+derivation_order+2
+                    dC=np.eye(derivation_order+2)
+                    dC=np.vstack((zeros,dC,np.zeros((sizeC-deltaCiRow,derivation_order+2))))
+                    C=np.hstack((C,dC))
+
+                else:
+
+                    zeros=np.zeros((deltaCiRow,2))
+                    dC=np.eye(2)
+                    dC=np.vstack((zeros,dC,np.zeros((sizeC-deltaCiRow-2,2))))
+                    deltaCiRow=deltaCiRow+derivation_order+2
+                    C=np.hstack((C,dC))
+            else:
+
+                if i==0:
+                    sizeC = 6 + (derivation_order + 2) * (self.segments-1)
+                    deltaCiRow=4
+                    dC=np.eye(deltaCiRow)
+                    zeros=np.zeros((sizeC-deltaCiRow,deltaCiRow))
+                    C=np.vstack((dC,zeros))
+                    deltaCiRow=deltaCiRow+derivation_order
+                    C=np.vstack((dC,zeros))
+
+                elif i==self.segments-1:
+                    zeros=np.zeros((deltaCiRow,4))
+                    dC=np.eye(4)
+                    deltaCiRow=deltaCiRow+4
+                    dC=np.vstack((zeros,dC,np.zeros((sizeC-deltaCiRow,4))))
+                    C=np.hstack((C,dC))
+                else:
+                    zeros=np.zeros((deltaCiRow,2))
+                    dC=np.eye(2)
+                    dC=np.vstack((zeros,dC,np.zeros((sizeC-deltaCiRow-2,2))))
+                    deltaCiRow=deltaCiRow+derivation_order+2
+                    C=np.hstack((C,dC))
+
+        (rows,columns)=C.shape
+        C=np.hstack((C,np.zeros((rows,sizeC-columns))))
+        return C
+
+    def generate_Q(self,T,derivation_order=4): #cost function
 
         # initializing basic polynom of a given order
 
@@ -172,7 +235,7 @@ class trajectory_planner():
                 Q=np.hstack((Q,Qi))
         return Q
 
-    def gen_dQ(self,T,derivation_order=4):
+    def generate_dQ(self,T,derivation_order=4):
 
         # initializing basic polynom of a given order
 
@@ -210,9 +273,9 @@ class trajectory_planner():
                 deltadQiRow=deltadQiRow+self.polyorder+1
                 dQi=np.vstack((dQi,np.zeros((sizedQ-deltadQiRow,self.polyorder+1))))
                 dQ=np.hstack((dQ,dQi))
-        return dQ
+        return dQ   #cost function derivative
 
-    def gen_T(self,Points):     #approximate segment times based on distance
+    def generate_T(self,Points):     #approximate segment times based on distance
         T=np.zeros(self.segments)
         for i in range(self.segments):
             tx=float(abs(Points[i].x-Points[i+1].x))
@@ -221,10 +284,39 @@ class trajectory_planner():
             T[i]=max(tx,ty,tz)
         return T
 
+    def keyframes_callback(self,data):
+        self.segments=len(data.points)-1
+
+        for i in range(self.segments+1):
+
+            dkeyframe=np.zeros((4,1))
+
+            dkeyframe[0]=data.points[i].transforms[0].translation.x
+            dkeyframe[1]=data.points[i].transforms[0].translation.y
+            dkeyframe[2]=data.points[i].transforms[0].translation.z
+
+            quaternion=(data.points[i].transforms[0].rotation.x,data.points[i].transforms[0].rotation.y, \
+                        data.points[i].transforms[0].rotation.z,data.points[i].transforms[0].rotation.w)
+            euler=tf.transformations.euler_from_quaternion(quaternion)
+            dkeyframe[3]=euler[2] #yaw
+            if i==0:
+                keyframes=np.copy(dkeyframe)
+            else:
+                keyframes=np.hstack((keyframes,dkeyframe))
+
+
+        self.keyframes=np.copy(keyframes)
+
+        print "Keyframes received, segments: ", self.segments
+    def run(self):
+        rospy.spin()
+
 if __name__=='__main__':
-    Points=np.array([Vector3(1,0,0)])
+    rospy.init_node('trajectory_planner')
+    """ Points=np.array([Vector3(1,0,0)])
     Points=np.append(Points,Vector3(2,.5,0))
     Points=np.append(Points,Vector3(3,.5,0))
     Points=np.append(Points,Vector3(4,0,0))
     Points=np.append(Points,Vector3(5,0,0))
-    trajectory=trajectory_planner(Points,9)
+    """
+    trajectory=TrajectoryPlanner(7).run()
