@@ -1,5 +1,17 @@
 # Installation Instructions
 
+**Important Notice**
+
+![#f03c15](https://placehold.it/15/f03c15/000000?text=+) If you cloned this repository before 16. May, 2018. please do the following steps:
+
+```
+cd ~/catkin_ws/src
+sudo rm -r rotors_simulator
+sudo rm -r mav_comm
+```
+Next, clone the repository as described in **Install required simulation packages** below.
+
+
 ## Configure workspace
 
 This instructions consider you have [ROS](http://wiki.ros.org/kinetic/Installation/Ubuntu) installed. Following dependencies have to be installed before configuring the workspace:
