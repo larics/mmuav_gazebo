@@ -5,11 +5,12 @@ uav:
     publish_rate: 50
 
   # Position Controllers ---------------------------------------
+
   joint1_controller:
     type: effort_controllers/JointPositionController
-    joint: connecto1_to_link1
-    pid: {p: 1.8, i: 0.35, d: 0.0, i_clamp_max: 100, i_clamp_min: -100}
+    joint: connector1_to_link1
+    pid: {p: 1.2, i: 0.5, d: 0.0, i_clamp_max: 100, i_clamp_min: -100}
   joint2_controller:
     type: effort_controllers/JointPositionController
     joint: connector2_to_link2
-    pid: {p: 1.2, i: 0.0, d: 0.0, i_clamp_max: 100, i_clamp_min: -100}
+    pid: {p: 0.5, i: 0.5, d: 0.0, i_clamp_max: 100, i_clamp_min: -100}

@@ -21,4 +21,7 @@
     <remap from="/robot_description" to="$(arg namespace)/robot_description"/>
   </node>
 
+  <node name="CamneraManipulator" pkg="mmuav_control" type="CameraManiuplatorKinematics.py">
+  </node>
+
 </launch>

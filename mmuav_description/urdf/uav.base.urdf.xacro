@@ -241,7 +241,7 @@
       <origin xyz="0 0 0" rpy="0 0 0"/>
     </joint>
 
-    <joint name="connecto1_to_link1" type="continuous">
+    <joint name="connector1_to_link1" type="continuous">
       <parent link="connector1"/>
       <child link="link1"/>
       <origin xyz="0 0 -0.09" rpy="0 0 0"/>
@@ -267,7 +267,7 @@
 
     <xacro:transmisija
       trans_number="0"
-      joint_name="connecto1_to_link1">
+      joint_name="connector1_to_link1">
     </xacro:transmisija>
 
     <xacro:transmisija
