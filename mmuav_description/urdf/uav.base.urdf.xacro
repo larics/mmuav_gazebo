@@ -165,12 +165,12 @@
 
     <link name='connector1'>
       <inertial>
-        <mass value="0.001" />
+        <mass value="0.0126" />
         <origin xyz="0 0 -0.04" rpy="0 0 0"/>
         <inertia
-          ixx="0.05" ixy="0" ixz="0"
-          iyx="0" iyy="0.05" iyz="0"
-          izx="0" izy="0" izz="0.05"/>
+          ixx="0.00001176" ixy="0" ixz="0"
+          iyx="0" iyy="0.00001176" iyz="0"
+          izx="0" izy="0" izz="0.00000252"/>
       </inertial>
 
       <visual>
@@ -183,12 +183,12 @@
 
   <link name='link1'>
     <inertial>
-      <mass value="0.001" />
+      <mass value="0.0256" />
       <origin xyz="-0.09899494936 0.09899494936 -0.01" rpy="0 0 0"/>
       <inertia
-        ixx="0.05" ixy="0" ixz="0"
-        iyx="0" iyy="0.05" iyz="0"
-        izx="0" izy="0" izz="0.05"/>
+        ixx="0.000004266" ixy="0" ixz="0"
+        iyx="0" iyy="0.002" iyz="0"
+        izx="0" izy="0" izz="0.000262827"/>
     </inertial>
 
     <visual>
@@ -201,12 +201,12 @@
 
     <link name='connector2'>
       <inertial>
-        <mass value="0.001" />
+        <mass value="0.00251" />
         <origin xyz="0 0 0" rpy="0 0 0"/>
         <inertia
-          ixx="0.05" ixy="0" ixz="0"
-          iyx="0" iyy="0.05" iyz="0"
-          izx="0" izy="0" izz="0.05"/>
+          ixx="0.0000003346" ixy="0" ixz="0"
+          iyx="0" iyy="0.0000003346" iyz="0"
+          izx="0" izy="0" izz="0.000000502"/>
       </inertial>
 
       <visual>
@@ -219,13 +219,13 @@
 
     <link name='link2'>
       <inertial>
-        <mass value="0.001" />
+        <mass value="0.0256" />
         <origin xyz="-0.09899494936 0.09899494936 -0.02" rpy="0 0 0"/>
         <inertia
-          ixx="0.05" ixy="0" ixz="0"
-          iyx="0" iyy="0.05" iyz="0"
-          izx="0" izy="0" izz="0.05"/>
-      </inertial>
+          ixx="0.000004266" ixy="0" ixz="0"
+          iyx="0" iyy="0.002" iyz="0"
+          izx="0" izy="0" izz="0.000262827"/>
+    </inertial>
 
       <visual>
         <origin xyz="-0.09899494936 0.09899494936 -0.02" rpy="0.758398 1.5708 0" />
