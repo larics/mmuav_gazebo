@@ -16,7 +16,7 @@ import time
 class MergeControllerOutputs:
 
     def __init__(self):
-        self.rate = rospy.get_param('rate', 50)
+        self.rate = rospy.get_param('~rate', 100)
         self.ros_rate = rospy.Rate(self.rate)
 
         self.roll_command = 0.0

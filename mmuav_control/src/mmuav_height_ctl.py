@@ -83,7 +83,7 @@ class HeightControl:
         #self.pub_mot = rospy.Publisher('/gazebo/command/motor_speed', Actuators, queue_size=1)
         #self.pub_gm_mot = rospy.Publisher('collectiveThrust', GmStatus, queue_size=1)       
         self.cfg_server = Server(MmuavZCtlParamsConfig, self.cfg_callback)
-        self.rate = rospy.get_param('rate', 100)
+        self.rate = rospy.get_param('~rate', 100)
         self.ros_rate = rospy.Rate(self.rate)                 # attitude control at 100 Hz
         self.t_start = rospy.Time.now()
 

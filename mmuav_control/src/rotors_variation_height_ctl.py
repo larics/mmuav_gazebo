@@ -74,7 +74,8 @@ class HeightControl:
         self.t_old = 0
 
         rospy.Subscriber('pose', PoseStamped, self.pose_cb)
-        rospy.Subscriber('velocity', Odometry, self.vel_cb)
+        #rospy.Subscriber('odometry', Odometry, self.vel_cb)
+        rospy.Subscriber('velocity_relative', TwistStamped, self.vel_cb)
         rospy.Subscriber('vel_ref', Vector3, self.vel_ref_cb)
         rospy.Subscriber('pos_ref', Vector3, self.pos_ref_cb)
         self.pub_pid_z = rospy.Publisher('pid_z', PIDController, queue_size=1)
@@ -83,7 +84,7 @@ class HeightControl:
         self.pub_mot = rospy.Publisher('/gazebo/command/motor_speed', Actuators, queue_size=1)
         #self.pub_gm_mot = rospy.Publisher('collectiveThrust', GmStatus, queue_size=1)
         self.cfg_server = Server(VpcMmcuavZCtlParamsConfig, self.cfg_callback)
-        self.rate = rospy.get_param('rate', 100)
+        self.rate = rospy.get_param('~rate', 100)
         self.ros_rate = rospy.Rate(self.rate)                 # attitude control at 100 Hz
         self.t_start = rospy.Time.now()
 
@@ -163,7 +164,7 @@ class HeightControl:
         '''
         #if not self.start_flag:
         #    self.start_flag = True
-        self.vz_mv = msg.twist.twist.linear.z
+        self.vz_mv = msg.twist.linear.z
 
     def vel_ref_cb(self, msg):
         '''

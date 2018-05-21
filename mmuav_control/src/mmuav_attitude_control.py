@@ -125,7 +125,7 @@ class AttitudeControl:
         self.q_left = [2.463-1.57, -2.4846+1.57, -1.117]
         self.q_right = [-0.6769896+1.57, -2.4846+1.57, -1.117]
 
-        self.rate = rospy.get_param('rate', 100)
+        self.rate = rospy.get_param('~rate', 100)
         self.ros_rate = rospy.Rate(self.rate)                 # attitude control at 100 Hz
         self.Ts = 1.0/float(self.rate)
 
