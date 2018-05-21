@@ -74,30 +74,30 @@ class AttitudeControl:
         # Add your PID params here
 
         self.pid_roll.set_kp(7.0)
-        self.pid_roll.set_ki(1.0)
+        self.pid_roll.set_ki(0.5)
         self.pid_roll.set_kd(0.0)
 
-        self.pid_roll_rate.set_kp(250.0)
-        self.pid_roll_rate.set_ki(20.0)
+        self.pid_roll_rate.set_kp(190.0)
+        self.pid_roll_rate.set_ki(15.0)
         self.pid_roll_rate.set_kd(3.0)
         self.pid_roll_rate.set_lim_high(1450.0)
         self.pid_roll_rate.set_lim_low(-1450.0)
 
         self.pid_pitch.set_kp(7.0)
-        self.pid_pitch.set_ki(1.0)
+        self.pid_pitch.set_ki(0.5)
         self.pid_pitch.set_kd(0.0)
 
-        self.pid_pitch_rate.set_kp(250.0)
-        self.pid_pitch_rate.set_ki(20.0)
+        self.pid_pitch_rate.set_kp(190.0)
+        self.pid_pitch_rate.set_ki(15.0)
         self.pid_pitch_rate.set_kd(3.0)
         self.pid_pitch_rate.set_lim_high(1450.0)
         self.pid_pitch_rate.set_lim_low(-1450.0)
 
-        self.pid_yaw.set_kp(7.0)
+        self.pid_yaw.set_kp(5.0)
         self.pid_yaw.set_ki(0.0)
         self.pid_yaw.set_kd(0.0)
 
-        self.pid_yaw_rate.set_kp(250.0)
+        self.pid_yaw_rate.set_kp(180.0)
         self.pid_yaw_rate.set_ki(0.0)
         self.pid_yaw_rate.set_kd(0.0)
         self.pid_yaw_rate.set_lim_high(1450.0)
