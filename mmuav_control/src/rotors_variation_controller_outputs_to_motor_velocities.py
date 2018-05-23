@@ -87,6 +87,6 @@ def saturate(value, minval, maxval):
 
 
 if __name__ == "__main__":
-    rospy.init_node('vpc_mmcuav_merge_controller_outputs')
+    rospy.init_node('rotors_variation_merge_controller_outputs')
     merge_controller_outputs = MergeControllerOutputs()
     merge_controller_outputs.run()

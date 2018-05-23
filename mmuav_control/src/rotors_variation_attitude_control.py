@@ -408,6 +408,6 @@ class AttitudeControl:
 
 if __name__ == '__main__':
 
-    rospy.init_node('vpc_mmcuav_attitude_ctl')
+    rospy.init_node('rotors_variation_attitude_ctl')
     attitude_ctl = AttitudeControl()
     attitude_ctl.run()
