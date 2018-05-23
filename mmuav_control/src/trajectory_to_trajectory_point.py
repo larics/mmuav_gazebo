@@ -30,9 +30,9 @@ class TrajectoryToTrajectoryPoint:
 
     def run(self):
         
-        sample_time = 1.0/float(self.rate)
+        rate = rospy.Rate(self.rate)
         while not rospy.is_shutdown():
-            rospy.sleep(sample_time)
+            rate.sleep()
 
             if self.executing_trajectory_flag == True:
                 # Take first point from trajectory, publish it and remove it
