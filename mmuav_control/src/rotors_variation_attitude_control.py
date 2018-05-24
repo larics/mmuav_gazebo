@@ -10,7 +10,7 @@ from nav_msgs.msg import Odometry
 from std_msgs.msg import Float64, Float64MultiArray, Empty
 from mmuav_msgs.msg import PIDController
 from dynamic_reconfigure.server import Server
-from mmuav_control.cfg import VpcMmcuavAttitudeCtlParamsConfig
+from mmuav_control.cfg import RotorsVariationAttitudeCtlParamsConfig
 import math
 from datetime import datetime
 from rosgraph_msgs.msg import Clock
@@ -143,7 +143,7 @@ class AttitudeControl:
         self.pub_pid_pitch_rate = rospy.Publisher('pid_pitch_rate', PIDController, queue_size=1)
         self.pub_pid_yaw = rospy.Publisher('pid_yaw', PIDController, queue_size=1)
         self.pub_pid_yaw_rate = rospy.Publisher('pid_yaw_rate', PIDController, queue_size=1)
-        self.cfg_server = Server(VpcMmcuavAttitudeCtlParamsConfig, self.cfg_callback)
+        self.cfg_server = Server(RotorsVariationAttitudeCtlParamsConfig, self.cfg_callback)
 
     def run(self):
         '''
