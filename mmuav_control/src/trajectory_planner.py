@@ -142,7 +142,6 @@ class TrajectoryPlanner():
                 if i==0:
                     deltaCiRow = derivation_order + 2 #difference between rows of adjacent Ci, C(i+1) matrices
                     sizeC = derivation_order + deltaCiRow * (self.segments) #expected size of C matrix
-                    print sizeC
 
                     #fixed derivatives
                     fixed_dC=np.eye(deltaCiRow)
@@ -202,6 +201,7 @@ class TrajectoryPlanner():
                     fixed_C=np.hstack((fixed_C,fixed_dC))
 
                 else:
+                    #fixed derivatives
                     zeros=np.zeros((deltaCiRow,2))
                     fixed_dC=np.eye(2)
                     fixed_dC=np.vstack((zeros,fixed_dC,np.zeros((sizeC-deltaCiRow-2,2))))
@@ -215,12 +215,18 @@ class TrajectoryPlanner():
 
 
             if i==0:
+                #fixed derivatives of yaw
                 deltaC_yaw_iRow = derivation_order_yaw + 2 #difference between rows of adjacent Ci, C(i+1) matrices for yaw
                 sizeC_yaw = derivation_order_yaw + deltaC_yaw_iRow * (self.segments) #expected size of C matrix for yaw
                 fixed_dCyaw=np.eye(deltaC_yaw_iRow)
                 zeros=np.zeros((sizeC_yaw-deltaC_yaw_iRow,deltaC_yaw_iRow))
                 fixed_Cyaw=np.vstack((fixed_dCyaw,zeros))
+
+                #free derivatives of yaw
+                ones=np.eye(derivation_order_yaw)
+                free_dCyaw=np.vstack((np.zeros((deltaC_yaw_iRow,derivation_order_yaw)),ones,np.zeros((sizeC_yaw-deltaC_yaw_iRow-derivation_order_yaw,derivation_order_yaw))))
                 deltaC_yaw_iRow=deltaC_yaw_iRow+derivation_order_yaw
+                free_Cyaw=np.copy(free_dCyaw)
 
             elif i==self.segments-1:
 
@@ -231,23 +237,28 @@ class TrajectoryPlanner():
                 fixed_Cyaw=np.hstack((fixed_Cyaw,fixed_dCyaw))
 
             else:
-
+                #fixed derivatives of yaw
                 zeros=np.zeros((deltaC_yaw_iRow,2))
                 fixed_dCyaw=np.eye(2)
                 fixed_dCyaw=np.vstack((zeros,fixed_dCyaw,np.zeros((sizeC_yaw-deltaC_yaw_iRow-2,2))))
-                deltaC_yaw_iRow=deltaC_yaw_iRow+derivation_order_yaw+2
                 fixed_Cyaw=np.hstack((fixed_Cyaw,fixed_dCyaw))
+                deltaC_yaw_iRow=deltaC_yaw_iRow+derivation_order_yaw+2
 
+                #free derivatives of yaw
+                ones=np.eye(derivation_order_yaw)
+                zeros=np.zeros((deltaC_yaw_iRow-derivation_order_yaw,derivation_order_yaw))
+                free_dCyaw=np.vstack((zeros,ones,np.zeros((sizeC_yaw-deltaC_yaw_iRow,derivation_order_yaw))))
+
+
+                free_Cyaw=np.hstack((free_Cyaw,free_dCyaw))
 
 
         fixed_C=block_diag(fixed_C,fixed_C,fixed_C,fixed_Cyaw)
-
-        free_C=block_diag(free_C,free_C,free_C)
-        print free_C.shape
+        free_C=block_diag(free_C,free_C,free_C,free_Cyaw)
         (rows,columns)=fixed_C.shape
         size_dp=3*sizeC+sizeC_yaw-columns #size of unspecified derivatives
-
-        return fixed_C,size_dp
+        C=np.hstack((fixed_C,free_C))
+        return C,size_dp
 
     def generate_Q(self,T,polyorder,derivation_order=4): #cost matrix
 
@@ -379,14 +390,13 @@ class TrajectoryPlanner():
         Q_yaw=self.generate_Q(self.T,6,derivation_order=2)
         Aeq=block_diag(Aeq_axis,Aeq_axis,Aeq_axis,Aeq_yaw)
         Q=block_diag(Q_axis,Q_axis,Q_axis,Q_yaw)
-        #dfp=self.free_derivatives_optimization(C,Aeq,deq,Q,size_dp)
+        dfp=self.free_derivatives_optimization(C,Aeq,deq,Q,size_dp)
 
     def free_derivatives_optimization(self,C,Aeq,deq,Q,size_dp):
 
         deq_permuated=np.transpose(np.dot(np.transpose(deq),C))
         (rows,columns)=deq_permuated.shape
         size_df=rows-size_dp
-        print size_df,size_dp
         df=np.copy(deq_permuated[0:size_df,0])
         H=np.dot(np.linalg.pinv(Aeq),np.transpose(C))
         R=np.dot(np.dot(np.transpose(H),Q),H)
