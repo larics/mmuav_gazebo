@@ -22,11 +22,11 @@ class TrajectoryPlanner():
         rospy.Subscriber(   'multi_dof_trajectory', MultiDOFJointTrajectory,\
                             self.keyframes_callback,queue_size=1)
 
-    def generate_Aeq(self,T,derivation_order=4):     # equality constraints matrix
+    def generate_Aeq(self,T,polyorder,derivation_order=4):     # equality constraints matrix
 
         # initializing basic polynome of a given order
 
-        polynom=np.poly1d(np.ones(self.polyorder+1))
+        polynom=np.poly1d(np.ones(polyorder+1))
 
         #calculating coeffitients of polynom derivatives
 
@@ -37,20 +37,20 @@ class TrajectoryPlanner():
             poly_derivations=np.vstack((poly_derivations,np.append(polynom.coef,np.zeros(n))))
 
         #skeleton of matrix for first segment
-        if self.polyorder >=9:
-            A1=np.zeros((derivation_order+1,self.polyorder+1))
+        if polyorder >=9:
+            A1=np.zeros((derivation_order+1,polyorder+1))
             for i in range(derivation_order+1):
-                A1[i,self.polyorder-i]=poly_derivations[i,self.polyorder-i]
+                A1[i,polyorder-i]=poly_derivations[i,polyorder-i]
         else:
-            A1=np.zeros((3,self.polyorder+1))
+            A1=np.zeros((3,polyorder+1))
             for i in range(3):
-                A1[i,self.polyorder-i]=poly_derivations[i,self.polyorder-i]
+                A1[i,polyorder-i]=poly_derivations[i,polyorder-i]
 
         #skeleton of matrix for other segments
-        Ai=np.zeros((derivation_order+1,self.polyorder+1))
+        Ai=np.zeros((derivation_order+1,polyorder+1))
         for i in range(derivation_order):
-            Ai[i,self.polyorder-i-1]=-poly_derivations[i+1,self.polyorder-1-i]
-        Ai[derivation_order,self.polyorder]=poly_derivations[0,self.polyorder]
+            Ai[i,polyorder-i-1]=-poly_derivations[i+1,polyorder-1-i]
+        Ai[derivation_order,polyorder]=poly_derivations[0,polyorder]
 
         #constructing complete Aeq
 
@@ -58,7 +58,7 @@ class TrajectoryPlanner():
 
         #expected size of Aeq
 
-        if self.polyorder >= 9:
+        if polyorder >= 9:
             sizeAeq = derivation_order + deltaAiRow * (self.segments)
         else:
             sizeAeq = 6 + deltaAiRow * (self.segments-1)
@@ -69,24 +69,24 @@ class TrajectoryPlanner():
             if i==0:
                 Aj=np.copy(A1)
             else:
-                Aj=np.vstack((np.zeros((deltaAiRow,self.polyorder+1)),Ai))
+                Aj=np.vstack((np.zeros((deltaAiRow,polyorder+1)),Ai))
                 deltaAiRow=deltaAiRow+derivation_order+2 #current rows + position + position + derivatives
 
             Ak=np.array([])
             for j in range(derivation_order+1):
                 temporaryA=np.copy(poly_derivations[j,:])
-                for k in range(self.polyorder-j+1):
-                    temporaryA[self.polyorder-k-j]=temporaryA[self.polyorder-k-j]*T[i]**(k)
+                for k in range(polyorder-j+1):
+                    temporaryA[polyorder-k-j]=temporaryA[polyorder-k-j]*T[i]**(k)
                 if j==0:
                     Ak=np.copy(temporaryA)
-                elif (i<self.segments-1 or self.polyorder>=9):
+                elif (i<self.segments-1 or polyorder>=9):
                     Ak=np.vstack((Ak,temporaryA))
                 elif j<3:
                     Ak=np.vstack((Ak,temporaryA))
 
             Aj=np.vstack((Aj,Ak))
             (a,b)=Aj.shape
-            Aj=np.vstack((Aj,np.zeros((sizeAeq-a,self.polyorder+1)))) #fill rest of the columns with zeros
+            Aj=np.vstack((Aj,np.zeros((sizeAeq-a,polyorder+1)))) #fill rest of the columns with zeros
 
             if i==0:
                 Aeq=np.copy(Aj)
@@ -138,88 +138,127 @@ class TrajectoryPlanner():
         for i in range(self.segments):
 
             if self.polyorder >=9:
+
+
+
+
                 if i==0:
                     deltaCiRow = derivation_order + 2 #difference between rows of adjacent Ci, C(i+1) matrices
                     sizeC = derivation_order + deltaCiRow * (self.segments) #expected size of C matrix
-                    dC=np.eye(deltaCiRow)
-                    zeros=np.zeros((sizeC-deltaCiRow,deltaCiRow))
-                    C=np.vstack((dC,zeros))
+                    print sizeC
+
+                    #fixed derivatives
+                    fixed_dC=np.eye(deltaCiRow)
+                    fixed_C=np.vstack((fixed_dC,np.zeros((sizeC-deltaCiRow,deltaCiRow))))
+
+                    #free derivatives
+                    ones=np.eye(derivation_order)
+                    free_dC=np.vstack((np.zeros((deltaCiRow,derivation_order)),ones,np.zeros((sizeC-deltaCiRow-derivation_order,derivation_order))))
                     deltaCiRow=deltaCiRow+derivation_order
+                    free_C=np.copy(free_dC)
 
                 elif i==self.segments-1:
 
                     zeros=np.zeros((deltaCiRow,derivation_order+2))
                     deltaCiRow=deltaCiRow+derivation_order+2
-                    dC=np.eye(derivation_order+2)
-                    dC=np.vstack((zeros,dC,np.zeros((sizeC-deltaCiRow,derivation_order+2))))
-                    C=np.hstack((C,dC))
+                    fixed_dC=np.eye(derivation_order+2)
+                    fixed_dC=np.vstack((zeros,fixed_dC,np.zeros((sizeC-deltaCiRow,derivation_order+2))))
+                    fixed_C=np.hstack((fixed_C,fixed_dC))
 
                 else:
 
+                    #fixed derivatives
                     zeros=np.zeros((deltaCiRow,2))
-                    dC=np.eye(2)
-                    dC=np.vstack((zeros,dC,np.zeros((sizeC-deltaCiRow-2,2))))
+                    fixed_dC=np.eye(2)
                     deltaCiRow=deltaCiRow+derivation_order+2
-                    C=np.hstack((C,dC))
+                    fixed_dC=np.vstack((zeros,fixed_dC,np.zeros((sizeC-deltaCiRow+derivation_order,2))))
+                    fixed_C=np.hstack((fixed_C,fixed_dC))
+
+                    #free derivatives
+                    ones=np.eye(derivation_order)
+                    free_dC=np.vstack((np.zeros((deltaCiRow-derivation_order,derivation_order)),ones,np.zeros((sizeC-deltaCiRow,derivation_order))))
+                    free_C=np.hstack((free_C,free_dC))
+
+
             else:
 
                 if i==0:
                     sizeC = 6 + (derivation_order + 2) * (self.segments-1)
                     deltaCiRow=4
-                    dC=np.eye(deltaCiRow)
+
+                    #fixed derivatives
+                    fixed_dC=np.eye(deltaCiRow)
                     zeros=np.zeros((sizeC-deltaCiRow,deltaCiRow))
-                    C=np.vstack((dC,zeros))
+                    fixed_C=np.vstack((fixed_dC,zeros))
                     deltaCiRow=deltaCiRow+derivation_order
-                    C=np.vstack((dC,zeros))
+                    fixed_C=np.vstack((fixed_dC,zeros))
+
+                    #free derivatives
+                    ones=np.eye(derivation_order)
+                    free_dC=np.vstack((np.zeros((deltaCiRow,derivation_order)),ones,np.zeros((sizeC-deltaCiRow-derivation_order,derivation_order))))
+                    deltaCiRow=deltaCiRow+derivation_order
+                    free_C=np.copy(free_dC)
 
                 elif i==self.segments-1:
                     zeros=np.zeros((deltaCiRow,4))
-                    dC=np.eye(4)
+                    fixed_dC=np.eye(4)
                     deltaCiRow=deltaCiRow+4
-                    dC=np.vstack((zeros,dC,np.zeros((sizeC-deltaCiRow,4))))
-                    C=np.hstack((C,dC))
+                    fixed_dC=np.vstack((zeros,fixed_dC,np.zeros((sizeC-deltaCiRow,4))))
+                    fixed_C=np.hstack((fixed_C,fixed_dC))
+
                 else:
                     zeros=np.zeros((deltaCiRow,2))
-                    dC=np.eye(2)
-                    dC=np.vstack((zeros,dC,np.zeros((sizeC-deltaCiRow-2,2))))
+                    fixed_dC=np.eye(2)
+                    fixed_dC=np.vstack((zeros,fixed_dC,np.zeros((sizeC-deltaCiRow-2,2))))
                     deltaCiRow=deltaCiRow+derivation_order+2
-                    C=np.hstack((C,dC))
+                    fixed_C=np.hstack((fixed_C,fixed_dC))
+
+                    #free derivatives
+                    ones=np.eye(derivation_order)
+                    free_dC=np.vstack((np.zeros((deltaCiRow-derivation_order,derivation_order)),ones,np.zeros((sizeC-deltaCiRow,derivation_order))))
+                    free_C=np.hstack((free_C,free_dC))
+
+
             if i==0:
                 deltaC_yaw_iRow = derivation_order_yaw + 2 #difference between rows of adjacent Ci, C(i+1) matrices for yaw
                 sizeC_yaw = derivation_order_yaw + deltaC_yaw_iRow * (self.segments) #expected size of C matrix for yaw
-                dCyaw=np.eye(deltaC_yaw_iRow)
+                fixed_dCyaw=np.eye(deltaC_yaw_iRow)
                 zeros=np.zeros((sizeC_yaw-deltaC_yaw_iRow,deltaC_yaw_iRow))
-                Cyaw=np.vstack((dCyaw,zeros))
+                Cyaw=np.vstack((fixed_dCyaw,zeros))
                 deltaC_yaw_iRow=deltaC_yaw_iRow+derivation_order_yaw
 
             elif i==self.segments-1:
 
                 zeros=np.zeros((deltaC_yaw_iRow,derivation_order_yaw+2))
                 deltaC_yaw_iRow=deltaC_yaw_iRow+derivation_order_yaw+2
-                dCyaw=np.eye(derivation_order_yaw+2)
-                dCyaw=np.vstack((zeros,dCyaw,np.zeros((sizeC_yaw-deltaC_yaw_iRow,derivation_order_yaw+2))))
-                Cyaw=np.hstack((Cyaw,dCyaw))
+                fixed_dCyaw=np.eye(derivation_order_yaw+2)
+                fixed_dCyaw=np.vstack((zeros,fixed_dCyaw,np.zeros((sizeC_yaw-deltaC_yaw_iRow,derivation_order_yaw+2))))
+                Cyaw=np.hstack((Cyaw,fixed_dCyaw))
 
             else:
 
                 zeros=np.zeros((deltaC_yaw_iRow,2))
-                dCyaw=np.eye(2)
-                dCyaw=np.vstack((zeros,dCyaw,np.zeros((sizeC_yaw-deltaC_yaw_iRow-2,2))))
+                fixed_dCyaw=np.eye(2)
+                fixed_dCyaw=np.vstack((zeros,fixed_dCyaw,np.zeros((sizeC_yaw-deltaC_yaw_iRow-2,2))))
                 deltaC_yaw_iRow=deltaC_yaw_iRow+derivation_order_yaw+2
-                Cyaw=np.hstack((Cyaw,dCyaw))
+                Cyaw=np.hstack((Cyaw,fixed_dCyaw))
 
+            #print fixed_C
 
-
+        """
         C=block_diag(C,C,C,Cyaw)
         (rows,columns)=C.shape
-        C=np.hstack((C,np.zeros((rows,3*sizeC+sizeC_yaw-columns))))
-        return C
+        size_dp=3*sizeC+sizeC_yaw-columns #size of unspecified derivatives
+        C=np.hstack((C,np.zeros((rows,size_dp))))
+        return C,size_dp
+        """
+        return Cyaw,0
 
-    def generate_Q(self,T,derivation_order=4): #cost matrix
+    def generate_Q(self,T,polyorder,derivation_order=4): #cost matrix
 
         # initializing basic polynom of a given order
 
-        polynom=np.poly1d(np.ones(self.polyorder+1))
+        polynom=np.poly1d(np.ones(polyorder+1))
 
         for n in range(1, derivation_order+1):
             polynom=np.polyder(polynom)
@@ -230,7 +269,7 @@ class TrajectoryPlanner():
         #constructing matrix Qi(T)
 
 
-        deltaQiRow = self.polyorder + 1     #alignment of adjacent Qi, Qi+1 matrices
+        deltaQiRow = polyorder + 1     #alignment of adjacent Qi, Qi+1 matrices
 
         #expected size of Q
         sizeQ = deltaQiRow * self.segments
@@ -238,17 +277,17 @@ class TrajectoryPlanner():
         for i in range(self.segments):
 
             Qi=np.matmul(np.transpose(polynom),polynom)
-            for j in range(self.polyorder - derivation_order+1):
-                for k in range(self.polyorder - derivation_order+1):
-                    exponent=2*(self.polyorder - derivation_order)
+            for j in range(polyorder - derivation_order+1):
+                for k in range(polyorder - derivation_order+1):
+                    exponent=2*(polyorder - derivation_order)
                     Qi[j,k]=Qi[j,k]*T[i]**(exponent-j-k+1)/(exponent-j-k+1)
             if i==0:
-                Qi=np.vstack((Qi,np.zeros((sizeQ-deltaQiRow,self.polyorder+1))))
+                Qi=np.vstack((Qi,np.zeros((sizeQ-deltaQiRow,polyorder+1))))
                 Q=np.copy(Qi)
             else:
-                Qi=np.vstack((np.zeros((deltaQiRow,self.polyorder+1)),Qi))
-                deltaQiRow=deltaQiRow+self.polyorder+1
-                Qi=np.vstack((Qi,np.zeros((sizeQ-deltaQiRow,self.polyorder+1))))
+                Qi=np.vstack((np.zeros((deltaQiRow,polyorder+1)),Qi))
+                deltaQiRow=deltaQiRow+polyorder+1
+                Qi=np.vstack((Qi,np.zeros((sizeQ-deltaQiRow,polyorder+1))))
                 Q=np.hstack((Q,Qi))
         return Q
 
@@ -330,15 +369,38 @@ class TrajectoryPlanner():
 
         print "Keyframes received, segments: ", self.segments
 
-        """
-        self.T=self.generate_T(self.keyframes)
-        C=self.generate_C()
-        d=self.generate_deq(self.keyframes)
-        print np.dot(np.transpose(d),C)
-        """
+        self.calculateJ()
 
     def run(self):
         rospy.spin()
+
+    def calculateJ(self):
+        self.T=self.generate_T(self.keyframes)
+        (C,size_dp)=self.generate_C()
+        deq=self.generate_deq(self.keyframes)
+        Aeq_axis=self.generate_Aeq(self.T,self.polyorder)
+        Aeq_yaw=self.generate_Aeq(self.T,6,derivation_order=2)
+        Q_axis=self.generate_Q(self.T,self.polyorder)
+        Q_yaw=self.generate_Q(self.T,6,derivation_order=2)
+        Aeq=block_diag(Aeq_axis,Aeq_axis,Aeq_axis,Aeq_yaw)
+        Q=block_diag(Q_axis,Q_axis,Q_axis,Q_yaw)
+        #dfp=self.free_derivatives_optimization(C,Aeq,deq,Q,size_dp)
+
+    def free_derivatives_optimization(self,C,Aeq,deq,Q,size_dp):
+
+        deq_permuated=np.transpose(np.dot(np.transpose(deq),C))
+        (rows,columns)=deq_permuated.shape
+        size_df=rows-size_dp
+        print size_df,size_dp
+        df=np.copy(deq_permuated[0:size_df,0])
+        H=np.dot(np.linalg.pinv(Aeq),np.transpose(C))
+        R=np.dot(np.dot(np.transpose(H),Q),H)
+        (rows,columns)=R.shape
+        Rpp=np.copy(R[size_df-1:-1,size_df-1:-1])
+        Rfp=np.copy(R[0:size_df,size_df-1:-1])
+        #print Rpp.shape,Rfp.shape
+        dp_optimal=-np.dot(np.dot(np.linalg.inv(Rpp),np.transpose(Rfp)),df)
+        print dp_optimal
 
 
 if __name__=='__main__':
