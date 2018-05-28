@@ -8,6 +8,16 @@
 cd ~/catkin_ws/src
 sudo rm -r rotors_simulator
 sudo rm -r mav_comm
+cd ~/catkin_ws/src
+git clone https://github.com/larics/rotors_simulator
+cd rotors_simulator
+git checkout larics_master
+cd ~/catkin_ws/src
+git clone https://github.com/larics/mav_comm
+cd mav_comm
+git checkout larics_master
+cd ~/catkin_ws/src
+catkin build
 ```
 Next, clone the repository as described in **Install required simulation packages** below.
 
