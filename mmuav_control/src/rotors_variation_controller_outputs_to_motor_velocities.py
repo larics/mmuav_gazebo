@@ -15,7 +15,7 @@ from rosgraph_msgs.msg import Clock
 class MergeControllerOutputs:
 
     def __init__(self):
-        self.rate = rospy.get_param('rate', 100)
+        self.rate = rospy.get_param('~rate', 100)
         self.ros_rate = rospy.Rate(self.rate)
 
         self.roll_command = 0.0
@@ -87,6 +87,6 @@ def saturate(value, minval, maxval):
 
 
 if __name__ == "__main__":
-    rospy.init_node('vpc_mmcuav_merge_controller_outputs')
+    rospy.init_node('rotors_variation_merge_controller_outputs')
     merge_controller_outputs = MergeControllerOutputs()
     merge_controller_outputs.run()

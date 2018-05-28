@@ -96,7 +96,7 @@ class AttitudeControl:
         ##################################################################
         ##################################################################
 
-        self.rate = rospy.get_param('rate', 100)
+        self.rate = rospy.get_param('~rate', 100)
         self.ros_rate = rospy.Rate(self.rate)                 # attitude control at 100 Hz
 
         self.t_old = 0

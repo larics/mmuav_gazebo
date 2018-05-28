@@ -21,6 +21,11 @@
       <param name="rate" value="$(arg rate)"/>
     </node>
 
+    <!-- Run the trajectory reference node -->
+    <node name="trajectory_to_trajectory_point" pkg="mmuav_control" type="trajectory_to_trajectory_point.py">
+      <param name="rate" value="$(arg rate)"/>
+    </node>
+
   </group>
 
 </launch>

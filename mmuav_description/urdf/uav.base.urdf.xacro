@@ -163,23 +163,23 @@
     <xacro:insert_block name="rotor_inertia" />
   </xacro:vertical_rotor>
 
-    <link name='connector1'>
-      <inertial>
-        <mass value="0.0126" />
-        <origin xyz="0 0 -0.04" rpy="0 0 0"/>
-        <inertia
-          ixx="0.00001176" ixy="0" ixz="0"
-          iyx="0" iyy="0.00001176" iyz="0"
-          izx="0" izy="0" izz="0.00000252"/>
-      </inertial>
+  <link name='connector1'>
+    <inertial>
+      <mass value="0.0126" />
+      <origin xyz="0 0 -0.04" rpy="0 0 0"/>
+      <inertia
+        ixx="0.00001176" ixy="0" ixz="0"
+        iyx="0" iyy="0.00001176" iyz="0"
+        izx="0" izy="0" izz="0.00000252"/>
+    </inertial>
 
-      <visual>
-        <origin xyz="0 0 -0.04" rpy="0 0 0" />
-        <geometry>
-          <cylinder length="0.1" radius="0.02"/>
-        </geometry>
-      </visual>
-    </link>
+    <visual>
+      <origin xyz="0 0 -0.04" rpy="0 0 0" />
+      <geometry>
+        <cylinder length="0.1" radius="0.02"/>
+      </geometry>
+    </visual>
+  </link>
 
   <link name='link1'>
     <inertial>

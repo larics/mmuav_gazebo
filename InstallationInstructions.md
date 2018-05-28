@@ -1,5 +1,27 @@
 # Installation Instructions
 
+**Important Notice**
+
+![#f03c15](https://placehold.it/15/f03c15/000000?text=+) If you cloned this repository before 16. May, 2018. please do the following steps:
+
+```
+cd ~/catkin_ws/src
+sudo rm -r rotors_simulator
+sudo rm -r mav_comm
+cd ~/catkin_ws/src
+git clone https://github.com/larics/rotors_simulator
+cd rotors_simulator
+git checkout larics_master
+cd ~/catkin_ws/src
+git clone https://github.com/larics/mav_comm
+cd mav_comm
+git checkout larics_master
+cd ~/catkin_ws/src
+catkin build
+```
+Next, clone the repository as described in **Install required simulation packages** below.
+
+
 ## Configure workspace
 
 This instructions consider you have [ROS](http://wiki.ros.org/kinetic/Installation/Ubuntu) installed. Following dependencies have to be installed before configuring the workspace:
@@ -29,13 +51,13 @@ Next, clone and checkout following packages in `src` folder:
 
 ```
 cd ~/catkin_ws/src
-git clone https://github.com/ethz-asl/rotors_simulator.git 
+git clone https://github.com/larics/rotors_simulator
 cd rotors_simulator
-git checkout 97b3da2d02ab498b0c9d7a15d0297e72fe6b6482
+git checkout larics_master
 cd ~/catkin_ws/src
-git clone https://github.com/ethz-asl/mav_comm.git
+git clone https://github.com/larics/mav_comm
 cd mav_comm
-git checkout de1b6294fa30f2c5fb892831bc86bd7ec8c08d00
+git checkout larics_master
 ```
 
 
@@ -43,7 +65,7 @@ Before you build, install following dependencies:
 
 ```
 sudo apt-get install libopencv-dev
-sudo apt-get install ros-kinetic-joy ros-kinetic-octomap-ros ros-kinetic-mavlink python-wstool python-catkin-tools protobuf-compiler libgoogle-glog-dev ros-kinetic-control-toolbox ros-kinetic-mavros ros-kinetic-effort-controllers ros-kinetic-position-controllers ros-kinetic-robot-controllers ros-kinetic-joint-state-controller ros-kinetic-controller-manager ros-kinetic-gazebo-ros-control ros-kinetic-hector-gazebo-plugins
+sudo apt-get install ros-kinetic-joy ros-kinetic-octomap-ros ros-kinetic-mavlink python-wstool python-catkin-tools protobuf-compiler libgoogle-glog-dev ros-kinetic-control-toolbox ros-kinetic-mavros ros-kinetic-effort-controllers ros-kinetic-position-controllers ros-kinetic-robot-controllers ros-kinetic-joint-state-controller ros-kinetic-controller-manager ros-kinetic-gazebo-ros-control ros-kinetic-hector-gazebo-plugins ros-kinetic-xacro ros-kinetic-robot-state-publisher
 catkin build
 ```
 

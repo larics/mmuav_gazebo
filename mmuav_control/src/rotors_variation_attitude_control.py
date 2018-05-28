@@ -10,7 +10,7 @@ from nav_msgs.msg import Odometry
 from std_msgs.msg import Float64, Float64MultiArray, Empty
 from mmuav_msgs.msg import PIDController
 from dynamic_reconfigure.server import Server
-from mmuav_control.cfg import VpcMmcuavAttitudeCtlParamsConfig
+from mmuav_control.cfg import RotorsVariationAttitudeCtlParamsConfig
 import math
 from datetime import datetime
 from rosgraph_msgs.msg import Clock
@@ -74,32 +74,32 @@ class AttitudeControl:
         # Add your PID params here
 
         self.pid_roll.set_kp(7.0)
-        self.pid_roll.set_ki(1.0)
+        self.pid_roll.set_ki(0.5)
         self.pid_roll.set_kd(0.0)
 
-        self.pid_roll_rate.set_kp(250.0)
-        self.pid_roll_rate.set_ki(20.0)
+        self.pid_roll_rate.set_kp(190.0)
+        self.pid_roll_rate.set_ki(15.0)
         self.pid_roll_rate.set_kd(3.0)
         self.pid_roll_rate.set_lim_high(1450.0)
         self.pid_roll_rate.set_lim_low(-1450.0)
 
         self.pid_pitch.set_kp(7.0)
-        self.pid_pitch.set_ki(1.0)
+        self.pid_pitch.set_ki(0.5)
         self.pid_pitch.set_kd(0.0)
 
-        self.pid_pitch_rate.set_kp(250.0)
-        self.pid_pitch_rate.set_ki(20.0)
+        self.pid_pitch_rate.set_kp(190.0)
+        self.pid_pitch_rate.set_ki(15.0)
         self.pid_pitch_rate.set_kd(3.0)
         self.pid_pitch_rate.set_lim_high(1450.0)
         self.pid_pitch_rate.set_lim_low(-1450.0)
 
-        self.pid_yaw.set_kp(1.0)
-        self.pid_yaw.set_ki(0.001)
-        self.pid_yaw.set_kd(0.1)
+        self.pid_yaw.set_kp(5.0)
+        self.pid_yaw.set_ki(0.0)
+        self.pid_yaw.set_kd(0.0)
 
-        self.pid_yaw_rate.set_kp(200.0)
-        self.pid_yaw_rate.set_ki(0)
-        self.pid_yaw_rate.set_kd(0)
+        self.pid_yaw_rate.set_kp(180.0)
+        self.pid_yaw_rate.set_ki(0.0)
+        self.pid_yaw_rate.set_kd(0.0)
         self.pid_yaw_rate.set_lim_high(1450.0)
         self.pid_yaw_rate.set_lim_low(-1450.0)
 
@@ -120,7 +120,7 @@ class AttitudeControl:
         ##################################################################
         ##################################################################
 
-        self.rate = rospy.get_param('rate', 100)
+        self.rate = rospy.get_param('~rate', 100)
         self.ros_rate = rospy.Rate(self.rate)                 # attitude control at 100 Hz
         self.Ts = 1.0/float(self.rate)
 
@@ -143,7 +143,7 @@ class AttitudeControl:
         self.pub_pid_pitch_rate = rospy.Publisher('pid_pitch_rate', PIDController, queue_size=1)
         self.pub_pid_yaw = rospy.Publisher('pid_yaw', PIDController, queue_size=1)
         self.pub_pid_yaw_rate = rospy.Publisher('pid_yaw_rate', PIDController, queue_size=1)
-        self.cfg_server = Server(VpcMmcuavAttitudeCtlParamsConfig, self.cfg_callback)
+        self.cfg_server = Server(RotorsVariationAttitudeCtlParamsConfig, self.cfg_callback)
 
     def run(self):
         '''
@@ -408,6 +408,6 @@ class AttitudeControl:
 
 if __name__ == '__main__':
 
-    rospy.init_node('vpc_mmcuav_attitude_ctl')
+    rospy.init_node('rotors_variation_attitude_ctl')
     attitude_ctl = AttitudeControl()
     attitude_ctl.run()
