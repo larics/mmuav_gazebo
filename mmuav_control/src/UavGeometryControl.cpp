@@ -16,19 +16,42 @@ UavGeometryControl::UavGeometryControl(int rate)
 	sleep_duration_ = 0.5;
 	start_flag_ = false;
 
-	// Initialize desired position and orientation values
+	// Initialize desired position and attitude values
 	x_d_.setZero(3,1);
+	v_d_.setZero(3,1);
+	a_d_.setZero(3,1);
+	omega_d_.setZero(3, 3);
+	alpha_d_.setZero(3, 3);
 	b1_d_.setZero(3,1);
-	b1_d_(2,0) = 1;			// Initial heading is (0, 0, 1)
-	omega_hat_.setZero(3,3);
+	b1_d_(0,0) = 1;			// Initial heading is (1, 0, 0)
+
+	// Initialize controller parameters
+	k_x_ = 1;
+	k_v_ = 1;
+	k_R_ = 1;
+	k_omega_ = 1;
 
 	// Initialize subscribers and publishers
 	imu_ros_sub_ = node_handle_.subscribe(
 			"/mmuav/imu", 1, &UavGeometryControl::imu_cb, this);
+
+	// Initialize position reference subscribers
 	xd_ros_sub_ = node_handle_.subscribe(
 			"/mmuav/x_desired", 1, &UavGeometryControl::xd_cb, this);
+	vd_ros_sub_ = node_handle_.subscribe(
+			"/mmuav/v_desired", 1, &UavGeometryControl::vd_cb, this);
+	ad_ros_sub_ = node_handle_.subscribe(
+			"/mmuav/a_desired", 1, &UavGeometryControl::ad_cb, this);
+
+	// Initialize attitude reference subscribers
 	b1d_ros_sub_ = node_handle_.subscribe(
-			"/mmuav/b1_desired", 1, &UavGeometryControl::b1d_cb, this);
+				"/mmuav/b1_desired", 1, &UavGeometryControl::b1d_cb, this);
+	omega_d_ros_sub_ = node_handle_.subscribe(
+				"/mmuav/omega_desired", 1,
+				&UavGeometryControl::omegad_cb, this);
+	alpha_d_ros_sub_ = node_handle_.subscribe(
+				"/mmuav/alpha_desired", 1,
+				&UavGeometryControl::alphad_cb, this);
 }
 
 UavGeometryControl::~UavGeometryControl()
@@ -79,6 +102,7 @@ void UavGeometryControl::run()
 
 		// Update old time
 		t_old_ = ros::Time::now();
+
 	}
 }
 
@@ -89,11 +113,35 @@ void UavGeometryControl::xd_cb(const geometry_msgs::Vector3 &msg)
 	x_d_(2, 0) = msg.z;
 }
 
+void UavGeometryControl::vd_cb(const geometry_msgs::Vector3 &msg)
+{
+	v_d_(0, 0) = msg.x;
+	v_d_(1, 0) = msg.y;
+	v_d_(2, 0) = msg.z;
+}
+
+void UavGeometryControl::ad_cb(const geometry_msgs::Vector3 &msg)
+{
+	a_d_(0, 0) = msg.x;
+	a_d_(1, 0) = msg.y;
+	a_d_(2, 0) = msg.z;
+}
+
 void UavGeometryControl::b1d_cb(const geometry_msgs::Vector3 &msg)
 {
 	b1_d_(0, 0) = msg.x;
 	b1_d_(1, 0) = msg.y;
 	b1_d_(2, 0) = msg.z;
+}
+
+void UavGeometryControl::omegad_cb(const geometry_msgs::Vector3 &msg)
+{
+	hatOperator(msg.x, msg.y, msg.z, omega_d_);
+}
+
+void UavGeometryControl::alphad_cb(const geometry_msgs::Vector3 &msg)
+{
+	hatOperator(msg.x, msg.y, msg.z, alpha_d_);
 }
 
 void UavGeometryControl::imu_cb (const sensor_msgs::Imu &msg)
@@ -129,18 +177,16 @@ void UavGeometryControl::imu_cb (const sensor_msgs::Imu &msg)
     euler_rate_mv_.z = sx / cy * q + cx / cy * r;
 }
 
-Matrix<double, 3, 3> UavGeometryControl::hatOperator(
-		double x, double y, double z)
+void UavGeometryControl::hatOperator(
+		double x, double y, double z, Matrix<double, 3, 3> &hatMatrix)
 {
-	Matrix<double, 3, 3> hat_matrix;
-	hat_matrix.setZero(3,3);
-	hat_matrix(0, 1) = -z;
-	hat_matrix(0, 2) =  y;
-	hat_matrix(1, 0) =  z;
-	hat_matrix(1, 2) = -x;
-	hat_matrix(2, 0) = -y;
-	hat_matrix(2, 1) =  x;
-	return hat_matrix;
+	hatMatrix.setZero(3,3);
+	hatMatrix(0, 1) = -z;
+	hatMatrix(0, 2) =  y;
+	hatMatrix(1, 0) =  z;
+	hatMatrix(1, 2) = -x;
+	hatMatrix(2, 0) = -y;
+	hatMatrix(2, 1) =  x;
 }
 
 void UavGeometryControl::quaternion2euler(float *quaternion, float *euler)

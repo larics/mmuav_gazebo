@@ -44,8 +44,13 @@ class UavGeometryControl
 
 	private:
 
+		// Callback functions
 		void imu_cb(const sensor_msgs::Imu &msg);
 		void xd_cb(const geometry_msgs::Vector3 &msg);
+		void vd_cb(const geometry_msgs::Vector3 &msg);
+		void ad_cb(const geometry_msgs::Vector3 &msg);
+		void omegad_cb(const geometry_msgs::Vector3 &msg);
+		void alphad_cb(const geometry_msgs::Vector3 &msg);
 		void b1d_cb(const geometry_msgs::Vector3 &msg);
 
 		/**
@@ -62,13 +67,12 @@ class UavGeometryControl
 		 * @param x - x vector component
 		 * @param y - y vector component
 		 * @param z - z vector component
-		 *
-		 * @return - Matrix of the following form:
+		 * @param hatMatrixs - Matrix of the following form:
 		 * 	[ 0  -z,  y]
 		 * 	[ z,  0, -x]
 		 * 	[-y,  x,  0]
 		 */
-		Matrix<double, 3, 3> hatOperator(double x, double y, double z);
+		void hatOperator(double x, double y, double z, Matrix<double, 3, 3> &hatMatrix);
 
 		/**
 		 * Node handle used for setting up subscribers and publishers.
@@ -76,11 +80,19 @@ class UavGeometryControl
 		ros::NodeHandle node_handle_;
 
 		/**
-		 * Subscriber handle for the IMU topic,
-		 * desired position (x_D) topic and
-		 * desired direction of the first body axis b1_D respectively.
+		 * Subscriber handle for the IMU topic.
 		 */
-		ros::Subscriber imu_ros_sub_, xd_ros_sub_, b1d_ros_sub_;
+		ros::Subscriber imu_ros_sub_;
+
+		/**
+		 * Subscriber handle for:
+		 * - desired position reference
+		 * - desired linear velocity reference
+		 * - desired linear acceleration reference
+		 * - desired heading reference
+		 */
+		ros::Subscriber xd_ros_sub_, vd_ros_sub_, ad_ros_sub_, b1d_ros_sub_,
+						omega_d_ros_sub_, alpha_d_ros_sub_;
 
 		/**
 		 * Messages containing angle measured values and
@@ -89,17 +101,30 @@ class UavGeometryControl
 		geometry_msgs::Vector3 euler_mv_, euler_rate_mv_;
 
 		/**
-		 * CONTROLLER INPUT REFERENCES(initialized from appropriate subscriber
-		 * callback functions):
-		 * 	- desired position x_D
-		 * 	- desired direction of the first body axis b1_D
+		 * CONTROLLER INPUT REFERENCES - position
+		 * 	- desired position x_d_
+		 * 	- desired linear velocity v_d_
+		 * 	- desired linear acceleration a_d_
 		 */
-		Matrix<double, 3, 1> x_d_, b1_d_;
+		Matrix<double, 3, 1> x_d_, v_d_, a_d_;
 
 		/**
-		 * Angular velocity in matrix form.
+		 * 	CONTROLLER INPUT REFERENCES - attitude
+		 * 	- desired angular velocity omega_d_
+		 * 	- desired angular acceleration alpha_d_
+		 * 	- desired direction of the first body axis b1_D
 		 */
-		Matrix<double, 3, 3> omega_hat_;
+		Matrix<double, 3, 3> omega_d_, alpha_d_;
+		Matrix<double, 3, 1> b1_d_;
+
+		/**
+		 * CONTROLLER PARAMETERS:
+		 *	- k_x: position tracking error gain (eX)
+		 *	- k_v: velocity tracking error gain (eV)
+		 *	- k_R: orientation matrix error gain (eR)
+		 *	- k_omega: angular velocity error gain (eOmega)
+		 */
+		double k_x_, k_v_, k_R_, k_omega_;
 
 		/**
 		 * Variable used for calculating time intervals in the controller loop.
