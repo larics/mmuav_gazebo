@@ -5,8 +5,10 @@ import tf
 from scipy.linalg import block_diag
 from trajectory_msgs.msg import MultiDOFJointTrajectory
 from trajectory_msgs.msg import MultiDOFJointTrajectoryPoint
+from geometry_msgs.msg import Vector3
 from geometry_msgs.msg import Quaternion
 from geometry_msgs.msg import Transform
+from geometry_msgs.msg import Twist
 from std_msgs.msg import Header
 from rospkg import RosPack
 import copy
@@ -19,8 +21,13 @@ class TrajectoryPlanner():
         self.segments=0
         self.polyorder=polyorder
         self.T=[]
+        self.publisher=rospy.Publisher('multi_dof_trajectory',\
+                                        MultiDOFJointTrajectory,\
+                                        queue_size=1)
         rospy.Subscriber(   'multi_dof_trajectory', MultiDOFJointTrajectory,\
                             self.keyframes_callback,queue_size=1)
+        rospy.sleep(2)
+        self.trajectory_publish()
 
     def generate_Aeq(self,T,polyorder,derivation_order=4):     # equality constraints matrix
 
@@ -240,7 +247,8 @@ class TrajectoryPlanner():
                 #fixed derivatives of yaw
                 zeros=np.zeros((deltaC_yaw_iRow,2))
                 fixed_dCyaw=np.eye(2)
-                fixed_dCyaw=np.vstack((zeros,fixed_dCyaw,np.zeros((sizeC_yaw-deltaC_yaw_iRow-2,2))))
+                fixed_dCyaw=np.vstack((zeros,fixed_dCyaw,np.zeros((\
+                    sizeC_yaw-deltaC_yaw_iRow-2,2))))
                 fixed_Cyaw=np.hstack((fixed_Cyaw,fixed_dCyaw))
                 deltaC_yaw_iRow=deltaC_yaw_iRow+derivation_order_yaw+2
 
@@ -253,11 +261,14 @@ class TrajectoryPlanner():
                 free_Cyaw=np.hstack((free_Cyaw,free_dCyaw))
 
 
+        #print fixed_C, "\n\n",free_C
         fixed_C=block_diag(fixed_C,fixed_C,fixed_C,fixed_Cyaw)
+
         free_C=block_diag(free_C,free_C,free_C,free_Cyaw)
         (rows,columns)=fixed_C.shape
         size_dp=3*sizeC+sizeC_yaw-columns #size of unspecified derivatives
         C=np.hstack((fixed_C,free_C))
+
         return C,size_dp
 
     def generate_Q(self,T,polyorder,derivation_order=4): #cost matrix
@@ -272,8 +283,8 @@ class TrajectoryPlanner():
 
         polynom=np.matrix(polynom.coef)
         polynom=np.hstack((polynom,[np.zeros(derivation_order)]))
-        #constructing matrix Qi(T)
 
+        #constructing matrix Qi(T)
 
         deltaQiRow = polyorder + 1     #alignment of adjacent Qi, Qi+1 matrices
 
@@ -345,6 +356,7 @@ class TrajectoryPlanner():
             tz=float(abs(keyframes[2,i]-keyframes[2,i+1]))
             tyaw=float(abs(keyframes[3,i]-keyframes[3,i+1]))
             T[i]=max(tx,ty,tz,tyaw)
+        print T
         return T
 
     def keyframes_callback(self,data):
@@ -391,6 +403,7 @@ class TrajectoryPlanner():
         Aeq=block_diag(Aeq_axis,Aeq_axis,Aeq_axis,Aeq_yaw)
         Q=block_diag(Q_axis,Q_axis,Q_axis,Q_yaw)
         dfp=self.free_derivatives_optimization(C,Aeq,deq,Q,size_dp)
+        #print np.dot(np.transpose(deq),C)
 
     def free_derivatives_optimization(self,C,Aeq,deq,Q,size_dp):
 
@@ -398,16 +411,35 @@ class TrajectoryPlanner():
         (rows,columns)=deq_permuated.shape
         size_df=rows-size_dp
         df=np.copy(deq_permuated[0:size_df,0])
+        print df
         H=np.dot(np.linalg.pinv(Aeq),np.transpose(C))
-        R=np.dot(np.dot(np.transpose(H),Q),H)
+        HT=np.dot(C,np.transpose(np.linalg.pinv(Aeq)))
+        R=np.dot(np.dot(HT,Q),H)
         (rows,columns)=R.shape
         Rpp=np.copy(R[size_df-1:-1,size_df-1:-1])
         Rfp=np.copy(R[0:size_df,size_df-1:-1])
-        #print Rpp.shape,Rfp.shape
+        print Rpp.shape,Rfp.shape
         dp_optimal=-np.dot(np.dot(np.linalg.inv(Rpp),np.transpose(Rfp)),df)
         print dp_optimal
+
+    def trajectory_publish(self):
+        msg=MultiDOFJointTrajectoryPoint()
+        trajectory=MultiDOFJointTrajectory()
+        points=[]
+        for i in range(1,6):
+            msg.transforms=[Transform()]
+            msg.transforms[0].translation=Vector3(i,i+10,i+20)
+            msg.transforms[0].rotation=Quaternion(0,0,0,1)
+            msg.velocities=[Twist()]
+            msg.accelerations=[Twist()]
+            points.append(copy.deepcopy(msg))
+        trajectory.joint_names='uav'
+        trajectory.points=points
+        self.publisher.publish(trajectory)
+
+
 
 
 if __name__=='__main__':
     rospy.init_node('trajectory_planner')
-    trajectory=TrajectoryPlanner(9).run()
+    trajectory=TrajectoryPlanner(7).run()
