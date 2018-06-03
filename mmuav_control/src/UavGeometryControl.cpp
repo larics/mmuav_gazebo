@@ -48,6 +48,8 @@ UavGeometryControl::UavGeometryControl(int rate)
 	// Initialize subscribers and publishers
 	imu_ros_sub_ = node_handle_.subscribe(
 			"/mmuav/imu", 1, &UavGeometryControl::imu_cb, this);
+	//odom_ros_sub_ = node_handle_.subscribe(
+	//		"/mmuav/odometry", 1, &UavGeometryControl::odom_cb, this);
 
 	// Initialize position reference subscribers
 	xd_ros_sub_ = node_handle_.subscribe(
@@ -100,8 +102,14 @@ void UavGeometryControl::run()
 
 	t_old_ = ros::Time::now();
 
-	// Define error matrices
-	Matrix<double, 3, 1> e_r, e_omega, e_x, e_v;
+	// Position errors
+	Matrix<double, 3, 1> e_x, e_v;
+
+	// Attitude errors
+	Matrix<double, 3, 1> e_omega, e_R;
+
+	// A - desired control force for the translational dynamics
+	Matrix<double, 3, 1> A;
 
 	// Start the control loop.
 	while (ros::ok())
@@ -120,7 +128,14 @@ void UavGeometryControl::run()
 		// Update old time
 		t_old_ = ros::Time::now();
 
-		// Control loop
+		// TRAJECTORY TRACKING
+		// Calculate total thrust and b3_d (desired thrust vector)
+		e_x = x_mv_ - x_d_;
+		e_v = v_mv_ - v_d_;
+
+		cout << "e_x: \n" << e_x << "\n";
+		cout << "e_v: \n" << e_v << "\n";
+		cout << endl;
 	}
 }
 
@@ -160,6 +175,17 @@ void UavGeometryControl::omegad_cb(const geometry_msgs::Vector3 &msg)
 void UavGeometryControl::alphad_cb(const geometry_msgs::Vector3 &msg)
 {
 	hatOperator(msg.x, msg.y, msg.z, alpha_d_);
+}
+
+void UavGeometryControl::odom_cb(const nav_msgs::Odometry &msg)
+{
+	x_mv_(0, 0) = msg.pose.pose.position.x;
+	x_mv_(1, 0) = msg.pose.pose.position.y;
+	x_mv_(2, 0) = msg.pose.pose.position.z;
+
+	v_mv_(0, 0) = msg.twist.twist.linear.x;
+	v_mv_(1, 0) = msg.twist.twist.linear.y;
+	v_mv_(1, 0) = msg.twist.twist.linear.z;
 }
 
 void UavGeometryControl::imu_cb (const sensor_msgs::Imu &msg)
@@ -207,6 +233,8 @@ void UavGeometryControl::imu_cb (const sensor_msgs::Imu &msg)
 			euler_rate_mv_.y,
 			euler_rate_mv_.z,
 			omega_mv_);
+
+    // Initialize position
 }
 
 void UavGeometryControl::euler2RotationMatrix(const double roll,

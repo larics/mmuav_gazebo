@@ -16,6 +16,7 @@
 #include "ros/ros.h"
 #include <rosgraph_msgs/Clock.h>
 #include <sensor_msgs/Imu.h>
+#include <nav_msgs/Odometry.h>
 #include <eigen3/Eigen/Dense>
 
 using namespace Eigen;
@@ -46,6 +47,7 @@ class UavGeometryControl
 
 		// Callback functions
 		void imu_cb(const sensor_msgs::Imu &msg);
+		void odom_cb(const nav_msgs::Odometry &msg);
 		void xd_cb(const geometry_msgs::Vector3 &msg);
 		void vd_cb(const geometry_msgs::Vector3 &msg);
 		void ad_cb(const geometry_msgs::Vector3 &msg);
@@ -98,9 +100,9 @@ class UavGeometryControl
 		ros::NodeHandle node_handle_;
 
 		/**
-		 * Subscriber handle for the IMU topic.
+		 * Subscriber handle for the IMU and odometry topics.
 		 */
-		ros::Subscriber imu_ros_sub_;
+		ros::Subscriber imu_ros_sub_, odom_ros_sub_;
 
 		/**
 		 * Subscriber handle for:
