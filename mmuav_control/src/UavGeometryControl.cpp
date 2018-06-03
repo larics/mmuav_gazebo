@@ -4,10 +4,11 @@
  *  Created on: May 10, 2018
  *      Author: lmark
  */
-
-#include <mmuav_control/UavGeometryControl.h>
+#include "mmuav_control/UavGeometryControl.hpp"
 
 using namespace std;
+
+const Matrix<double, 3, 1> e3(0, 0, 1);
 
 UavGeometryControl::UavGeometryControl(int rate)
 {
@@ -16,17 +17,30 @@ UavGeometryControl::UavGeometryControl(int rate)
 	sleep_duration_ = 0.5;
 	start_flag_ = false;
 
-	// Initialize desired position and attitude values
+	// Initialize desired position values
 	x_d_.setZero(3,1);
 	v_d_.setZero(3,1);
 	a_d_.setZero(3,1);
+
+	// Initial measured position values
+	x_mv_.setZero(3,1);
+	v_mv_.setZero(3,1);
+	a_mv_.setZero(3,1);
+
+	// Initialize desired attitude
 	omega_d_.setZero(3, 3);
 	alpha_d_.setZero(3, 3);
 	b1_d_.setZero(3,1);
-	b1_d_(0,0) = 1;			// Initial heading is (1, 0, 0)
+	b1_d_(0,0) = 1;
+
+	// Initialize measured
+	omega_mv_.setZero(3, 3);
+	alpha_mv_.setZero(3, 3);
+	b1_mv_.setZero(3, 1);
+	b1_mv_(0,0) = 1;
 
 	// Initialize controller parameters
-	k_x_ = 1;
+	k_x_ = 2;
 	k_v_ = 1;
 	k_R_ = 1;
 	k_omega_ = 1;
@@ -86,6 +100,9 @@ void UavGeometryControl::run()
 
 	t_old_ = ros::Time::now();
 
+	// Define error matrices
+	Matrix<double, 3, 1> e_r, e_omega, e_x, e_v;
+
 	// Start the control loop.
 	while (ros::ok())
 	{
@@ -103,6 +120,7 @@ void UavGeometryControl::run()
 		// Update old time
 		t_old_ = ros::Time::now();
 
+		// Control loop
 	}
 }
 

@@ -107,6 +107,7 @@ class UavGeometryControl
 		 * 	- desired linear acceleration a_d_
 		 */
 		Matrix<double, 3, 1> x_d_, v_d_, a_d_;
+		Matrix<double, 3, 1>  x_mv_, v_mv_, a_mv_;
 
 		/**
 		 * 	CONTROLLER INPUT REFERENCES - attitude
@@ -115,7 +116,17 @@ class UavGeometryControl
 		 * 	- desired direction of the first body axis b1_D
 		 */
 		Matrix<double, 3, 3> omega_d_, alpha_d_;
-		Matrix<double, 3, 1> b1_d_;
+		Matrix<double, 3, 3> omega_mv_, alpha_mv_;
+		Matrix<double, 3, 1> b1_d_, b1_mv_;
+
+		/**
+		 *	MEASURED VALUES - position
+		 */
+
+		/**
+		 *	MEASURED VALUES - attitude
+		 */
+		Matrix<double, 3, 3> omega_mv_, alpha_mv_;
 
 		/**
 		 * CONTROLLER PARAMETERS:
