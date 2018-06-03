@@ -72,7 +72,25 @@ class UavGeometryControl
 		 * 	[ z,  0, -x]
 		 * 	[-y,  x,  0]
 		 */
-		void hatOperator(double x, double y, double z, Matrix<double, 3, 3> &hatMatrix);
+		void hatOperator(
+				double x,
+				double y,
+				double z,
+				Matrix<double, 3, 3> &hatMatrix);
+
+		/**
+		 * Euler angles represented as a rotation matrix.
+		 *
+		 * @param roll
+		 * @param pitch
+		 * @param yaw
+		 * @param rotMatrix - Rotation matrix will be stored here
+		 */
+		void euler2RotationMatrix(
+				const double roll,
+				const double pitch,
+				const double yaw,
+				Matrix<double, 3, 3> &rotMatrix);
 
 		/**
 		 * Node handle used for setting up subscribers and publishers.
@@ -117,16 +135,12 @@ class UavGeometryControl
 		 */
 		Matrix<double, 3, 3> omega_d_, alpha_d_;
 		Matrix<double, 3, 3> omega_mv_, alpha_mv_;
-		Matrix<double, 3, 1> b1_d_, b1_mv_;
+		Matrix<double, 3, 1> b1_d_;
 
 		/**
-		 *	MEASURED VALUES - position
+		 * Measured rotation matrix.
 		 */
-
-		/**
-		 *	MEASURED VALUES - attitude
-		 */
-		Matrix<double, 3, 3> omega_mv_, alpha_mv_;
+		Matrix<double, 3, 3> R_mv_;
 
 		/**
 		 * CONTROLLER PARAMETERS:

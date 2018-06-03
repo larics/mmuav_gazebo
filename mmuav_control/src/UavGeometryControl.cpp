@@ -4,6 +4,7 @@
  *  Created on: May 10, 2018
  *      Author: lmark
  */
+
 #include "mmuav_control/UavGeometryControl.hpp"
 
 using namespace std;
@@ -36,8 +37,7 @@ UavGeometryControl::UavGeometryControl(int rate)
 	// Initialize measured
 	omega_mv_.setZero(3, 3);
 	alpha_mv_.setZero(3, 3);
-	b1_mv_.setZero(3, 1);
-	b1_mv_(0,0) = 1;
+	R_mv_.setZero(3,3);
 
 	// Initialize controller parameters
 	k_x_ = 2;
@@ -193,6 +193,36 @@ void UavGeometryControl::imu_cb (const sensor_msgs::Imu &msg)
     euler_rate_mv_.x = p + sx * ty * q + cx * ty * r;
     euler_rate_mv_.y = cx * q - sx * r;
     euler_rate_mv_.z = sx / cy * q + cx / cy * r;
+
+    // Construct current rotation matrix - R
+    euler2RotationMatrix(
+    		euler_mv_.x,
+			euler_mv_.y,
+			euler_mv_.z,
+			R_mv_);
+
+    // Construct angular velocity skew matrix
+    hatOperator(
+    		euler_rate_mv_.x,
+			euler_rate_mv_.y,
+			euler_rate_mv_.z,
+			omega_mv_);
+}
+
+void UavGeometryControl::euler2RotationMatrix(const double roll,
+				const double pitch,
+				const double yaw,
+				Matrix<double, 3, 3> &rotMatrix)
+{
+	rotMatrix.setZero(3, 3);
+
+	AngleAxisd rollAngle(roll, Eigen::Vector3d::UnitX());
+	AngleAxisd pitchAngle(pitch, Eigen::Vector3d::UnitY());
+	AngleAxisd yawAngle(yaw, Eigen::Vector3d::UnitZ());
+
+	// TODO(lmark): Check if correct.
+	Eigen::Quaternion<double> q = rollAngle * yawAngle * pitchAngle;
+	rotMatrix = q.matrix();
 }
 
 void UavGeometryControl::hatOperator(
