@@ -12,6 +12,7 @@ from geometry_msgs.msg import Twist
 from std_msgs.msg import Header
 from rospkg import RosPack
 import copy
+from pprint import pprint
 
 class TrajectoryPlanner():
 
@@ -27,6 +28,7 @@ class TrajectoryPlanner():
         rospy.Subscriber(   'multi_dof_trajectory', MultiDOFJointTrajectory,\
                             self.keyframes_callback,queue_size=1)
         rospy.sleep(2)
+        np.set_printoptions(threshold=np.inf)
         self.trajectory_publish()
 
     def generate_Aeq(self,T,polyorder,derivation_order=4):     # equality constraints matrix
@@ -269,6 +271,7 @@ class TrajectoryPlanner():
         size_dp=3*sizeC+sizeC_yaw-columns #size of unspecified derivatives
         C=np.hstack((fixed_C,free_C))
 
+        print "C \n",free_C
         return C,size_dp
 
     def generate_Q(self,T,polyorder,derivation_order=4): #cost matrix
@@ -411,16 +414,15 @@ class TrajectoryPlanner():
         (rows,columns)=deq_permuated.shape
         size_df=rows-size_dp
         df=np.copy(deq_permuated[0:size_df,0])
-        print df
+        #print df
         H=np.dot(np.linalg.pinv(Aeq),np.transpose(C))
         HT=np.dot(C,np.transpose(np.linalg.pinv(Aeq)))
         R=np.dot(np.dot(HT,Q),H)
         (rows,columns)=R.shape
         Rpp=np.copy(R[size_df-1:-1,size_df-1:-1])
         Rfp=np.copy(R[0:size_df,size_df-1:-1])
-        print Rpp.shape,Rfp.shape
         dp_optimal=-np.dot(np.dot(np.linalg.inv(Rpp),np.transpose(Rfp)),df)
-        print dp_optimal
+        #print dp_optimal
 
     def trajectory_publish(self):
         msg=MultiDOFJointTrajectoryPoint()
