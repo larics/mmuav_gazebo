@@ -115,6 +115,11 @@ class UavGeometryControl
 		ros::Subscriber imu_ros_sub_, odom_ros_sub_;
 
 		/**
+		 * Motor velocities publisher.
+		 */
+		ros::Publisher rotor_ros_pub_;
+
+		/**
 		 * Subscriber handle for:
 		 * - desired position reference
 		 * - desired linear velocity reference

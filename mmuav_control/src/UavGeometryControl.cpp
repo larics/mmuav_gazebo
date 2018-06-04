@@ -6,6 +6,7 @@
  */
 
 #include <mmuav_control/UavGeometryControl.hpp>
+#include <mav_msgs/Actuators.h>
 
 using namespace std;
 
@@ -79,9 +80,10 @@ UavGeometryControl::UavGeometryControl(int rate)
 	R_mv_.setZero(3,3);
 
 	// Initialize controller parameters
-	k_x_ = 2;
-	k_v_ = 1;
-	k_R_ = 1;
+	// Parameters initialized according to 2010-extended.pdf
+	k_x_ = 8 * UAV_MASS;
+	k_v_ = 2.5 * UAV_MASS;
+	k_R_ = 4;
 	k_omega_ = 1;
 
 	// Initialize subscribers and publishers
@@ -89,6 +91,8 @@ UavGeometryControl::UavGeometryControl(int rate)
 			"/mmuav/imu", 1, &UavGeometryControl::imu_cb, this);
 	odom_ros_sub_ = node_handle_.subscribe(
 			"/mmuav/odometry", 1, &UavGeometryControl::odom_cb, this);
+	rotor_ros_pub_ = node_handle_.advertise<mav_msgs::Actuators>(
+			"/gazebo/command/motor_speed", 10);
 
 	// Initialize position reference subscribers
 	xd_ros_sub_ = node_handle_.subscribe(
@@ -165,6 +169,14 @@ void UavGeometryControl::run()
 	// Rotor velocities control vector
 	Matrix<double, 4, 1> rotor_velocities;
 
+	// Initialize rotor velocity publisher msg
+	mav_msgs::Actuators rotor_vel_msg;
+	vector<double> velocity_vector(4);
+	rotor_vel_msg.angular_velocities = velocity_vector;
+
+	// Wait for gazebo to start up
+	sleep(5);
+
 	// Start the control loop.
 	while (ros::ok())
 	{
@@ -225,6 +237,13 @@ void UavGeometryControl::run()
 				M_u(2, 0));
 		rotor_velocities = THRUST_TRANSFORM * thrust_moment_vec;
 
+		// Fill and publish rotor message
+		rotor_vel_msg.angular_velocities[0] = rotor_velocities(0, 0);
+		rotor_vel_msg.angular_velocities[1] = rotor_velocities(1, 0);
+		rotor_vel_msg.angular_velocities[2] = rotor_velocities(2, 0);
+		rotor_vel_msg.angular_velocities[3] = rotor_velocities(3, 0);
+		rotor_ros_pub_.publish(rotor_vel_msg);
+
 		cout << "e_x: \n" << e_x << "\n";
 		cout << "e_v: \n" << e_v << "\n";
 		cout << "e_R: \n" << e_R << "\n";
@@ -234,6 +253,8 @@ void UavGeometryControl::run()
 		cout << "Rotor_vel: \n" << rotor_velocities << "\n";
 		cout << "R_d: \n" << R_d << "\n";
 		cout << "R_mv: \n" << R_mv_ << "\n";
+		cout << "A: \n" << A << "\n";
+		cout << "\n";
 		cout << endl;
 	}
 }
