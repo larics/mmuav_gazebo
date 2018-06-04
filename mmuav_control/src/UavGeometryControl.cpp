@@ -12,7 +12,11 @@ using namespace std;
 const Matrix<double, 3, 1> E3(0, 0, 1); 		// Z - unit vector
 const double UAV_MASS = 2.5;					// Mass constant
 const double G = 9.81;							// Gravity acceleration
+const double ARM_LENGTH = 0.314;				// Motor offset
+const double MOMENT_CONSTANT = 0.016;			// Moment constant [m]
+const double MOTOR_CONSTANT = 8.54858e-06;		// Motor constant
 Matrix<double, 3, 3> INERTIA;					// Inertia matrix
+Matrix<double, 4, 4> THRUST_TRANSFORM;			// Thrust transform matrix
 
 UavGeometryControl::UavGeometryControl(int rate)
 {
@@ -26,6 +30,32 @@ UavGeometryControl::UavGeometryControl(int rate)
 	INERTIA(0, 0) = 0.0826944;
 	INERTIA(1, 1) = 0.0826944;
 	INERTIA(2, 2) = 0.0104;
+
+	// Initialize thrust transform matrix
+	THRUST_TRANSFORM.setZero(4, 4);
+
+	// First row
+	THRUST_TRANSFORM(0, 0) = 1;
+	THRUST_TRANSFORM(0, 1) = 1;
+	THRUST_TRANSFORM(0, 2) = 1;
+	THRUST_TRANSFORM(0, 3) = 1;
+
+	// Second row
+	THRUST_TRANSFORM(1, 1) = - ARM_LENGTH;
+	THRUST_TRANSFORM(1, 3) = ARM_LENGTH;
+
+	// Third row
+	THRUST_TRANSFORM(2, 0) = ARM_LENGTH;
+	THRUST_TRANSFORM(2, 2) = - ARM_LENGTH;
+
+	// Fourth row
+	THRUST_TRANSFORM(3, 0) = - MOTOR_CONSTANT * MOMENT_CONSTANT;
+	THRUST_TRANSFORM(3, 1) = MOTOR_CONSTANT * MOMENT_CONSTANT;
+	THRUST_TRANSFORM(3, 2) = - MOTOR_CONSTANT * MOMENT_CONSTANT;
+	THRUST_TRANSFORM(3, 3) = MOTOR_CONSTANT * MOMENT_CONSTANT;
+
+	// Invert the matrix
+	THRUST_TRANSFORM = THRUST_TRANSFORM.inverse().eval();
 
 	// Initialize desired position values
 	x_d_.setZero(3,1);
@@ -132,6 +162,9 @@ void UavGeometryControl::run()
 	// Total thrust control value
 	double f_u;
 
+	// Rotor velocities control vector
+	Matrix<double, 4, 1> rotor_velocities;
+
 	// Start the control loop.
 	while (ros::ok())
 	{
@@ -184,12 +217,21 @@ void UavGeometryControl::run()
 					- R_mv_.adjoint() * R_d * alpha_d_
 				);
 
+		// Calculate thrust velocities
+		Matrix<double, 4, 1> thrust_moment_vec(
+				f_u,
+				M_u(0, 0),
+				M_u(1, 0),
+				M_u(2, 0));
+		rotor_velocities = THRUST_TRANSFORM * thrust_moment_vec;
+
 		cout << "e_x: \n" << e_x << "\n";
 		cout << "e_v: \n" << e_v << "\n";
 		cout << "e_R: \n" << e_R << "\n";
 		cout << "e_omega: \n" << e_omega << "\n";
 		cout << "f_u: \n" << f_u << "\n";
 		cout << "M_u: \n" << M_u << "\n";
+		cout << "Rotor_vel: \n" << rotor_velocities << "\n";
 		cout << "R_d: \n" << R_d << "\n";
 		cout << "R_mv: \n" << R_mv_ << "\n";
 		cout << endl;
