@@ -5,13 +5,14 @@
  *      Author: lmark
  */
 
-#include "mmuav_control/UavGeometryControl.hpp"
+#include <mmuav_control/UavGeometryControl.hpp>
 
 using namespace std;
 
 const Matrix<double, 3, 1> E3(0, 0, 1); 		// Z - unit vector
 const double UAV_MASS = 2.5;					// Mass constant
 const double G = 9.81;							// Gravity acceleration
+Matrix<double, 3, 3> INERTIA;					// Inertia matrix
 
 UavGeometryControl::UavGeometryControl(int rate)
 {
@@ -19,6 +20,12 @@ UavGeometryControl::UavGeometryControl(int rate)
 	controller_rate_ = rate;
 	sleep_duration_ = 0.5;
 	start_flag_ = false;
+
+	// Initialize inertia matrix
+	INERTIA.setZero(3, 3);
+	INERTIA(0, 0) = 0.0826944;
+	INERTIA(1, 1) = 0.0826944;
+	INERTIA(2, 2) = 0.0104;
 
 	// Initialize desired position values
 	x_d_.setZero(3,1);
@@ -31,14 +38,14 @@ UavGeometryControl::UavGeometryControl(int rate)
 	a_mv_.setZero(3,1);
 
 	// Initialize desired attitude
-	omega_d_.setZero(3, 3);
-	alpha_d_.setZero(3, 3);
+	omega_d_.setZero(3, 1);
+	alpha_d_.setZero(3, 1);
 	b1_d_.setZero(3,1);
 	b1_d_(0,0) = 1;
 
 	// Initialize measured
-	omega_mv_.setZero(3, 3);
-	alpha_mv_.setZero(3, 3);
+	omega_mv_.setZero(3, 1);
+	alpha_mv_.setZero(3, 1);
 	R_mv_.setZero(3,3);
 
 	// Initialize controller parameters
@@ -50,8 +57,8 @@ UavGeometryControl::UavGeometryControl(int rate)
 	// Initialize subscribers and publishers
 	imu_ros_sub_ = node_handle_.subscribe(
 			"/mmuav/imu", 1, &UavGeometryControl::imu_cb, this);
-	//odom_ros_sub_ = node_handle_.subscribe(
-	//		"/mmuav/odometry", 1, &UavGeometryControl::odom_cb, this);
+	odom_ros_sub_ = node_handle_.subscribe(
+			"/mmuav/odometry", 1, &UavGeometryControl::odom_cb, this);
 
 	// Initialize position reference subscribers
 	xd_ros_sub_ = node_handle_.subscribe(
@@ -110,8 +117,12 @@ void UavGeometryControl::run()
 	// Attitude errors
 	Matrix<double, 3, 1> e_omega, e_R;
 
+	// Auxiliary matrices
+	Matrix<double, 3, 3> e_R_skew, omega_mv_skew;
+
 	// A - desired control force for the translational dynamics
 	// b3_d - desired thrust vector
+	// b2_d - desired y-direction body vector
 	// M_u - control moment
 	Matrix<double, 3, 1> A, b3_d, M_u, b2_d;
 
@@ -142,25 +153,45 @@ void UavGeometryControl::run()
 		// Calculate total thrust and b3_d (desired thrust vector)
 		e_x = x_mv_ - x_d_;
 		e_v = v_mv_ - v_d_;
-		A = - k_x_ * e_x - k_v_ * e_v - UAV_MASS * G * E3 + UAV_MASS * a_d_;
+		A = - k_x_ * e_x
+			- k_v_ * e_v
+			- UAV_MASS * G * E3
+			+ UAV_MASS * a_d_;
 		f_u = - A.dot( R_mv_ * E3 );
 		b3_d = - A / A.norm();
 
 		// Construct desired rotation matrix
-		b2_d = b1_d_.cross(b3_d);
+		b2_d = b3_d.cross(b1_d_);
 		R_d.setZero(3, 3);
 		R_d << b1_d_, b2_d, b3_d;
 
 		// ATTITUDE TRACKING
 		// Calculate control moment M
-		// .adjoint() -> conjugate transpose !
-		// TODO(lmark): Vee map
-		e_R = (R_d.adjoint() * R_mv_ - R_mv_.adjoint() * R_d) / 2;
+		e_R_skew = (R_d.adjoint() * R_mv_ - R_mv_.adjoint() * R_d) / 2;
+		veeOperator(e_R_skew, e_R);
+		e_omega = omega_mv_ - R_mv_.adjoint() * R_d * omega_d_;
+		hatOperator(
+				(double)omega_mv_(0, 0),
+				(double)omega_mv_(1, 0),
+				(double)omega_mv_(2, 0),
+				omega_mv_skew);
+		M_u = 	- k_R_ * e_R
+				- k_omega_ * e_omega
+				+ omega_mv_.cross(INERTIA * omega_mv_)
+				- INERTIA *
+				(
+					omega_mv_skew * R_mv_.adjoint() * R_d * omega_d_
+					- R_mv_.adjoint() * R_d * alpha_d_
+				);
 
 		cout << "e_x: \n" << e_x << "\n";
 		cout << "e_v: \n" << e_v << "\n";
-		cout << "f:   \n" << f_u << "\n";
-		cout << R_d;
+		cout << "e_R: \n" << e_R << "\n";
+		cout << "e_omega: \n" << e_omega << "\n";
+		cout << "f_u: \n" << f_u << "\n";
+		cout << "M_u: \n" << M_u << "\n";
+		cout << "R_d: \n" << R_d << "\n";
+		cout << "R_mv: \n" << R_mv_ << "\n";
 		cout << endl;
 	}
 }
@@ -195,12 +226,16 @@ void UavGeometryControl::b1d_cb(const geometry_msgs::Vector3 &msg)
 
 void UavGeometryControl::omegad_cb(const geometry_msgs::Vector3 &msg)
 {
-	hatOperator(msg.x, msg.y, msg.z, omega_d_);
+	omega_d_(0, 0) = msg.x;
+	omega_d_(1, 0) = msg.y;
+	omega_d_(2, 0) = msg.z;
 }
 
 void UavGeometryControl::alphad_cb(const geometry_msgs::Vector3 &msg)
 {
-	hatOperator(msg.x, msg.y, msg.z, alpha_d_);
+	alpha_d_(0, 0) = msg.x;
+	alpha_d_(1, 0) = msg.y;
+	alpha_d_(2, 0) = msg.z;
 }
 
 void UavGeometryControl::odom_cb(const nav_msgs::Odometry &msg)
@@ -253,18 +288,17 @@ void UavGeometryControl::imu_cb (const sensor_msgs::Imu &msg)
 			euler_mv_.z,
 			R_mv_);
 
-    // Construct angular velocity skew matrix
-    hatOperator(
-    		euler_rate_mv_.x,
-			euler_rate_mv_.y,
-			euler_rate_mv_.z,
-			omega_mv_);
+    // Construct angular velocity vector
+    omega_mv_(0, 0) = euler_rate_mv_.x;
+    omega_mv_(1, 0) = euler_rate_mv_.y;
+	omega_mv_(2, 0) = euler_rate_mv_.z;
 }
 
-void UavGeometryControl::euler2RotationMatrix(const double roll,
-				const double pitch,
-				const double yaw,
-				Matrix<double, 3, 3> &rotMatrix)
+void UavGeometryControl::euler2RotationMatrix(
+		const double roll,
+		const double pitch,
+		const double yaw,
+		Matrix<double, 3, 3> &rotMatrix)
 {
 	rotMatrix.setZero(3, 3);
 
@@ -278,7 +312,10 @@ void UavGeometryControl::euler2RotationMatrix(const double roll,
 }
 
 void UavGeometryControl::hatOperator(
-		double x, double y, double z, Matrix<double, 3, 3> &hatMatrix)
+		const double x,
+		const double y,
+		const double z,
+		Matrix<double, 3, 3> &hatMatrix)
 {
 	hatMatrix.setZero(3,3);
 	hatMatrix(0, 1) = -z;
@@ -287,6 +324,16 @@ void UavGeometryControl::hatOperator(
 	hatMatrix(1, 2) = -x;
 	hatMatrix(2, 0) = -y;
 	hatMatrix(2, 1) =  x;
+}
+
+void UavGeometryControl::veeOperator(
+		Matrix<double, 3, 3> hatMatrix,
+		Matrix<double, 3, 1> &veeVector)
+{
+	veeVector.setZero(3, 1);
+	veeVector(0, 0) = hatMatrix(2, 1); 			// x component
+	veeVector(1, 0) = hatMatrix(0, 2);			// y component
+	veeVector(2, 0) = hatMatrix(1, 0);			// z component
 }
 
 void UavGeometryControl::quaternion2euler(float *quaternion, float *euler)

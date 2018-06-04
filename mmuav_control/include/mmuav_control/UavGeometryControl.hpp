@@ -45,7 +45,6 @@ class UavGeometryControl
 
 	private:
 
-		// Callback functions
 		void imu_cb(const sensor_msgs::Imu &msg);
 		void odom_cb(const nav_msgs::Odometry &msg);
 		void xd_cb(const geometry_msgs::Vector3 &msg);
@@ -75,11 +74,22 @@ class UavGeometryControl
 		 * 	[-y,  x,  0]
 		 */
 		void hatOperator(
-				double x,
-				double y,
-				double z,
+				const double x,
+				const double y,
+				const double z,
 				Matrix<double, 3, 3> &hatMatrix);
 
+		/**
+		 * Perform a vee( V ) operator on a given hatMatrix.
+		 * It is implied that the given hatMatrix is a skew matrix.
+		 * It will decompose the skew matrix into a given veeVector reference.
+		 *
+		 * @param hatMatrx
+		 * @param veeVector
+		 */
+		void veeOperator(
+				const Matrix<double, 3, 3> hatMatrix,
+				Matrix<double, 3, 1> &veeVector);
 		/**
 		 * Euler angles represented as a rotation matrix.
 		 *
@@ -111,8 +121,8 @@ class UavGeometryControl
 		 * - desired linear acceleration reference
 		 * - desired heading reference
 		 */
-		ros::Subscriber xd_ros_sub_, vd_ros_sub_, ad_ros_sub_, b1d_ros_sub_,
-						omega_d_ros_sub_, alpha_d_ros_sub_;
+		ros::Subscriber xd_ros_sub_, vd_ros_sub_, ad_ros_sub_,
+						b1d_ros_sub_, omega_d_ros_sub_, alpha_d_ros_sub_;
 
 		/**
 		 * Messages containing angle measured values and
@@ -135,8 +145,8 @@ class UavGeometryControl
 		 * 	- desired angular acceleration alpha_d_
 		 * 	- desired direction of the first body axis b1_D
 		 */
-		Matrix<double, 3, 3> omega_d_, alpha_d_;
-		Matrix<double, 3, 3> omega_mv_, alpha_mv_;
+		Matrix<double, 3, 1> omega_d_, alpha_d_;
+		Matrix<double, 3, 1> omega_mv_, alpha_mv_;
 		Matrix<double, 3, 1> b1_d_;
 
 		/**
