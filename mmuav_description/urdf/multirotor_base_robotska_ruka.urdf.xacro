@@ -1,0 +1,501 @@
+<?xml version="1.0"?>
+
+<robot xmlns:xacro="http://ros.org/wiki/xacro">
+  <!-- Main multirotor link -->
+  <xacro:macro name="multirotor_base_macro"
+    params="robot_namespace mass body_width body_height mesh_file *origin *inertia">
+
+    <link name="base_link"></link>
+    <joint name="base_joint" type="fixed">
+      <xacro:insert_block name="origin"/>
+      <parent link="base_link" />
+      <child link="base_link_inertia" />
+    </joint>
+    <link name="base_link_inertia">
+      <inertial>
+        <mass value="${mass}" />  <!-- [kg] -->
+        <origin xyz="0 0 0" />
+        <xacro:insert_block name="inertia" />
+      </inertial>
+
+      <visual>
+        <origin xyz="0 0 0" rpy="0 0 0" />
+        <geometry>
+          <mesh filename="package://mmuav_description/meshes/${mesh_file}"
+            scale="1 1 1" />
+          <!--box size="${body_width} ${body_width} ${body_height}"/--> <!-- [m] [m] [m] -->
+        </geometry>
+      </visual>
+
+      <!--collision>
+        <origin xyz="0 0 0" rpy="0 0 0" />
+        <geometry>
+          <mesh filename="package://mmuav_description/meshes/${mesh_file}"
+            scale="1 1 1" />
+          <box size="${body_width} ${body_width} ${body_height}" />
+        </geometry>
+      </collision-->
+    </link>
+
+    <!-- IMU -->
+    <link name="imu_link">
+      <inertial>
+        <inertia ixx="0.00001" ixy="0.0" ixz="0.0" iyy="0.00001" iyz="0.0"
+          izz="0.00001" />
+        <mass value="0.01" />  <!-- [kg] -->
+        <origin xyz="0 0 0" rpy="0 0 0" />
+      </inertial>
+    </link>
+    <!-- IMU joint -->
+    <joint name="imu_joint" type="revolute">
+      <!--origin xyz="0 0 0" rpy="3.1416 0 0" / -->
+      <parent link="base_link" />
+      <child link="imu_link" />
+      <limit upper="0" lower="0" effort="0" velocity="0" />
+    </joint>
+
+    <!-- attach multirotor_base_plugin to the base_link -->
+    <gazebo>
+      <plugin filename="librotors_gazebo_multirotor_base_plugin.so" name="rosbag">
+        <robotNamespace>$(arg name)</robotNamespace>
+        <linkName>base_link</linkName>
+        <rotorVelocitySlowdownSim>${rotor_velocity_slowdown_sim}</rotorVelocitySlowdownSim>
+      </plugin>
+    </gazebo>
+  </xacro:macro>
+
+  <!-- Rotor joint and link -->
+  <xacro:macro name="vertical_rotor"
+    params="robot_namespace suffix direction motor_constant moment_constant parent mass_rotor radius_rotor time_constant_up time_constant_down max_rot_velocity motor_number rotor_drag_coefficient rolling_moment_coefficient color *origin *inertia">
+    <joint name="rotor_${motor_number}_joint" type="continuous">
+      <xacro:insert_block name="origin" />
+      <axis xyz="0 0 1" />
+      <!-- TODO(ff): not currently set because it's not yet supported -->
+      <!-- <limit effort="2000" velocity="${max_rot_velocity}" /> -->
+      <parent link="${parent}" />
+      <child link="rotor_${motor_number}" />
+
+    </joint>
+    <!-- TODO(ff): not currently set because it's not yet supported -->
+    <!-- <gazebo reference="rotor_${motor_number}_joint"> <axis> <xyz>0 0 1</xyz>
+      <limit> <velocity> ${max_rot_velocity} </velocity> </limit> </axis> </gazebo> -->
+    <link name="rotor_${motor_number}">
+      <inertial>
+        <mass value="${mass_rotor}" /> <!-- [kg] -->
+        <xacro:insert_block name="inertia" />
+      </inertial>
+      <visual>
+        <geometry>
+          <!-- <cylinder length="0.005" radius="${radius_rotor}"/> --> <!-- [m] -->
+          <mesh filename="package://mmuav_description/meshes/propeller_${direction}.dae"
+            scale="0.001 0.001 0.001" />
+          <!-- <box size="${2*radius_rotor} 0.01 0.005"/> -->
+        </geometry>
+      </visual>
+      <collision>
+        <geometry>
+          <cylinder length="0.005" radius="${radius_rotor}" /> <!-- [m] -->
+        </geometry>
+      </collision>
+    </link>
+    <gazebo>
+      <plugin name="${suffix}_motor_model" filename="librotors_gazebo_motor_model.so">
+        <jointName>rotor_${motor_number}_joint</jointName>
+        <linkName>rotor_${motor_number}</linkName>
+        <turningDirection>${direction}</turningDirection>
+        <timeConstantUp>${time_constant_up}</timeConstantUp>
+        <timeConstantDown>${time_constant_down}</timeConstantDown>
+        <maxRotVelocity>${max_rot_velocity}</maxRotVelocity>
+        <motorConstant>${motor_constant}</motorConstant>
+        <momentConstant>${moment_constant}</momentConstant>
+        <commandTopic>${robot_namespace}/command/motors</commandTopic>
+        <motorNumber>${motor_number}</motorNumber>
+        <rotorDragCoefficient>${rotor_drag_coefficient}</rotorDragCoefficient>
+        <rollingMomentCoefficient>${rolling_moment_coefficient}</rollingMomentCoefficient>
+        <motorVelocityTopic>${robot_namespace}/motor_vel/${motor_number}</motorVelocityTopic>
+        <rotorVelocitySlowdownSim>${rotor_velocity_slowdown_sim}</rotorVelocitySlowdownSim>
+      </plugin>
+    </gazebo>
+    <gazebo reference="rotor_${motor_number}">
+      <material>Gazebo/${color}</material>
+    </gazebo>
+  </xacro:macro>
+
+  <!-- We add a <transmission> block for every joint that we wish to actuate. -->
+  <xacro:macro name="transmisija" params="trans_number mechanical_reduction joint_name">
+    <transmission name="transmission_${trans_number}">
+      <type>transmission_interface/SimpleTransmission</type>
+      <joint name="${joint_name}">
+         <hardwareInterface>hardware_interface/EffortJointInterface</hardwareInterface>
+      </joint>
+      <actuator name="motor_${trans_number}">
+        <hardwareInterface>hardware_interface/EffortJointInterface</hardwareInterface>
+        <mechanicalReduction>${mechanical_reduction}</mechanicalReduction>
+      </actuator>
+    </transmission>
+  </xacro:macro>
+
+  <xacro:macro name="landing_gear" params="gear_num parent mass dim_x dim_y dim_z *origin *inertia">
+    <joint name="land_gear_${gear_num}" type="fixed">
+      <xacro:insert_block name="origin"/>
+      <axis xyz="0 0 1"/>
+      <parent link="${parent}"/>
+      <child link="land_gear_${gear_num}"/>
+    </joint>
+    <link name="land_gear_${gear_num}">
+      <visual>
+        <origin rpy="0 0 0" xyz="0 0 0"/>
+        <geometry>
+          <box size="0.01 0.01 0.0001"/>
+        </geometry>
+      </visual>
+      <collision>
+        <origin rpy="0 0 0" xyz="0 0 0"/>
+        <geometry>
+          <box size="${dim_x} ${dim_y} ${dim_z}"/>
+        </geometry>
+      </collision>
+      <inertial>
+         <origin rpy="0 0 0" xyz="0 0 0"/>
+        <mass value="${mass}"/>
+        <xacro:insert_block name="inertia"/>
+      </inertial>
+    </link>
+
+  </xacro:macro>
+
+  <!-- Camera macro. Adds a box representing a camera below the UAV
+
+  @param camera_link Length of the camera box
+  @param camera_mass Mass of the camera
+  @param parent Parent link on which the camera will be fixed
+  @param *origin Block argument defining the origin of the camera with
+  reference to the parent link.
+  @param *inertia Block argument defining camera inertia.
+  -->
+  <xacro:macro name="cam" params="camera_link camera_mass parent *origin *inertia">
+
+    <!-- Camera link -->
+    <link name="camera_box">
+
+      <!--collision>
+        <origin xyz="0 0 0" rpy="0 0 0"/>
+        <geometry>
+          <box size="${camera_link} ${camera_link} ${camera_link}"/>
+        </geometry>
+      </collision-->
+
+      <visual>
+        <origin xyz="0 0 0" rpy="0 0 0"/>
+        <geometry>
+          <box size="${camera_link} ${camera_link} ${camera_link}"/>
+        </geometry>
+        <material name="red"/>
+      </visual>
+
+      <inertial>
+        <mass value="${camera_mass}" />
+        <origin xyz="0 0 0" rpy="0 0 0"/>
+        <xacro:insert_block name="inertia"/>
+      </inertial>
+
+    </link>
+
+    <!-- Camera joint with reference to the parent link -->
+    <joint name="camera_joint" type="fixed">
+      <xacro:insert_block name="origin"/>
+      <parent link="${parent}"/>
+      <child link="camera_box"/>
+    </joint>
+
+    <!-- camera -->
+    <gazebo reference="camera_box">
+      <sensor type="camera" name="camera1">
+        <update_rate>30.0</update_rate>
+
+        <camera name="head">
+          <horizontal_fov>1.3962634</horizontal_fov>
+          <image>
+            <width>1920</width>
+            <height>1080</height>
+            <format>R8G8B8</format>
+          </image>
+          <clip>
+            <near>0.02</near>
+            <far>300</far>
+          </clip>
+          <noise>
+            <type>gaussian</type>
+            <mean>0.0</mean>
+            <stddev>0.007</stddev>
+          </noise>
+        </camera>
+
+        <plugin name="camera_controller" filename="libgazebo_ros_camera.so">
+          <alwaysOn>true</alwaysOn>
+          <updateRate>0.0</updateRate>
+          <cameraName>mmuav/camera1</cameraName>
+          <imageTopicName>image_raw</imageTopicName>
+          <cameraInfoTopicName>camera_info</cameraInfoTopicName>
+          <frameName>camera_box</frameName>
+          <hackBaseline>0.07</hackBaseline>
+          <distortionK1>0.0</distortionK1>
+          <distortionK2>0.0</distortionK2>
+          <distortionK3>0.0</distortionK3>
+          <distortionT1>0.0</distortionT1>
+          <distortionT2>0.0</distortionT2>
+        </plugin>
+
+      </sensor>
+    </gazebo>
+
+  </xacro:macro>
+
+
+  <!--_____________________________________________________________-->
+  <!--________________________Robotska ruka________________________-->
+  <!--_____________________________________________________________-->
+
+  <xacro:macro name = "robotska_ruka" params = "parent *origin">
+
+    <link name="part_1_2">
+      <inertial>
+        <origin xyz="0 0 0" rpy="0 0 0" />
+        <mass value="0.11653706" />
+        <inertia
+          ixx="0.00059280"
+          ixy="0.00003484"
+          ixz="0.00006670"
+          iyy="0.00031976"
+          iyz="0.00014666"
+          izz="0.00074111" />
+      </inertial>
+
+      <visual>
+        <origin xyz="0 0 0" rpy="0 0 0" />
+        <geometry>
+          <mesh filename="package://mmuav_description/meshes/part_1_2.STL" />
+        </geometry>
+        <material name="">
+          <color rgba="0.79216 0.81961 0.93333 1" />
+        </material>
+      </visual>
+
+      <collision>
+        <origin xyz="0 0 0" rpy="0 0 0" />
+        <geometry>
+          <mesh filename="package://mmuav_description/meshes/part_1_2.STL" />
+        </geometry>
+      </collision>
+    </link>
+
+
+
+    <link name="part_3">
+      <inertial>
+        <origin xyz="0 0 0" rpy="0 0 0" />
+        <mass value="0.21980126" />
+        <inertia
+          ixx="0.00182303"
+          ixy="-0.00126623"
+          ixz="-0.00225408"
+          iyy="0.00574488"
+          iyz="0.00057462"
+          izz="0.00522069" />
+      </inertial>
+      <visual>
+        <origin xyz="0 0 0" rpy="0 0 0" />
+        <geometry>
+          <mesh filename="package://mmuav_description/meshes/part_3.STL" />
+        </geometry>
+        <material name="">
+          <color rgba="0.79216 0.81961 0.93333 1" />
+        </material>
+      </visual>
+      <collision>
+        <origin xyz="0 0 0" rpy="0 0 0" />
+        <geometry>
+          <mesh filename="package://mmuav_description/meshes/part_3.STL" />
+        </geometry>
+      </collision>
+    </link>
+
+
+
+    <link name="part_4">
+       <inertial>
+         <origin xyz="0 0 0" rpy="0 0 0" />
+         <mass value="0.05485881" />
+         <inertia
+           ixx="0.00002943"
+           ixy="0.0"
+           ixz="0.0"
+           iyy="0.00085352"
+           iyz="0.0"
+           izz="0.00087023" />
+       </inertial>
+       <visual>
+         <origin xyz="0 0 0" rpy="0 0 0" />
+         <geometry>
+           <mesh filename="package://mmuav_description/meshes/part_4.STL" />
+         </geometry>
+         <material name="">
+           <color rgba="0.79216 0.81961 0.93333 1" />
+         </material>
+       </visual>
+       <collision>
+         <origin xyz="0 0 0" rpy="0 0 0" />
+         <geometry>
+           <mesh filename="package://mmuav_description/meshes/part_4.STL" />
+         </geometry>
+       </collision>
+     </link>
+
+
+
+    <link name="part_5">
+
+         <inertial>
+           <origin xyz="0 0 0" rpy="0 0 0" />
+           <mass value="0.17769829" />
+           <inertia
+             ixx="0.00273696"
+             ixy="-0.00103823"
+             ixz="-0.00026120"
+             iyy="0.00064113"
+             iyz="0.00063455"
+             izz="0.00300462" />
+         </inertial>
+
+         <visual>
+           <origin xyz="0 0 0" rpy="0 0 0" />
+           <geometry>
+             <mesh filename="package://mmuav_description/meshes/part_5.STL" />
+           </geometry>
+           <material name="">
+             <color rgba="0.79216 0.81961 0.93333 1" />
+           </material>
+         </visual>
+
+         <collision>
+           <origin xyz="0 0 0" rpy="0 0 0" />
+           <geometry>
+             <mesh filename="package://mmuav_description/meshes/part_5.STL" />
+           </geometry>
+         </collision>
+    </link>
+
+
+
+    <link name="part_6">
+
+        <inertial>
+          <origin xyz="0 0 0" rpy="0 0 0" />
+          <mass value="0.02518342" />
+          <inertia
+            ixx="0.00001255"
+            ixy="0.0"
+            ixz="0.0"
+            iyy="0.00004029"
+            iyz="0.0"
+            izz="0.00004529" />
+        </inertial>
+
+        <visual>
+          <origin xyz="0 0 0" rpy="0 0 0" />
+          <geometry>
+            <mesh filename="package://mmuav_description/meshes/part_6.STL" />
+          </geometry>
+          <material name="">
+            <color rgba="0.79216 0.81961 0.93333 1" />
+          </material>
+        </visual>
+
+        <collision>
+          <origin xyz="0 0 0" rpy="0 0 0" />
+          <geometry>
+            <mesh filename="package://mmuav_description/meshes/part_6.STL" />
+          </geometry>
+        </collision>
+    </link>
+
+
+
+    <joint name="joint_0" type="fixed">
+      <parent link="${parent}"/>
+      <child link="part_1_2" />
+      <xacro:insert_block name="origin"/>
+    </joint>
+
+
+    <joint name="joint_1" type="continuous">
+      <origin xyz="0 0.0185 -0.0765" rpy="3.1416 -0.7 0" />
+      <parent link="part_1_2" />
+      <child link="part_3" />
+      <axis xyz="0 1 0" />
+    </joint>
+
+
+    <joint name="joint_2" type="continuous">
+      <origin xyz="0.25 0 0.0985" rpy="-1.5708 0 2.9" />
+      <parent link="part_3" />
+      <child link="part_4" />
+      <axis xyz="0 1 0" />
+    </joint>
+
+
+    <joint name="joint_3" type="continuous">
+      <origin xyz="0.205 0 0" rpy="0 2.9 0" />
+      <parent link="part_4" />
+      <child link="part_5" />
+      <axis xyz="0 1 0" />
+    </joint>
+
+
+    <joint name="joint_4" type="continuous">
+      <origin xyz="0.21 0 0" rpy="1.5708 0 -1.5" />
+      <parent link="part_5" />
+      <child link="part_6" />
+      <axis xyz="0 -1 0" />
+    </joint>
+
+  </xacro:macro>
+
+
+  <!-- Definition of movable mass macro -->
+<xacro:macro name="movable_mass" params="mass_number parent mass dimension path_len color x_axis y_axis z_axis orientation *origin *inertia">
+  <joint name="stick_to_movable_mass_${mass_number}" type="prismatic">
+    <xacro:insert_block name="origin"/>
+    <axis xyz="${x_axis} ${y_axis} ${z_axis}"/>
+    <parent link="${parent}"/>
+    <child link="movable_mass_${mass_number}"/>
+    <limit lower="${-path_len/2}" upper="${path_len/2}" effort="10000" velocity="20"/>
+    <dynamics damping="10" />
+  </joint>
+  <link name="movable_mass_${mass_number}">
+    <visual>
+      <origin rpy="0 0 ${orientation}" xyz="0 0 ${0*dimension/2}"/>
+      <geometry>
+        <box size="${1*dimension} ${1*dimension} ${1*dimension}"/>
+      </geometry>
+    </visual>
+    <collision>
+      <origin rpy="0 0 0" xyz="0 0 ${0*dimension/2}"/>
+      <geometry>
+        <box size="${1*dimension} ${1*dimension} ${1*dimension}"/>
+      </geometry>
+    </collision>
+    <inertial>
+      <origin rpy="0 0 0" xyz="0 0 ${0*dimension/2}"/>
+      <mass value="${mass}"/>
+      <xacro:insert_block name="inertia"/>
+    </inertial>
+  </link>
+
+  <gazebo reference="movable_mass_${mass_number}">
+    <material>Gazebo/${color}</material>
+  </gazebo>
+</xacro:macro>
+
+
+</robot>
