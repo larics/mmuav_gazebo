@@ -9,7 +9,9 @@
 
 using namespace std;
 
-const Matrix<double, 3, 1> e3(0, 0, 1);
+const Matrix<double, 3, 1> E3(0, 0, 1); 		// Z - unit vector
+const double UAV_MASS = 2.5;					// Mass constant
+const double G = 9.81;							// Gravity acceleration
 
 UavGeometryControl::UavGeometryControl(int rate)
 {
@@ -109,7 +111,15 @@ void UavGeometryControl::run()
 	Matrix<double, 3, 1> e_omega, e_R;
 
 	// A - desired control force for the translational dynamics
-	Matrix<double, 3, 1> A;
+	// b3_d - desired thrust vector
+	// M_u - control moment
+	Matrix<double, 3, 1> A, b3_d, M_u, b2_d;
+
+	// Desired rotation matrix
+	Matrix<double, 3, 3> R_d;
+
+	// Total thrust control value
+	double f_u;
 
 	// Start the control loop.
 	while (ros::ok())
@@ -132,9 +142,25 @@ void UavGeometryControl::run()
 		// Calculate total thrust and b3_d (desired thrust vector)
 		e_x = x_mv_ - x_d_;
 		e_v = v_mv_ - v_d_;
+		A = - k_x_ * e_x - k_v_ * e_v - UAV_MASS * G * E3 + UAV_MASS * a_d_;
+		f_u = - A.dot( R_mv_ * E3 );
+		b3_d = - A / A.norm();
+
+		// Construct desired rotation matrix
+		b2_d = b1_d_.cross(b3_d);
+		R_d.setZero(3, 3);
+		R_d << b1_d_, b2_d, b3_d;
+
+		// ATTITUDE TRACKING
+		// Calculate control moment M
+		// .adjoint() -> conjugate transpose !
+		// TODO(lmark): Vee map
+		e_R = (R_d.adjoint() * R_mv_ - R_mv_.adjoint() * R_d) / 2;
 
 		cout << "e_x: \n" << e_x << "\n";
 		cout << "e_v: \n" << e_v << "\n";
+		cout << "f:   \n" << f_u << "\n";
+		cout << R_d;
 		cout << endl;
 	}
 }
@@ -233,8 +259,6 @@ void UavGeometryControl::imu_cb (const sensor_msgs::Imu &msg)
 			euler_rate_mv_.y,
 			euler_rate_mv_.z,
 			omega_mv_);
-
-    // Initialize position
 }
 
 void UavGeometryControl::euler2RotationMatrix(const double roll,
