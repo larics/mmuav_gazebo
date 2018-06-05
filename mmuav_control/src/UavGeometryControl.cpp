@@ -11,7 +11,7 @@
 using namespace std;
 
 const Matrix<double, 3, 1> E3(0, 0, 1); 		// Z - unit vector
-const double UAV_MASS = 2.5;					// Mass constant
+const double UAV_MASS = 2.1;					// Mass constant
 const double G = 9.81;							// Gravity acceleration
 const double ARM_LENGTH = 0.314;				// Motor offset
 const double MOMENT_CONSTANT = 0.016;			// Moment constant [m]
@@ -24,7 +24,8 @@ UavGeometryControl::UavGeometryControl(int rate)
 	// Initialize controller variables
 	controller_rate_ = rate;
 	sleep_duration_ = 0.5;
-	start_flag_ = false;
+	imu_start_flag_ = false;
+	odometry_start_flag_ = false;
 
 	// Initialize inertia matrix
 	INERTIA.setZero(3, 3);
@@ -50,13 +51,17 @@ UavGeometryControl::UavGeometryControl(int rate)
 	THRUST_TRANSFORM(2, 2) = - ARM_LENGTH;
 
 	// Fourth row
-	THRUST_TRANSFORM(3, 0) = - MOTOR_CONSTANT * MOMENT_CONSTANT;
-	THRUST_TRANSFORM(3, 1) = MOTOR_CONSTANT * MOMENT_CONSTANT;
-	THRUST_TRANSFORM(3, 2) = - MOTOR_CONSTANT * MOMENT_CONSTANT;
-	THRUST_TRANSFORM(3, 3) = MOTOR_CONSTANT * MOMENT_CONSTANT;
+	THRUST_TRANSFORM(3, 0) = - MOTOR_CONSTANT;
+	THRUST_TRANSFORM(3, 1) = MOTOR_CONSTANT;
+	THRUST_TRANSFORM(3, 2) = - MOTOR_CONSTANT;
+	THRUST_TRANSFORM(3, 3) = MOTOR_CONSTANT;
 
 	// Invert the matrix
 	THRUST_TRANSFORM = THRUST_TRANSFORM.inverse().eval();
+
+	cout << "Thrust transform: \n";
+	cout << THRUST_TRANSFORM << "\n";
+	cout << endl;
 
 	// Initialize desired position values
 	x_d_.setZero(3,1);
@@ -81,10 +86,10 @@ UavGeometryControl::UavGeometryControl(int rate)
 
 	// Initialize controller parameters
 	// Parameters initialized according to 2010-extended.pdf
-	k_x_ = 1;
-	k_v_ = 1;
-	k_R_ = 1;
-	k_omega_ = 1;
+	k_x_ = 20 * UAV_MASS;
+	k_v_ = 5.6 * UAV_MASS;
+	k_R_ = 8;
+	k_omega_ = 2;
 
 	// Initialize subscribers and publishers
 	imu_ros_sub_ = node_handle_.subscribe(
@@ -133,13 +138,23 @@ void UavGeometryControl::run()
 			"Received first clock message");
 
 	// Wait for start flag from IMU callback
-	while (!start_flag_ && ros::ok())
+	while (!imu_start_flag_ && ros::ok())
 	{
 		ros::spinOnce();
 		ROS_INFO("UavGeometricControl::run() - "
-				"Waiting for first measurement");
+				"Waiting for first IMU measurement");
 		ros::Duration(sleep_duration_).sleep();
 	}
+
+	// Wait for start flag from odometry callback
+	while (!odometry_start_flag_ && ros::ok())
+	{
+		ros::spinOnce();
+		ROS_INFO("UavGeometricControl::run() - "
+				"Waiting for first odometry measurement");
+		ros::Duration(sleep_duration_).sleep();
+	}
+
 	ROS_INFO("UavGeometricControl::run() - "
 			"Starting geometric control.");
 
@@ -203,7 +218,7 @@ void UavGeometryControl::run()
 			- UAV_MASS * G * E3
 			+ UAV_MASS * a_d_;
 		f_u = - A.dot( R_mv_ * E3 );
-		b3_d = - A / A.norm();
+		b3_d =  - A / A.norm();
 
 		// Construct desired rotation matrix
 		b2_d = b3_d.cross(b1_d_);
@@ -250,6 +265,7 @@ void UavGeometryControl::run()
 		cout << "e_omega: \n" << e_omega << "\n";
 		cout << "f_u: \n" << f_u << "\n";
 		cout << "M_u: \n" << M_u << "\n";
+		cout << "Thrust_moment_vec: \n" << thrust_moment_vec << "\n";
 		cout << "Rotor_vel: \n" << rotor_velocities << "\n";
 		cout << "R_d: \n" << R_d << "\n";
 		cout << "R_mv: \n" << R_mv_ << "\n";
@@ -303,6 +319,8 @@ void UavGeometryControl::alphad_cb(const geometry_msgs::Vector3 &msg)
 
 void UavGeometryControl::odom_cb(const nav_msgs::Odometry &msg)
 {
+    if (!odometry_start_flag_) odometry_start_flag_ = true;
+
 	x_mv_(0, 0) = msg.pose.pose.position.x;
 	x_mv_(1, 0) = msg.pose.pose.position.y;
 	x_mv_(2, 0) = msg.pose.pose.position.z;
@@ -317,7 +335,7 @@ void UavGeometryControl::imu_cb (const sensor_msgs::Imu &msg)
     float quaternion[4], euler[3];
     float p, q, r, sx, cx, cy, ty;
 
-    if (!start_flag_) start_flag_ = true;
+    if (!imu_start_flag_) imu_start_flag_ = true;
 
     quaternion[1] = msg.orientation.x;
     quaternion[2] = msg.orientation.y;
@@ -421,7 +439,7 @@ int main(int argc, char** argv)
 	// Initialize controller rate
 	int rate;
 	ros::NodeHandle private_node_handle_("~");
-	private_node_handle_.param("rate", rate, int(10));
+	private_node_handle_.param("rate", rate, int(50));
 
 	// Start the control algorithm
 	UavGeometryControl geometric_control(rate);

@@ -186,9 +186,14 @@ class UavGeometryControl
 		float sleep_duration_;
 
 		/**
-		 * True when first callback function occurred otherwise false.
+		 * True when imu callback function occurred otherwise false.
 		 */
-		bool start_flag_;
+		bool imu_start_flag_;
+
+		/**
+		 * True when odometry callback function occured otherwise false.
+		 */
+		bool odometry_start_flag_;
 };
 
 #endif /* UAV_GEOMETRY_CONTROL_H */
