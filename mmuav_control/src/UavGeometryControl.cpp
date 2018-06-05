@@ -81,35 +81,35 @@ UavGeometryControl::UavGeometryControl(int rate)
 
 	// Initialize controller parameters
 	// Parameters initialized according to 2010-extended.pdf
-	k_x_ = 8 * UAV_MASS;
-	k_v_ = 2.5 * UAV_MASS;
-	k_R_ = 4;
+	k_x_ = 1;
+	k_v_ = 1;
+	k_R_ = 1;
 	k_omega_ = 1;
 
 	// Initialize subscribers and publishers
 	imu_ros_sub_ = node_handle_.subscribe(
-			"/mmuav/imu", 1, &UavGeometryControl::imu_cb, this);
+			"/uav/imu", 1, &UavGeometryControl::imu_cb, this);
 	odom_ros_sub_ = node_handle_.subscribe(
-			"/mmuav/odometry", 1, &UavGeometryControl::odom_cb, this);
+			"/uav/odometry", 1, &UavGeometryControl::odom_cb, this);
 	rotor_ros_pub_ = node_handle_.advertise<mav_msgs::Actuators>(
 			"/gazebo/command/motor_speed", 10);
 
 	// Initialize position reference subscribers
 	xd_ros_sub_ = node_handle_.subscribe(
-			"/mmuav/x_desired", 1, &UavGeometryControl::xd_cb, this);
+			"/uav/x_desired", 1, &UavGeometryControl::xd_cb, this);
 	vd_ros_sub_ = node_handle_.subscribe(
-			"/mmuav/v_desired", 1, &UavGeometryControl::vd_cb, this);
+			"/uav/v_desired", 1, &UavGeometryControl::vd_cb, this);
 	ad_ros_sub_ = node_handle_.subscribe(
-			"/mmuav/a_desired", 1, &UavGeometryControl::ad_cb, this);
+			"/uav/a_desired", 1, &UavGeometryControl::ad_cb, this);
 
 	// Initialize attitude reference subscribers
 	b1d_ros_sub_ = node_handle_.subscribe(
-				"/mmuav/b1_desired", 1, &UavGeometryControl::b1d_cb, this);
+				"/uav/b1_desired", 1, &UavGeometryControl::b1d_cb, this);
 	omega_d_ros_sub_ = node_handle_.subscribe(
-				"/mmuav/omega_desired", 1,
+				"/uav/omega_desired", 1,
 				&UavGeometryControl::omegad_cb, this);
 	alpha_d_ros_sub_ = node_handle_.subscribe(
-				"/mmuav/alpha_desired", 1,
+				"/uav/alpha_desired", 1,
 				&UavGeometryControl::alphad_cb, this);
 }
 

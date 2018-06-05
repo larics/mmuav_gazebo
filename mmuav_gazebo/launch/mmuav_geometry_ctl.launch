@@ -29,7 +29,7 @@
 		<arg name="headless" value="$(arg headless)"/>
 	</include> 
 	
-	<include file="$(find mmuav_description)/launch/spawn_mmuav.launch" />
+	<include file="$(find mmuav_description)/launch/spawn_uav.launch" />
     <include file="$(find mmuav_control)/launch/mmuav_geometry_ctl.launch" />
        
 </launch>

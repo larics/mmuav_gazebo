@@ -25,7 +25,6 @@
   <xacro:property name="arm_offset" value="0.1" /> <!-- [m] 0.0457-->
 
   <!-- Moving masses properties -->
-
   <xacro:property name="mm_mass" value="0.208" />
   <xacro:property name="mm_dimension" value="0.035" />
   <xacro:property name="mm_ver_offset" value="0.0" />
@@ -172,26 +171,35 @@
     <xacro:insert_block name="rotor_inertia" />
   </xacro:vertical_rotor>
 
-  <!-- <xacro:camera_macro robot_namespace="${namespace}">
-  </xacro:camera_macro> -->
+  <!-- Added landing gear -->
+  <xacro:property name="land_gear_inertia">
+    <inertia
+    ixx="1e-6"
+    iyy="1e-6"
+    izz="1e-6"
+    ixy="0.0" ixz="0.0"  iyz="0.0" /> <!-- [kg*m^2] [kg*m^2] [kg*m^2] [kg*m^2] [kg*m^2] [kg*m^2] -->
+  </xacro:property>
 
-  <!--xacro:transmisija
-    trans_number="0"
-    joint_name="stick_to_movable_mass_0">
-  </xacro:transmisija>
+  <xacro:landing_gear
+      parent="base_link"
+      gear_num = "1"
+      mass = "1e-6"
+      dim_x = "0.8"
+      dim_y = "0.1"
+      dim_z = "0.05">
+      <origin xyz="0 -0.325 -0.1" rpy="0 0 0" />
+      <xacro:insert_block name="land_gear_inertia"/>
+  </xacro:landing_gear>
 
-  <xacro:transmisija
-    trans_number="1"
-    joint_name="stick_to_movable_mass_1">
-  </xacro:transmisija>
-
-  <xacro:transmisija
-    trans_number="2"
-    joint_name="stick_to_movable_mass_2">
-  </xacro:transmisija>
-
-  <xacro:transmisija
-    trans_number="3"
-    joint_name="stick_to_movable_mass_3">
-  </xacro:transmisija-->
+  <xacro:landing_gear
+      parent="base_link"
+      gear_num = "2"
+      mass = "1e-6"
+      dim_x = "0.8"
+      dim_y = "0.1"
+      dim_z = "0.05">
+      <origin xyz="0 0.325 -0.1" rpy="0 0 0" />
+      <xacro:insert_block name="land_gear_inertia"/>
+  </xacro:landing_gear>
+  
 </robot>
