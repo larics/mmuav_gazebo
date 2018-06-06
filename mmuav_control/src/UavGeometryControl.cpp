@@ -43,12 +43,12 @@ UavGeometryControl::UavGeometryControl(int rate)
 	THRUST_TRANSFORM(0, 3) = 1;
 
 	// Second row
-	THRUST_TRANSFORM(1, 1) = - ARM_LENGTH;
-	THRUST_TRANSFORM(1, 3) = ARM_LENGTH;
+	THRUST_TRANSFORM(1, 1) = ARM_LENGTH;
+	THRUST_TRANSFORM(1, 3) = - ARM_LENGTH;
 
 	// Third row
-	THRUST_TRANSFORM(2, 0) = ARM_LENGTH;
-	THRUST_TRANSFORM(2, 2) = - ARM_LENGTH;
+	THRUST_TRANSFORM(2, 0) = - ARM_LENGTH;
+	THRUST_TRANSFORM(2, 2) = ARM_LENGTH;
 
 	// Fourth row
 	THRUST_TRANSFORM(3, 0) = MOMENT_CONSTANT;
@@ -86,10 +86,10 @@ UavGeometryControl::UavGeometryControl(int rate)
 
 	// Initialize controller parameters
 	// Parameters initialized according to 2010-extended.pdf
-	k_x_ = 10 * UAV_MASS;
-	k_v_ = 8 * UAV_MASS;
-	k_R_ = 0.1;
-	k_omega_ = 0.05;
+	k_x_ = 20 * UAV_MASS;
+	k_v_ = 10 * UAV_MASS;
+	k_R_ = 6;
+	k_omega_ = 3;
 
 	// Initialize subscribers and publishers
 	imu_ros_sub_ = node_handle_.subscribe(
@@ -212,7 +212,7 @@ void UavGeometryControl::run()
 		// TRAJECTORY TRACKING
 		// Calculate total thrust and b3_d (desired thrust vector)
 		e_x = - (x_mv_ - x_d_);
-		e_v = v_mv_ - v_d_;
+		e_v = - (v_mv_ - v_d_);
 		A =  k_x_ * e_x
 			+ k_v_ * e_v
 			+ UAV_MASS * G * E3
@@ -279,7 +279,7 @@ void UavGeometryControl::run()
 		cout << "Rotor_vel: \n" << rotor_velocities << "\n";
 		cout << "R_d: \n" << R_d << "\n";
 		cout << "R_mv: \n" << R_mv_ << "\n";
-		cout << "A: \n" << A << "\n";
+		cout << "b3_d: \n" << b3_d << "\n";
 		cout << "\n";
 		cout << endl;
 	}
@@ -337,7 +337,7 @@ void UavGeometryControl::odom_cb(const nav_msgs::Odometry &msg)
 
 	v_mv_(0, 0) = msg.twist.twist.linear.x;
 	v_mv_(1, 0) = msg.twist.twist.linear.y;
-	v_mv_(1, 0) = msg.twist.twist.linear.z;
+	v_mv_(2, 0) = msg.twist.twist.linear.z;
 }
 
 void UavGeometryControl::imu_cb (const sensor_msgs::Imu &msg)
