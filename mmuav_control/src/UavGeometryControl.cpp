@@ -86,10 +86,10 @@ UavGeometryControl::UavGeometryControl(int rate)
 
 	// Initialize controller parameters
 	// Parameters initialized according to 2010-extended.pdf
-	k_x_ = 1 * UAV_MASS;
-	k_v_ = 0.5 * UAV_MASS;
-	k_R_ = 1;
-	k_omega_ = 1;
+	k_x_ = 10 * UAV_MASS;
+	k_v_ = 8 * UAV_MASS;
+	k_R_ = 0.1;
+	k_omega_ = 0.05;
 
 	// Initialize subscribers and publishers
 	imu_ros_sub_ = node_handle_.subscribe(
@@ -211,14 +211,14 @@ void UavGeometryControl::run()
 
 		// TRAJECTORY TRACKING
 		// Calculate total thrust and b3_d (desired thrust vector)
-		e_x = x_mv_ - x_d_;
+		e_x = - (x_mv_ - x_d_);
 		e_v = v_mv_ - v_d_;
-		A = - k_x_ * e_x
-			- k_v_ * e_v
-			- UAV_MASS * G * E3
-			+ UAV_MASS * a_d_;
-		f_u = - A.dot( R_mv_ * E3 );
-		b3_d =  - A / A.norm();
+		A =  k_x_ * e_x
+			+ k_v_ * e_v
+			+ UAV_MASS * G * E3
+			- UAV_MASS * a_d_;
+		f_u = A.dot( R_mv_ * E3 );
+		b3_d = A / A.norm();
 
 		// Construct desired rotation matrix
 		b2_d = b3_d.cross(b1_d_);
@@ -254,6 +254,7 @@ void UavGeometryControl::run()
 		// Convert force vector - THRUST_TRANSFORM * thrus_moment_vec ...
 		// ...to angular velocity -> fi = MOTOR_CONSTANT * ang_vel_i^2
 		rotor_velocities = THRUST_TRANSFORM * thrust_moment_vec;
+		rotor_velocities = rotor_velocities.array().abs();
 		cout << "Forces: \n" << rotor_velocities << "\n";
 		rotor_velocities = rotor_velocities / MOTOR_CONSTANT;
 		rotor_velocities = rotor_velocities.array().sqrt();
@@ -391,14 +392,15 @@ void UavGeometryControl::euler2RotationMatrix(
 		Matrix<double, 3, 3> &rotMatrix)
 {
 	rotMatrix.setZero(3, 3);
-
-	AngleAxisd rollAngle(roll, Eigen::Vector3d::UnitX());
-	AngleAxisd pitchAngle(pitch, Eigen::Vector3d::UnitY());
-	AngleAxisd yawAngle(yaw, Eigen::Vector3d::UnitZ());
-
-	// TODO(lmark): Check if correct.
-	Eigen::Quaternion<double> q = rollAngle * yawAngle * pitchAngle;
-	rotMatrix = q.matrix();
+	rotMatrix(0, 0) = cos(yaw) * cos(pitch);
+	rotMatrix(0, 1) = cos(yaw) * sin(pitch) * sin(roll) - sin(yaw) * cos(roll);
+	rotMatrix(0, 2) = cos(yaw) * sin(pitch) * cos(roll) + sin(yaw) * sin(roll);
+	rotMatrix(1, 0) = sin(yaw) * cos(pitch);
+	rotMatrix(1, 1) = sin(yaw) * sin(pitch) * sin(roll) + cos(yaw) * cos(roll);
+	rotMatrix(1, 2) = sin(yaw) * sin(pitch) * cos(roll) - cos(yaw) * sin(roll);
+	rotMatrix(2, 0) = - sin(pitch);
+	rotMatrix(2, 1) = cos(pitch) * sin(roll);
+	rotMatrix(2, 2) = cos(pitch) * cos(roll);
 }
 
 void UavGeometryControl::hatOperator(
@@ -448,7 +450,7 @@ int main(int argc, char** argv)
 	// Initialize controller rate
 	int rate;
 	ros::NodeHandle private_node_handle_("~");
-	private_node_handle_.param("rate", rate, int(50));
+	private_node_handle_.param("rate", rate, int(100));
 
 	// Start the control algorithm
 	UavGeometryControl geometric_control(rate);
