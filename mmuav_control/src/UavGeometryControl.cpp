@@ -51,10 +51,10 @@ UavGeometryControl::UavGeometryControl(int rate)
 	THRUST_TRANSFORM(2, 2) = - ARM_LENGTH;
 
 	// Fourth row
-	THRUST_TRANSFORM(3, 0) = - MOTOR_CONSTANT;
-	THRUST_TRANSFORM(3, 1) = MOTOR_CONSTANT;
-	THRUST_TRANSFORM(3, 2) = - MOTOR_CONSTANT;
-	THRUST_TRANSFORM(3, 3) = MOTOR_CONSTANT;
+	THRUST_TRANSFORM(3, 0) = MOMENT_CONSTANT;
+	THRUST_TRANSFORM(3, 1) = - MOMENT_CONSTANT;
+	THRUST_TRANSFORM(3, 2) = MOMENT_CONSTANT;
+	THRUST_TRANSFORM(3, 3) = - MOMENT_CONSTANT;
 
 	// Invert the matrix
 	THRUST_TRANSFORM = THRUST_TRANSFORM.inverse().eval();
@@ -86,10 +86,10 @@ UavGeometryControl::UavGeometryControl(int rate)
 
 	// Initialize controller parameters
 	// Parameters initialized according to 2010-extended.pdf
-	k_x_ = 20 * UAV_MASS;
-	k_v_ = 5.6 * UAV_MASS;
-	k_R_ = 8;
-	k_omega_ = 2;
+	k_x_ = 1 * UAV_MASS;
+	k_v_ = 0.5 * UAV_MASS;
+	k_R_ = 1;
+	k_omega_ = 1;
 
 	// Initialize subscribers and publishers
 	imu_ros_sub_ = node_handle_.subscribe(
@@ -250,13 +250,22 @@ void UavGeometryControl::run()
 				M_u(0, 0),
 				M_u(1, 0),
 				M_u(2, 0));
+
+		// Convert force vector - THRUST_TRANSFORM * thrus_moment_vec ...
+		// ...to angular velocity -> fi = MOTOR_CONSTANT * ang_vel_i^2
 		rotor_velocities = THRUST_TRANSFORM * thrust_moment_vec;
+		cout << "Forces: \n" << rotor_velocities << "\n";
+		rotor_velocities = rotor_velocities / MOTOR_CONSTANT;
+		rotor_velocities = rotor_velocities.array().sqrt();
 
 		// Fill and publish rotor message
+		/**
+		 * Note: Added negative signs to the 2nd and 4th rotor.
+		 */
 		rotor_vel_msg.angular_velocities[0] = rotor_velocities(0, 0);
-		rotor_vel_msg.angular_velocities[1] = rotor_velocities(1, 0);
+		rotor_vel_msg.angular_velocities[1] = - rotor_velocities(1, 0);
 		rotor_vel_msg.angular_velocities[2] = rotor_velocities(2, 0);
-		rotor_vel_msg.angular_velocities[3] = rotor_velocities(3, 0);
+		rotor_vel_msg.angular_velocities[3] = - rotor_velocities(3, 0);
 		rotor_ros_pub_.publish(rotor_vel_msg);
 
 		cout << "e_x: \n" << e_x << "\n";

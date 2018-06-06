@@ -30,6 +30,6 @@
 	</include> 
 	
 	<include file="$(find mmuav_description)/launch/spawn_uav.launch" />
-    <include file="$(find mmuav_control)/launch/mmuav_geometry_ctl.launch" />
+    <include file="$(find mmuav_control)/launch/uav_geometry_ctl.launch" />
        
 </launch>
