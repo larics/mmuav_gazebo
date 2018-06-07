@@ -7,6 +7,7 @@
 
 #include <mmuav_control/UavGeometryControl.hpp>
 #include <mav_msgs/Actuators.h>
+#include <std_msgs/Float64.h>
 
 using namespace std;
 
@@ -18,6 +19,7 @@ const double MOMENT_CONSTANT = 0.016;			// Moment constant [m]
 const double MOTOR_CONSTANT = 8.54858e-06;		// Motor constant
 Matrix<double, 3, 3> INERTIA;					// Inertia matrix
 Matrix<double, 4, 4> THRUST_TRANSFORM;			// Thrust transform matrix
+Matrix<double, 3, 3> EYE;						// 3x3 EYE matrix
 
 UavGeometryControl::UavGeometryControl(int rate)
 {
@@ -59,6 +61,12 @@ UavGeometryControl::UavGeometryControl(int rate)
 	// Invert the matrix
 	THRUST_TRANSFORM = THRUST_TRANSFORM.inverse().eval();
 
+	// Initialize eye(3) matrix
+	EYE.setZero(3, 3);
+	EYE(0, 0) = 1;
+	EYE(1, 1) = 1;
+	EYE(2, 2) = 1;
+
 	cout << "Thrust transform: \n";
 	cout << THRUST_TRANSFORM << "\n";
 	cout << endl;
@@ -86,10 +94,10 @@ UavGeometryControl::UavGeometryControl(int rate)
 
 	// Initialize controller parameters
 	// Parameters initialized according to 2010-extended.pdf
-	k_x_ = 20 * UAV_MASS;
-	k_v_ = 10 * UAV_MASS;
-	k_R_ = 6;
-	k_omega_ = 3;
+	k_x_ = 14 * UAV_MASS;
+	k_v_ = 4 * UAV_MASS;
+	k_R_ = 5;
+	k_omega_ = 2.54;
 
 	// Initialize subscribers and publishers
 	imu_ros_sub_ = node_handle_.subscribe(
@@ -97,7 +105,9 @@ UavGeometryControl::UavGeometryControl(int rate)
 	odom_ros_sub_ = node_handle_.subscribe(
 			"/uav/odometry", 1, &UavGeometryControl::odom_cb, this);
 	rotor_ros_pub_ = node_handle_.advertise<mav_msgs::Actuators>(
-			"/gazebo/command/motor_speed", 10);
+			"/gazebo/command/motor_speed", 1);
+	att_err_ros_pub_ = node_handle_.advertise<std_msgs::Float64>(
+			"/uav/att_err", 10);
 
 	// Initialize position reference subscribers
 	xd_ros_sub_ = node_handle_.subscribe(
@@ -165,6 +175,10 @@ void UavGeometryControl::run()
 
 	// Attitude errors
 	Matrix<double, 3, 1> e_omega, e_R;
+
+	// Attitude error - scalar (PSI)
+	Matrix<double, 3, 3> att_err;
+	std_msgs::Float64 att_err_msg;
 
 	// Auxiliary matrices
 	Matrix<double, 3, 3> e_R_skew, omega_mv_skew;
@@ -268,6 +282,11 @@ void UavGeometryControl::run()
 		rotor_vel_msg.angular_velocities[2] = rotor_velocities(2, 0);
 		rotor_vel_msg.angular_velocities[3] = - rotor_velocities(3, 0);
 		rotor_ros_pub_.publish(rotor_vel_msg);
+
+		// Calculate attitude error
+		att_err = (EYE - R_d.adjoint() * R_mv_);
+		att_err_msg.data = att_err.trace() / 2;
+		att_err_ros_pub_.publish(att_err_msg);
 
 		cout << "e_x: \n" << e_x << "\n";
 		cout << "e_v: \n" << e_v << "\n";
