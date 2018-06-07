@@ -94,16 +94,18 @@ UavGeometryControl::UavGeometryControl(int rate)
 
 	// Initialize controller parameters
 	// Parameters initialized according to 2010-extended.pdf
-	k_x_ = 14 * UAV_MASS;
-	k_v_ = 4 * UAV_MASS;
+	k_x_ = 5 * UAV_MASS;
+	k_v_ = 2.5 * UAV_MASS;
 	k_R_ = 5;
-	k_omega_ = 2.54;
+	k_omega_ = 1;
 
 	// Initialize subscribers and publishers
 	imu_ros_sub_ = node_handle_.subscribe(
-			"/uav/imu", 1, &UavGeometryControl::imu_cb, this);
+			"/uav/imu", 1,
+			&UavGeometryControl::imu_cb, this);
 	odom_ros_sub_ = node_handle_.subscribe(
-			"/uav/odometry", 1, &UavGeometryControl::odom_cb, this);
+			"/uav/odometry", 1,
+			&UavGeometryControl::odom_cb, this);
 	rotor_ros_pub_ = node_handle_.advertise<mav_msgs::Actuators>(
 			"/gazebo/command/motor_speed", 1);
 	att_err_ros_pub_ = node_handle_.advertise<std_msgs::Float64>(
@@ -111,11 +113,14 @@ UavGeometryControl::UavGeometryControl(int rate)
 
 	// Initialize position reference subscribers
 	xd_ros_sub_ = node_handle_.subscribe(
-			"/uav/x_desired", 1, &UavGeometryControl::xd_cb, this);
+			"/uav/x_desired", 1,
+			&UavGeometryControl::xd_cb, this);
 	vd_ros_sub_ = node_handle_.subscribe(
-			"/uav/v_desired", 1, &UavGeometryControl::vd_cb, this);
+			"/uav/v_desired", 1,
+			&UavGeometryControl::vd_cb, this);
 	ad_ros_sub_ = node_handle_.subscribe(
-			"/uav/a_desired", 1, &UavGeometryControl::ad_cb, this);
+			"/uav/a_desired", 1,
+			&UavGeometryControl::ad_cb, this);
 
 	// Initialize attitude reference subscribers
 	b1d_ros_sub_ = node_handle_.subscribe(
@@ -197,6 +202,7 @@ void UavGeometryControl::run()
 
 	// Rotor velocities control vector
 	Matrix<double, 4, 1> rotor_velocities;
+	Matrix<double, 4, 1> rotor_signs;
 
 	// Initialize rotor velocity publisher msg
 	mav_msgs::Actuators rotor_vel_msg;
@@ -268,8 +274,9 @@ void UavGeometryControl::run()
 		// Convert force vector - THRUST_TRANSFORM * thrus_moment_vec ...
 		// ...to angular velocity -> fi = MOTOR_CONSTANT * ang_vel_i^2
 		rotor_velocities = THRUST_TRANSFORM * thrust_moment_vec;
-		rotor_velocities = rotor_velocities.array().abs();
 		cout << "Forces: \n" << rotor_velocities << "\n";
+		rotor_signs = rotor_velocities.array().sign();
+		rotor_velocities = rotor_velocities.array().abs();
 		rotor_velocities = rotor_velocities / MOTOR_CONSTANT;
 		rotor_velocities = rotor_velocities.array().sqrt();
 
@@ -277,10 +284,14 @@ void UavGeometryControl::run()
 		/**
 		 * Note: Added negative signs to the 2nd and 4th rotor.
 		 */
-		rotor_vel_msg.angular_velocities[0] = rotor_velocities(0, 0);
-		rotor_vel_msg.angular_velocities[1] = - rotor_velocities(1, 0);
-		rotor_vel_msg.angular_velocities[2] = rotor_velocities(2, 0);
-		rotor_vel_msg.angular_velocities[3] = - rotor_velocities(3, 0);
+		rotor_vel_msg.angular_velocities[0] =
+				rotor_signs(0, 0) * rotor_velocities(0, 0);
+		rotor_vel_msg.angular_velocities[1] =
+				- rotor_signs(1, 0) * rotor_velocities(1, 0);
+		rotor_vel_msg.angular_velocities[2] =
+				rotor_signs(2, 0) * rotor_velocities(2, 0);
+		rotor_vel_msg.angular_velocities[3] =
+				- rotor_signs(3, 0) * rotor_velocities(3, 0);
 		rotor_ros_pub_.publish(rotor_vel_msg);
 
 		// Calculate attitude error
@@ -330,6 +341,7 @@ void UavGeometryControl::b1d_cb(const geometry_msgs::Vector3 &msg)
 	b1_d_(0, 0) = msg.x;
 	b1_d_(1, 0) = msg.y;
 	b1_d_(2, 0) = msg.z;
+	b1_d_ = b1_d_ / b1_d_.norm();
 }
 
 void UavGeometryControl::omegad_cb(const geometry_msgs::Vector3 &msg)
