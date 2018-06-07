@@ -94,10 +94,10 @@ UavGeometryControl::UavGeometryControl(int rate)
 
 	// Initialize controller parameters
 	// Parameters initialized according to 2010-extended.pdf
-	k_x_ = 5 * UAV_MASS;
-	k_v_ = 2.5 * UAV_MASS;
-	k_R_ = 5;
-	k_omega_ = 1;
+	k_x_ = 6 * UAV_MASS;
+	k_v_ = 3 * UAV_MASS;
+	k_R_ = 2;
+	k_omega_ = 0.8;
 
 	// Initialize subscribers and publishers
 	imu_ros_sub_ = node_handle_.subscribe(
@@ -171,7 +171,7 @@ void UavGeometryControl::run()
 	}
 
 	ROS_INFO("UavGeometricControl::run() - "
-			"Starting geometric control.");
+			"Starting geometric control in 5...");
 
 	t_old_ = ros::Time::now();
 
@@ -192,7 +192,8 @@ void UavGeometryControl::run()
 	// b3_d - desired thrust vector
 	// b2_d - desired y-direction body vector
 	// M_u - control moment
-	Matrix<double, 3, 1> A, b3_d, M_u, b2_d;
+	// b1_c - b1_c = Proj[b1_d] b1_d projection on the plane with normal b3_d
+	Matrix<double, 3, 1> A, b3_d, M_u, b2_d, b1_c;
 
 	// Desired rotation matrix
 	Matrix<double, 3, 3> R_d;
@@ -238,12 +239,20 @@ void UavGeometryControl::run()
 			+ UAV_MASS * G * E3
 			- UAV_MASS * a_d_;
 		f_u = A.dot( R_mv_ * E3 );
-		b3_d = A / A.norm();
+		b3_d = A.array() / A.norm();
+
+		// Normal of plane spanned by b1_d and b3_d
+		Matrix<double, 3, 1> b13_normal = b3_d.cross(b1_d_);
+		b13_normal = b13_normal.array() / b13_normal.norm();
+
+		// Compute b1_c = Proj[b1_d] onto the plane with normal b3_d
+		b1_c = - b3_d.cross(b13_normal);
 
 		// Construct desired rotation matrix
-		b2_d = b3_d.cross(b1_d_);
+		b2_d = b3_d.cross(b1_c);
+		b2_d = b2_d.array() / b2_d.norm();
 		R_d.setZero(3, 3);
-		R_d << b1_d_, b2_d, b3_d;
+		R_d << b1_c, b2_d, b3_d;
 
 		// ATTITUDE TRACKING
 		// Calculate control moment M
@@ -287,11 +296,11 @@ void UavGeometryControl::run()
 		rotor_vel_msg.angular_velocities[0] =
 				rotor_signs(0, 0) * rotor_velocities(0, 0);
 		rotor_vel_msg.angular_velocities[1] =
-				- rotor_signs(1, 0) * rotor_velocities(1, 0);
+				rotor_signs(1, 0) * rotor_velocities(1, 0);
 		rotor_vel_msg.angular_velocities[2] =
 				rotor_signs(2, 0) * rotor_velocities(2, 0);
 		rotor_vel_msg.angular_velocities[3] =
-				- rotor_signs(3, 0) * rotor_velocities(3, 0);
+				rotor_signs(3, 0) * rotor_velocities(3, 0);
 		rotor_ros_pub_.publish(rotor_vel_msg);
 
 		// Calculate attitude error
@@ -305,12 +314,12 @@ void UavGeometryControl::run()
 		cout << "e_omega: \n" << e_omega << "\n";
 		cout << "f_u: \n" << f_u << "\n";
 		cout << "M_u: \n" << M_u << "\n";
-		cout << "Thrust_moment_vec: \n" << thrust_moment_vec << "\n";
+		//cout << "Thrust_moment_vec: \n" << thrust_moment_vec << "\n";
 		cout << "Rotor_vel: \n" << rotor_velocities << "\n";
 		cout << "R_d: \n" << R_d << "\n";
 		cout << "R_mv: \n" << R_mv_ << "\n";
 		cout << "b3_d: \n" << b3_d << "\n";
-		cout << "\n";
+		cout << "\n\n";
 		cout << endl;
 	}
 }
@@ -341,7 +350,7 @@ void UavGeometryControl::b1d_cb(const geometry_msgs::Vector3 &msg)
 	b1_d_(0, 0) = msg.x;
 	b1_d_(1, 0) = msg.y;
 	b1_d_(2, 0) = msg.z;
-	b1_d_ = b1_d_ / b1_d_.norm();
+	b1_d_ = b1_d_.array() / b1_d_.norm();
 }
 
 void UavGeometryControl::omegad_cb(const geometry_msgs::Vector3 &msg)
