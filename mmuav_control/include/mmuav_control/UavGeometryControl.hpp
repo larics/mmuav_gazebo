@@ -18,6 +18,7 @@
 #include <sensor_msgs/Imu.h>
 #include <nav_msgs/Odometry.h>
 #include <eigen3/Eigen/Dense>
+#include <std_msgs/Int8.h>
 
 using namespace Eigen;
 
@@ -53,6 +54,7 @@ class UavGeometryControl
 		void omegad_cb(const geometry_msgs::Vector3 &msg);
 		void alphad_cb(const geometry_msgs::Vector3 &msg);
 		void b1d_cb(const geometry_msgs::Vector3 &msg);
+		void ctl_mode_cb(const std_msgs::Int8 &msg);
 
 		/**
 		 * Perform quaternion to euler transformation.
@@ -128,7 +130,8 @@ class UavGeometryControl
 		 * - desired heading reference
 		 */
 		ros::Subscriber xd_ros_sub_, vd_ros_sub_, ad_ros_sub_,
-						b1d_ros_sub_, omega_d_ros_sub_, alpha_d_ros_sub_;
+						b1d_ros_sub_, omega_d_ros_sub_, alpha_d_ros_sub_,
+						ctl_mode_ros_sub_;
 
 		/**
 		 * Messages containing angle measured values and
@@ -195,6 +198,14 @@ class UavGeometryControl
 		 * True when odometry callback function occured otherwise false.
 		 */
 		bool odometry_start_flag_;
+
+		/**
+		 * Current control mode:
+		 * 	- position control
+		 * 	- attitude control
+		 * 	- linear velocity control
+		 */
+		int current_control_mode_;
 };
 
 #endif /* UAV_GEOMETRY_CONTROL_H */
