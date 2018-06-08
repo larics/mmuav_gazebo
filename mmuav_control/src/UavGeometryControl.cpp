@@ -94,10 +94,25 @@ UavGeometryControl::UavGeometryControl(int rate)
 
 	// Initialize controller parameters
 	// Parameters initialized according to 2010-extended.pdf
-	k_x_ = 6 * UAV_MASS;
-	k_v_ = 3 * UAV_MASS;
-	k_R_ = 2;
-	k_omega_ = 0.8;
+	k_x_.setZero(3, 3);
+	k_x_(0, 0) = 3.5 * UAV_MASS;
+	k_x_(1, 1) = 3.5 * UAV_MASS;
+	k_x_(2, 2) = 5 * UAV_MASS;
+
+	k_v_.setZero(3, 3);
+	k_v_(0, 0) = 1.25 * UAV_MASS;
+	k_v_(1, 1) = 1.25 * UAV_MASS;
+	k_v_(2, 2) = 2.5 * UAV_MASS;
+
+	k_R_.setZero(3, 3);
+	k_R_(0, 0) = 2;
+	k_R_(1, 1) = 2;
+	k_R_(2, 2) = 3.5;
+
+	k_omega_.setZero(3, 3);
+	k_omega_(0, 0) = 0.5;
+	k_omega_(1, 1) = 0.5;
+	k_omega_(2, 2) = 1;
 
 	// Initialize subscribers and publishers
 	imu_ros_sub_ = node_handle_.subscribe(
@@ -193,10 +208,14 @@ void UavGeometryControl::run()
 	// b2_d - desired y-direction body vector
 	// M_u - control moment
 	// b1_c - b1_c = Proj[b1_d] b1_d projection on the plane with normal b3_d
-	Matrix<double, 3, 1> A, b3_d, M_u, b2_d, b1_c;
+	Matrix<double, 3, 1> A, b3_d, M_u, b2_d, b1_c, x_old;
 
 	// Desired rotation matrix
-	Matrix<double, 3, 3> R_d;
+	Matrix<double, 3, 3> R_d, R_d_old, R_d_dot, omega_d_skew;
+	R_d_old.setZero(3, 3);
+	R_d_old(0, 0) = 1;
+	R_d_old(1, 1) = 1;
+	R_d_old(2, 2) = 1;
 
 	// Total thrust control value
 	double f_u;
@@ -212,6 +231,9 @@ void UavGeometryControl::run()
 
 	// Wait for gazebo to start up
 	sleep(5);
+
+	// TODO: Add topic to change control mode from outside
+	bool att_ctl = false;
 
 	// Start the control loop.
 	while (ros::ok())
@@ -232,8 +254,19 @@ void UavGeometryControl::run()
 
 		// TRAJECTORY TRACKING
 		// Calculate total thrust and b3_d (desired thrust vector)
-		e_x = - (x_mv_ - x_d_);
-		e_v = - (v_mv_ - v_d_);
+
+		if (att_ctl)
+		{
+			v_d_ = (x_d_ - x_old) * 50;
+			e_x = - (x_mv_(2, 0) - x_d_(2, 0)) * E3;
+			e_v = - (v_mv_(2, 0) - v_d_(2, 0)) * E3;
+		}
+		else
+		{
+			e_x = - (x_mv_ - x_d_);
+			e_v = - (v_mv_ - v_d_);
+		}
+		x_old = x_d_;
 		A =  k_x_ * e_x
 			+ k_v_ * e_v
 			+ UAV_MASS * G * E3
@@ -253,6 +286,16 @@ void UavGeometryControl::run()
 		b2_d = b2_d.array() / b2_d.norm();
 		R_d.setZero(3, 3);
 		R_d << b1_c, b2_d, b3_d;
+
+		if (!att_ctl)
+		{
+			// Calculate R_dot
+			R_d_dot = (R_d - R_d_old) * 50;
+			omega_d_skew = R_d.adjoint() * R_d_dot;
+			cout << omega_d_skew << "\n";
+			veeOperator(omega_d_skew, omega_d_);
+		}
+		R_d_old = R_d;
 
 		// ATTITUDE TRACKING
 		// Calculate control moment M
@@ -490,7 +533,7 @@ int main(int argc, char** argv)
 	// Initialize controller rate
 	int rate;
 	ros::NodeHandle private_node_handle_("~");
-	private_node_handle_.param("rate", rate, int(100));
+	private_node_handle_.param("rate", rate, int(50));
 
 	// Start the control algorithm
 	UavGeometryControl geometric_control(rate);

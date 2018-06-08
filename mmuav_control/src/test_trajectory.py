@@ -55,8 +55,8 @@ class TestTrajectory:
             self.heading_ref_msg.y = sin(pi * t)
             self.heading_ref_msg.z = 0
             
-            #self.pos_ref_pub.publish(self.pos_ref_msg)
-            self.heading_ref_pub.publish(self.heading_ref_msg)     
+            self.pos_ref_pub.publish(self.pos_ref_msg)
+            #self.heading_ref_pub.publish(self.heading_ref_msg)     
 
 if __name__ == '__main__':
     rospy.init_node('test_flight', anonymous=True)

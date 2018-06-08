@@ -167,7 +167,7 @@ class UavGeometryControl
 		 *	- k_R: orientation matrix error gain (eR)
 		 *	- k_omega: angular velocity error gain (eOmega)
 		 */
-		double k_x_, k_v_, k_R_, k_omega_;
+		Matrix<double, 3, 3> k_x_, k_v_, k_R_, k_omega_;
 
 		/**
 		 * Variable used for calculating time intervals in the controller loop.
