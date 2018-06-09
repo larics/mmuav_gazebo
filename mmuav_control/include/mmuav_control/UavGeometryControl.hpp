@@ -19,6 +19,7 @@
 #include <nav_msgs/Odometry.h>
 #include <eigen3/Eigen/Dense>
 #include <std_msgs/Int8.h>
+#include <std_msgs/Float64MultiArray.h>
 
 using namespace Eigen;
 
@@ -54,6 +55,7 @@ class UavGeometryControl
 		void omegad_cb(const geometry_msgs::Vector3 &msg);
 		void alphad_cb(const geometry_msgs::Vector3 &msg);
 		void b1d_cb(const geometry_msgs::Vector3 &msg);
+		void rd_cb(const std_msgs::Float64MultiArray &msg);
 		void ctl_mode_cb(const std_msgs::Int8 &msg);
 
 		/**
@@ -130,8 +132,8 @@ class UavGeometryControl
 		 * - desired heading reference
 		 */
 		ros::Subscriber xd_ros_sub_, vd_ros_sub_, ad_ros_sub_,
-						b1d_ros_sub_, omega_d_ros_sub_, alpha_d_ros_sub_,
-						ctl_mode_ros_sub_;
+						b1d_ros_sub_, omega_d_ros_sub_, rd_ros_sub_,
+						alpha_d_ros_sub_, ctl_mode_ros_sub_;
 
 		/**
 		 * Messages containing angle measured values and
@@ -159,9 +161,10 @@ class UavGeometryControl
 		Matrix<double, 3, 1> b1_d_;
 
 		/**
-		 * Measured rotation matrix.
+		 * R_mv_ - Measured rotation matrix.
+		 * R_d_  - Desired rotation matrix
 		 */
-		Matrix<double, 3, 3> R_mv_;
+		Matrix<double, 3, 3> R_mv_, R_d_;
 
 		/**
 		 * CONTROLLER PARAMETERS:
