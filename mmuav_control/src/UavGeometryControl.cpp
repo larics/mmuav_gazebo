@@ -11,15 +11,18 @@
 
 using namespace std;
 
-const Matrix<double, 3, 1> E3(0, 0, 1); 		// Z - unit vector
-const double UAV_MASS = 2.1;					// Mass constant
-const double G = 9.81;							// Gravity acceleration
-const double ARM_LENGTH = 0.314;				// Motor offset
-const double MOMENT_CONSTANT = 0.016;			// Moment constant [m]
-const double MOTOR_CONSTANT = 8.54858e-06;		// Motor constant
-Matrix<double, 3, 3> INERTIA;					// Inertia matrix
-Matrix<double, 4, 4> THRUST_TRANSFORM;			// Thrust transform matrix
-Matrix<double, 3, 3> EYE;						// 3x3 EYE matrix
+const Matrix<double, 3, 1> E3(0, 0, 1);
+const double UAV_MASS = 2.1;
+const double G = 9.81;
+const double ARM_LENGTH = 0.314;
+const double MOMENT_CONSTANT = 0.016;
+const double MOTOR_CONSTANT = 8.54858e-06;
+const double ROTOR_MASS = 0.01;
+const double ROTOR_VELOCITY_SLOWDOWN_SIM = 15;
+const double ROTOR_RADIUS = 0.1524;
+Matrix<double, 3, 3> INERTIA;
+Matrix<double, 4, 4> THRUST_TRANSFORM;
+Matrix<double, 3, 3> EYE;
 
 // Define control modes
 const int POSITION_CONTROL = 1;
@@ -43,6 +46,21 @@ UavGeometryControl::UavGeometryControl(int rate)
 	INERTIA(0, 0) = 0.0826944;
 	INERTIA(1, 1) = 0.0826944;
 	INERTIA(2, 2) = 0.0104;
+
+	Matrix<double, 3, 3> rotor_inertia;
+	rotor_inertia.setZero(3, 3);
+	rotor_inertia(0, 0) = 1/12 * ROTOR_MASS
+			* (0.031 * 0.031 + 0.005 * 0.005)
+			* ROTOR_VELOCITY_SLOWDOWN_SIM;
+	rotor_inertia(1, 1) = 1/12 * ROTOR_MASS
+			* (4 * ROTOR_RADIUS * ROTOR_RADIUS + 0.005 * 0.005)
+			* ROTOR_VELOCITY_SLOWDOWN_SIM;
+	rotor_inertia(2, 2) = 1/12 * ROTOR_MASS
+			* (4 * ROTOR_RADIUS * ROTOR_RADIUS + 0.031 * 0.031)
+			* ROTOR_VELOCITY_SLOWDOWN_SIM
+			+ ROTOR_MASS * ARM_LENGTH * ARM_LENGTH;
+
+	INERTIA = INERTIA + 4 * rotor_inertia;
 
 	// Initialize thrust transform matrix
 	THRUST_TRANSFORM.setZero(4, 4);
@@ -110,9 +128,9 @@ UavGeometryControl::UavGeometryControl(int rate)
 	k_x_(2, 2) = 10;
 
 	k_v_.setZero(3, 3);
-	k_v_(0, 0) = 2.5;
-	k_v_(1, 1) = 2.5;
-	k_v_(2, 2) = 2.5;
+	k_v_(0, 0) = 5;
+	k_v_(1, 1) = 5;
+	k_v_(2, 2) = 5;
 
 	k_R_.setZero(3, 3);
 	k_R_(0, 0) = 2.5;
@@ -289,8 +307,8 @@ void UavGeometryControl::run()
 		omega_mv_(2, 0) = euler_rate_mv_.z;
 
 		// Position and heading prefilter
-		//x_des = x_old + 0.1 * (x_d_ - x_old);
-		//b1_des = b1_old + 0.1 * (b1_d_ - b1_old);
+		x_des = x_old + 0.1 * (x_d_ - x_old);
+		b1_des = b1_old + 0.1 * (b1_d_ - b1_old);
 
 		// ####################################################################
 		// TRAJECTORY TRACKING
@@ -435,9 +453,9 @@ void UavGeometryControl::run()
 		att_err_msg.data = att_err.trace() / 2;
 		att_err_ros_pub_.publish(att_err_msg);
 
-		//cout << "e_x: \n" << e_x << "\n";
+		cout << "e_x: \n" << e_x << "\n";
 		//cout << "e_v: \n" << e_v << "\n";
-		//cout << "e_R: \n" << e_R << "\n";
+		cout << "e_R: \n" << e_R << "\n";
 		//cout << "e_omega: \n" << e_omega << "\n";
 		//cout << "f_u: \n" << f_u << "\n";
 		cout << "M_u: \n" << M_u << "\n";

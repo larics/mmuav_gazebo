@@ -40,7 +40,7 @@ class TestTrajectory:
         self.mode_ref_msg = Int8()
 
         # Crontroller rate
-        self.controller_rate = 5
+        self.controller_rate = 10
         self.rate = rospy.Rate(self.controller_rate)
         
         self.pos_ref_msg = Vector3()
@@ -62,13 +62,13 @@ class TestTrajectory:
             self.pos_ref_msg.y = 0.5 * sin(pi * t)
             self.pos_ref_msg.z = 0.6 * cos(pi * t) + 2
             
-            self.pos_ref_pub.publish(self.pos_ref_msg)
+            #self.pos_ref_pub.publish(self.pos_ref_msg)
             
             self.heading_ref_msg.x = cos(pi * t)
             self.heading_ref_msg.y = sin(pi * t)
             self.heading_ref_msg.z = 0
             
-            #self.heading_ref_pub.publish(self.heading_ref_msg)     
+            self.heading_ref_pub.publish(self.heading_ref_msg)     
                  
            
                 
