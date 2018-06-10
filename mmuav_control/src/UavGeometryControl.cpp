@@ -30,7 +30,7 @@ const int ATTITUDE_CONTROL = 2;
 const int VELOCITY_CONTROL = 3;
 
 // Controller rate
-const int CONTROLLER_RATE = 50;
+const int CONTROLLER_RATE = 100;
 
 UavGeometryControl::UavGeometryControl(int rate)
 {
@@ -123,23 +123,23 @@ UavGeometryControl::UavGeometryControl(int rate)
 	// Initialize controller parameters
 	// Parameters initialized according to 2010-extended.pdf
 	k_x_.setZero(3, 3);
-	k_x_(0, 0) = 10;
-	k_x_(1, 1) = 10;
-	k_x_(2, 2) = 10;
+	k_x_(0, 0) = 5 * UAV_MASS;
+	k_x_(1, 1) = 5 * UAV_MASS;
+	k_x_(2, 2) = 12 * UAV_MASS;
 
 	k_v_.setZero(3, 3);
-	k_v_(0, 0) = 5;
-	k_v_(1, 1) = 5;
-	k_v_(2, 2) = 5;
+	k_v_(0, 0) = 3 * UAV_MASS;
+	k_v_(1, 1) = 3 * UAV_MASS;
+	k_v_(2, 2) = 5 * UAV_MASS;
 
 	k_R_.setZero(3, 3);
-	k_R_(0, 0) = 2.5;
-	k_R_(1, 1) = 2.5;
+	k_R_(0, 0) = 6;
+	k_R_(1, 1) = 6;
 	k_R_(2, 2) = 2.5;
 
 	k_omega_.setZero(3, 3);
-	k_omega_(0, 0) = 0.5;
-	k_omega_(1, 1) = 0.5;
+	k_omega_(0, 0) = 2;
+	k_omega_(1, 1) = 2;
 	k_omega_(2, 2) = 0.5;
 
 	// Initialize subscribers and publishers
@@ -258,9 +258,9 @@ void UavGeometryControl::run()
 	 * R_d_old - used for matrix differentiation
 	 * R_d_dot - Desired matrix derivative
 	 */
-	Matrix<double, 3, 3> R_c, R_c_old, R_c_dot, R_c_dot_old;
+	Matrix<double, 3, 3> R_c, R_c_old, R_c_dot, omega_c_old;
 	R_c_old = EYE;
-	R_c_dot_old = EYE;
+	omega_c_old = EYE;
 
 	// Rotor velocities control vector
 	Matrix<double, 4, 1> rotor_velocities;
@@ -307,8 +307,8 @@ void UavGeometryControl::run()
 		omega_mv_(2, 0) = euler_rate_mv_.z;
 
 		// Position and heading prefilter
-		x_des = x_old + 0.1 * (x_d_ - x_old);
-		b1_des = b1_old + 0.1 * (b1_d_ - b1_old);
+		x_des = x_old + 0.025 * (x_d_ - x_old);
+		b1_des = b1_old + 0.025 * (b1_d_ - b1_old);
 
 		// ####################################################################
 		// TRAJECTORY TRACKING
@@ -374,12 +374,26 @@ void UavGeometryControl::run()
 			R_c.setZero(3, 3);
 			R_c << b1_c, b2_d, b3_d;
 
-			// Calculate R_dot / alpha dot
-			R_c_dot = (R_c - R_c_old) / 2;
-			alpha_c_skew = (R_c_dot - R_c_dot_old) / 2;
+			// Calculate angular velocity based on R_c[k] and R_c[k-1]
+			Matrix<double, 3, 3> AA = R_c * R_c_old.adjoint();
+			double theta = acos((AA.trace() - 1 ) / 2);
+			omega_c_skew = (AA - AA.adjoint()) * theta / (2 * dt * sin(theta));
+			veeOperator(omega_c_skew, omega_d_);
 
-			// Calculate omega_d
-			omega_c_skew = R_c.adjoint() * R_c_dot;
+			// Check if omega_c_skew is NAN
+			if ((double)omega_c_skew(0, 0) != (double)omega_c_skew(0, 0)
+					|| omega_d_.norm() > 15)
+			{
+				// If current value is NAN take the old value do not update
+				omega_c_skew = omega_c_old;
+				alpha_c_skew.setZero(3, 3);
+			}
+			else
+			{
+				// If it's valid update
+				alpha_c_skew = (omega_c_skew - omega_c_old);
+				omega_c_old = omega_c_skew;
+			}
 
 			// Remap calculated values to desired
 			veeOperator(omega_c_skew, omega_d_);
@@ -399,7 +413,7 @@ void UavGeometryControl::run()
 
 		// Update old R_c
 		R_c_old = R_c;
-		R_c_dot_old = R_c_dot;
+
 
 		// ###################################################################
 		// ATTITUDE TRACKING
@@ -453,13 +467,13 @@ void UavGeometryControl::run()
 		att_err_msg.data = att_err.trace() / 2;
 		att_err_ros_pub_.publish(att_err_msg);
 
-		cout << "e_x: \n" << e_x << "\n";
+		//cout << "e_x: \n" << e_x << "\n";
 		//cout << "e_v: \n" << e_v << "\n";
 		cout << "e_R: \n" << e_R << "\n";
-		//cout << "e_omega: \n" << e_omega << "\n";
+		cout << "e_omega: \n" << e_omega << "\n";
 		//cout << "f_u: \n" << f_u << "\n";
-		cout << "M_u: \n" << M_u << "\n";
-		//cout << "Rotor_vel: \n" << rotor_velocities << "\n";
+		//cout << "M_u: \n" << M_u << "\n";
+		cout << "Rotor_vel: \n" << rotor_velocities << "\n";
 		//cout << "R_d: \n" << R_d << "\n";
 		//cout << "R_mv: \n" << R_mv_ << "\n";
 		//cout << "b3_d: \n" << b3_d << "\n";
