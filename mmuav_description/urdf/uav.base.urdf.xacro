@@ -163,116 +163,63 @@
     <xacro:insert_block name="rotor_inertia" />
   </xacro:vertical_rotor>
 
-  <link name='connector1'>
-    <inertial>
-      <mass value="0.0126" />
-      <origin xyz="0 0 -0.04" rpy="0 0 0"/>
-      <inertia
-        ixx="0.00001176" ixy="0" ixz="0"
-        iyx="0" iyy="0.00001176" iyz="0"
-        izx="0" izy="0" izz="0.00000252"/>
-    </inertial>
+<!--
+  <xacro:camera_manipulator
+    parent="base_link"
+    link_mass="0.25"
+    link_ixx="0.00004167"
+    link_iyy="0.00854167"
+    link_izz="0.00856667" >
+    <origin xyz="0 0 0" rpy="0 0 0"/>
+  </xacro:camera_manipulator>
+-->
+<!--
+  <xacro:camera_manipulator
+    parent="base_link"
+    link_mass="0.05"
+    link_ixx="0.00000833"
+    link_iyy="0.00170833"
+    link_izz="0.00171333" >
+    <origin xyz="0 0 0" rpy="0 0 0"/>
+  </xacro:camera_manipulator>
+-->
 
-    <visual>
-      <origin xyz="0 0 -0.04" rpy="0 0 0" />
-      <geometry>
-        <cylinder length="0.1" radius="0.02"/>
-      </geometry>
-    </visual>
-  </link>
 
-  <link name='link1'>
-    <inertial>
-      <mass value="0.0256" />
-      <origin xyz="-0.09899494936 0.09899494936 -0.01" rpy="0 0 0"/>
-      <inertia
-        ixx="0.000004266" ixy="0" ixz="0"
-        iyx="0" iyy="0.002" iyz="0"
-        izx="0" izy="0" izz="0.000262827"/>
-    </inertial>
+  <xacro:camera_manipulator
+    parent="base_link"
+    link_mass="0.005"
+    link_ixx="0.00000083"
+    link_iyy="0.00017083"
+    link_izz="0.00017133" >
+    <origin xyz="0 0 0" rpy="0 0 0"/>
+  </xacro:camera_manipulator>
 
-    <visual>
-      <origin xyz="-0.09899494936 0.09899494936 -0.01" rpy="0.758398 1.5708 0" />
-      <geometry>
-        <box size="0.02 0.04 0.32"/>
-      </geometry>
-    </visual>
-  </link>
+  <xacro:transmisija
+    trans_number="0"
+    joint_name="connector1_to_link1">
+  </xacro:transmisija>
 
-    <link name='connector2'>
-      <inertial>
-        <mass value="0.00251" />
-        <origin xyz="0 0 0" rpy="0 0 0"/>
-        <inertia
-          ixx="0.0000003346" ixy="0" ixz="0"
-          iyx="0" iyy="0.0000003346" iyz="0"
-          izx="0" izy="0" izz="0.000000502"/>
-      </inertial>
+  <xacro:transmisija
+    trans_number="1"
+    joint_name="connector2_to_link2">
+  </xacro:transmisija>
 
-      <visual>
-        <origin xyz="0 0 -0.02" rpy="0 0 0" />
-        <geometry>
-          <cylinder length="0.02" radius="0.02"/>
-        </geometry>
-      </visual>
-    </link>
+  <xacro:property name="camera_link" value="0.05" />
+  <xacro:property name="camera_inertia">
+    <inertia
+    ixx="1e-8"
+    iyy="1e-8"
+    izz="1e-8"
+    ixy="0.0" ixz="0.0" iyz="0.0" />
+  </xacro:property>
+  <xacro:property name="camera_mass" value="1e-5"/>
 
-    <link name='link2'>
-      <inertial>
-        <mass value="0.0256" />
-        <origin xyz="-0.09899494936 0.09899494936 -0.02" rpy="0 0 0"/>
-        <inertia
-          ixx="0.000004266" ixy="0" ixz="0"
-          iyx="0" iyy="0.002" iyz="0"
-          izx="0" izy="0" izz="0.000262827"/>
-    </inertial>
-
-      <visual>
-        <origin xyz="-0.09899494936 0.09899494936 -0.02" rpy="0.758398 1.5708 0" />
-        <geometry>
-          <box size="0.02 0.04 0.32"/>
-        </geometry>
-      </visual>
-    </link>
-
-    <joint name="base_to_connector1" type="fixed">
-      <parent link="base_link"/>
-      <child link="connector1"/>
-      <origin xyz="0 0 0" rpy="0 0 0"/>
-    </joint>
-
-    <joint name="connector1_to_link1" type="continuous">
-      <parent link="connector1"/>
-      <child link="link1"/>
-      <origin xyz="0 0 -0.09" rpy="0 0 0"/>
-      <limit upper="3.14" lower="-3.14" effort="10000000" velocity="20"/>
-      <axis xyz="0 0 1" />
-      <dynamics damping="0.07" friction="0.0"/>
-    </joint>
-
-    <joint name="link1_to_connector2" type="fixed">
-      <parent link="link1"/>
-      <child link="connector2"/>
-      <origin xyz="-0.19798989873 0.19798989873 -0.01" rpy="0 0 0"/>
-    </joint>
-
-    <joint name="connector2_to_link2" type="continuous">
-      <parent link="connector2"/>
-      <child link="link2"/>
-      <origin xyz="0 0 -0.02" rpy="0 0 0"/>
-      <limit upper="3.14" lower="-3.14" effort="10000000" velocity="20"/>
-      <axis xyz="0 0 1" />
-      <dynamics damping="0.07" friction="0.0"/>
-    </joint>
-
-    <xacro:transmisija
-      trans_number="0"
-      joint_name="connector1_to_link1">
-    </xacro:transmisija>
-
-    <xacro:transmisija
-      trans_number="1"
-      joint_name="connector2_to_link2">
-    </xacro:transmisija>
-
+  <xacro:cam
+    camera_link="${camera_link}"
+    camera_mass="${camera_mass}"
+    parent="link2">
+    <origin xyz="-0.2121320344 0.2121320344 0.02" rpy="0 0 0"/>
+    <xacro:insert_block name="camera_inertia"/>
+  </xacro:cam>
+  
 </robot>

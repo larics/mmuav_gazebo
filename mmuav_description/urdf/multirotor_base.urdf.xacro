@@ -4,7 +4,7 @@
   <!-- Main multirotor link -->
   <xacro:macro name="multirotor_base_macro"
     params="robot_namespace mass body_width body_height mesh_file *origin *inertia">
-    
+
     <link name="base_link"></link>
     <joint name="base_joint" type="fixed">
       <xacro:insert_block name="origin"/>
@@ -53,7 +53,7 @@
       <child link="imu_link" />
       <limit upper="0" lower="0" effort="0" velocity="0" />
     </joint>
-    
+
     <!-- attach multirotor_base_plugin to the base_link -->
     <gazebo>
       <plugin filename="librotors_gazebo_multirotor_base_plugin.so" name="rosbag">
@@ -77,7 +77,7 @@
 
     </joint>
     <!-- TODO(ff): not currently set because it's not yet supported -->
-    <!-- <gazebo reference="rotor_${motor_number}_joint"> <axis> <xyz>0 0 1</xyz> 
+    <!-- <gazebo reference="rotor_${motor_number}_joint"> <axis> <xyz>0 0 1</xyz>
       <limit> <velocity> ${max_rot_velocity} </velocity> </limit> </axis> </gazebo> -->
     <link name="rotor_${motor_number}">
       <inertial>
@@ -165,11 +165,11 @@
   </xacro:macro>
 
   <!-- Camera macro. Adds a box representing a camera below the UAV
-  
+
   @param camera_link Length of the camera box
-  @param camera_mass Mass of the camera 
+  @param camera_mass Mass of the camera
   @param parent Parent link on which the camera will be fixed
-  @param *origin Block argument defining the origin of the camera with 
+  @param *origin Block argument defining the origin of the camera with
   reference to the parent link.
   @param *inertia Block argument defining camera inertia.
   -->
@@ -212,7 +212,7 @@
     <gazebo reference="camera_box">
       <sensor type="camera" name="camera1">
         <update_rate>30.0</update_rate>
-        
+
         <camera name="head">
           <horizontal_fov>1.3962634</horizontal_fov>
           <image>
@@ -257,7 +257,7 @@
     <!--LINK1 Dynamixel-->
     <!--_____________________________________________________________-->
     <link name='dynamixel_1_${suffix}'>
-      
+
       <inertial>
         <mass value="0.055" />
         <origin xyz="0.01261097 0 0.00120978" rpy="0 0 0"/>
@@ -266,7 +266,7 @@
           iyx="0" iyy="0.00001597" iyz="0"
           izx="-0.00000024" izy="0" izz="0.00001335"/>
       </inertial>
-            
+
       <visual>
         <origin xyz="0 0 0" rpy="0 0 0" />
         <geometry>
@@ -274,7 +274,7 @@
             scale="1 1 1" />
         </geometry>
       </visual>
-      
+
       <!--collision name='collision'>
         <origin xyz="0.01261097 0 0.00120978" rpy="0 0 0"/>
         <geometry>
@@ -289,7 +289,7 @@
     <!--LINK1 F3-->
     <!--_____________________________________________________________-->
     <link name='link_F3_fixed_${suffix}'>
-      
+
       <inertial>
         <mass value="0.00323" />
         <origin xyz="0.00000191 0.00240389 0" rpy="0 0 0"/>
@@ -298,7 +298,7 @@
           iyx="0" iyy="0.00000065" iyz="0"
           izx="0.0" izy="0" izz="0.00000020"/>
       </inertial>
-            
+
       <visual>
         <origin xyz="0 0 0" rpy="0 0 0" />
         <geometry>
@@ -312,7 +312,7 @@
     <!--LINK1 F4-->
     <!--_____________________________________________________________-->
     <link name='link_F4_fixed_${suffix}'>
-      
+
       <inertial>
         <mass value="0.01" />
         <origin xyz="0 -0.03040000 -0.00860000" rpy="0 0 0"/>
@@ -321,7 +321,7 @@
           iyx="0" iyy="0.00000180" iyz="-0.00000279"
           izx="0.0" izy="-0.00000279" izz="0.00000750"/>
       </inertial>
-            
+
       <visual>
         <origin xyz="0 0 0" rpy="0 0 0" />
         <geometry>
@@ -335,7 +335,7 @@
     <!--LINK2 Dynamixel-->
     <!--_____________________________________________________________-->
     <link name='dynamixel_2_${suffix}'>
-      
+
       <inertial>
         <mass value="0.055" />
         <origin xyz="0.01261097 0 0.00120978" rpy="0 0 0"/>
@@ -344,7 +344,7 @@
           iyx="0" iyy="0.00001597" iyz="0"
           izx="-0.00000024" izy="0" izz="0.00001335"/>
       </inertial>
-            
+
       <visual>
         <origin xyz="0 0 0" rpy="0 0 0" />
         <geometry>
@@ -367,7 +367,7 @@
     <!--GRIPPER PART1-->
     <!--_____________________________________________________________-->
     <link name='link_gripper1_${suffix}'>
-      
+
       <inertial>
         <mass value="0.0109" />
         <origin xyz="0.00028510 0.00103830 0.00134070" rpy="0 0 0"/>
@@ -376,7 +376,7 @@
           iyx="0" iyy="0.00000170" iyz="0"
           izx="0.0" izy="0" izz="0.00000137"/>
       </inertial>
-            
+
       <visual>
         <origin xyz="0 0 0" rpy="0 0 0" />
         <geometry>
@@ -390,7 +390,7 @@
     <!--GRIPPER PART2-->
     <!--_____________________________________________________________-->
     <link name='link_gripper2_${suffix}'>
-      
+
       <inertial>
         <mass value="0.25" />
         <!-- origin xyz="0.02116183 0 0" rpy="1.57079632679 0 0"/ -->
@@ -406,7 +406,7 @@
           izz="0.00015"
           ixy="0.0" ixz="0.0" iyz="0.0" />
       </inertial>
-            
+
       <visual>
         <!-- origin xyz="0.02047 -0.00104 -0.00134" rpy="0 0 0" / -->
         <origin xyz="0.08 0.0 0.0" rpy="0 0 0" />
@@ -510,5 +510,133 @@
     </gazebo>
   </xacro:macro>
 
+
+  <xacro:macro name="camera_manipulator"
+  params="parent link_mass link_ixx link_iyy link_izz *origin">
+
+    <material name="blue">
+      <color rgba="0 0 0.8 1"/>
+    </material>
+
+    <material name="red">
+      <color rgba="1 0 0 1"/>
+    </material>
+
+    <link name='connector1'>
+      <inertial>
+        <mass value="0.00251" />
+        <origin xyz="0 0 -0.01" rpy="0 0 0"/>
+        <inertia
+          ixx="0.00001176" ixy="0" ixz="0"
+          iyx="0" iyy="0.00001176" iyz="0"
+          izx="0" izy="0" izz="0.00000252"/>
+      </inertial>
+
+      <visual>
+        <origin xyz="0 0 -0.01" rpy="0 0 0" />
+        <geometry>
+          <cylinder length="0.02" radius="0.02"/>
+        </geometry>
+      </visual>
+    </link>
+
+    <link name='link1'>
+      <inertial>
+        <mass value="${link_mass}" />
+        <origin xyz="-0.09899494936 0.09899494936 -0.01" rpy="0 0 0"/>
+        <inertia
+          ixx="${link_ixx}" ixy="0" ixz="0"
+          iyx="0" iyy="${link_iyy}" iyz="0"
+          izx="0" izy="0" izz="${link_izz}"/>
+      </inertial>
+
+      <visual>
+        <origin xyz="-0.09899494936 0.09899494936 -0.01" rpy="0.7853981634 1.570796327 0" />
+        <geometry>
+          <box size="0.02 0.04 0.32"/>
+        </geometry>
+      </visual>
+    </link>
+
+    <link name='connector2'>
+      <inertial>
+        <mass value="0.00251" />
+        <origin xyz="0 0 0" rpy="0 0 0"/>
+        <inertia
+          ixx="00001176" ixy="0" ixz="0"
+          iyx="0" iyy="0.00001176" iyz="0"
+          izx="0" izy="0" izz="0.00000252"/>
+      </inertial>
+
+      <visual>
+        <origin xyz="0 0 -0.02" rpy="0 0 0" />
+        <geometry>
+          <cylinder length="0.02" radius="0.02"/>
+        </geometry>
+      </visual>
+    </link>
+
+    <link name='link2'>
+      <inertial>
+        <mass value="${link_mass}" />
+        <origin xyz="-0.09899494936 0.09899494936 -0.02" rpy="0 0 0"/>
+        <inertia
+          ixx="${link_ixx}" ixy="0" ixz="0"
+          iyx="0" iyy="${link_iyy}" iyz="0"
+          izx="0" izy="0" izz="${link_izz}"/>
+    </inertial>
+
+      <visual>
+        <origin xyz="-0.09899494936 0.09899494936 -0.02" rpy="0.7853981634 1.570796327 0" />
+        <geometry>
+          <box size="0.02 0.04 0.32"/>
+        </geometry>
+      </visual>
+    </link>
+
+    <joint name="base_to_connector1" type="fixed">
+      <parent link="${parent}"/>
+      <child link="connector1"/>
+      <xacro:insert_block name="origin"/>
+    </joint>
+
+    <joint name="connector1_to_link1" type="continuous">
+      <parent link="connector1"/>
+      <child link="link1"/>
+      <origin xyz="0 0 -0.02" rpy="0 0 0"/>
+      <limit upper="3.14" lower="-3.14" effort="10000000" velocity="20"/>
+      <axis xyz="0 0 1" />
+      <dynamics damping="0.00" friction="0.0"/>
+    </joint>
+
+    <joint name="link1_to_connector2" type="fixed">
+      <parent link="link1"/>
+      <child link="connector2"/>
+      <origin xyz="-0.19798989873 0.19798989873 -0.01" rpy="0 0 0"/>
+    </joint>
+
+    <joint name="connector2_to_link2" type="continuous">
+      <parent link="connector2"/>
+      <child link="link2"/>
+      <origin xyz="0 0 -0.02" rpy="0 0 0"/>
+      <limit upper="3.14" lower="-3.14" effort="10000000" velocity="20"/>
+      <axis xyz="0 0 1" />
+      <dynamics damping="0.07" friction="0.0"/>
+    </joint>
+
+    <gazebo reference="link1">
+      <material>Gazebo/Blue</material>
+    </gazebo>
+    <gazebo reference="link2">
+      <material>Gazebo/Blue</material>
+    </gazebo>
+    <gazebo reference="connector1">
+      <material>Gazebo/Red</material>
+    </gazebo>
+    <gazebo reference="connector2">
+      <material>Gazebo/Red</material>
+    </gazebo>
+
+  </xacro:macro>
 
 </robot>
