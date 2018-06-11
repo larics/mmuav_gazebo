@@ -59,6 +59,43 @@ class UavGeometryControl
 		void ctl_mode_cb(const std_msgs::Int8 &msg);
 
 		/**
+		 * Calculate b3_d and f_u as position tracking control inputs.
+		 *
+		 * @param pos_desired - desired position reference
+		 * 						(may change due to prefilter)
+		 * @param pos_old - old position
+		 * @param dt - time interval
+		 * @param b3_d - thrust heading reference, assigned in method
+		 * @param f_u - thrust magnitude value, assigned in method
+		 */
+		void trajectoryTracking(
+				const Matrix<double, 3, 1> pos_desired,
+				const Matrix<double, 3, 1> pos_old,
+				const double dt,
+				Matrix<double, 3, 1> &b3_d,
+				double &f_u);
+
+		/**
+		 * Calculate control moments M_u used for attitude tracking.
+		 *
+		 * @param b1_d - desired heading
+		 * @param b3_d - desired thrust vector
+		 * @param dt - time interval
+		 * @param R_c_old - reference for old calculated rotation matrix
+		 * 					(Position tracking)
+		 * @param omega_c_old - reference for old calculated angular velocity
+		 * 						(Position tracking)
+		 * @param M_u - control moments, assigned in method
+		 */
+		void attitudeTracking(
+				const Matrix<double, 3, 1> b1_desired,
+				const Matrix<double, 3, 1> b3_desired,
+				const double dt,
+				Matrix<double, 3, 3> &R_c_old,
+				Matrix<double, 3, 3> &omega_c_old,
+				Matrix<double, 3, 1> &M_u);
+
+		/**
 		 * Perform quaternion to euler transformation.
 		 *
 		 * @param quaternion: 4 dimensional float array.
@@ -109,6 +146,20 @@ class UavGeometryControl
 				Matrix<double, 3, 3> &rotMatrix);
 
 		/**
+		 * Perform saturation filter on the given value;
+		 *
+		 * @param value
+		 * @param lowLimit
+		 * @param highLimit
+		 *
+		 * @return saturated value
+		 */
+		double saturation(
+				double value,
+				double lowLimit,
+				double highLimit);
+
+		/**
 		 * Node handle used for setting up subscribers and publishers.
 		 */
 		ros::NodeHandle node_handle_;
@@ -130,10 +181,15 @@ class UavGeometryControl
 		 * - desired linear velocity reference
 		 * - desired linear acceleration reference
 		 * - desired heading reference
+		 * - desired angular velocity
+		 * - desired angular acceleration
+		 * - desired control mode ( position / attitude )
+		 * - orientation: roll, pitch, yaw
 		 */
 		ros::Subscriber xd_ros_sub_, vd_ros_sub_, ad_ros_sub_,
 						b1d_ros_sub_, omega_d_ros_sub_, rd_ros_sub_,
-						alpha_d_ros_sub_, ctl_mode_ros_sub_;
+						alpha_d_ros_sub_, ctl_mode_ros_sub_,
+						orientation_ros_sub_;
 
 		/**
 		 * Messages containing angle measured values and
