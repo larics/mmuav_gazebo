@@ -56,6 +56,7 @@ class UavGeometryControl
 		void alphad_cb(const geometry_msgs::Vector3 &msg);
 		void b1d_cb(const geometry_msgs::Vector3 &msg);
 		void rd_cb(const std_msgs::Float64MultiArray &msg);
+		void euler_cb(const geometry_msgs::Vector3 &msg);
 		void ctl_mode_cb(const std_msgs::Int8 &msg);
 
 		/**
@@ -189,7 +190,7 @@ class UavGeometryControl
 		ros::Subscriber xd_ros_sub_, vd_ros_sub_, ad_ros_sub_,
 						b1d_ros_sub_, omega_d_ros_sub_, rd_ros_sub_,
 						alpha_d_ros_sub_, ctl_mode_ros_sub_,
-						orientation_ros_sub_;
+						euler_ros_sub_;
 
 		/**
 		 * Messages containing angle measured values and
@@ -211,10 +212,11 @@ class UavGeometryControl
 		 * 	- desired angular velocity omega_d_
 		 * 	- desired angular acceleration alpha_d_
 		 * 	- desired direction of the first body axis b1_D
+		 * 	- desired euler angles (as a means to set R_d)
 		 */
 		Matrix<double, 3, 1> omega_d_, alpha_d_;
 		Matrix<double, 3, 1> omega_mv_, alpha_mv_;
-		Matrix<double, 3, 1> b1_d_;
+		Matrix<double, 3, 1> b1_d_, euler_d_;
 
 		/**
 		 * R_mv_ - Measured rotation matrix.
