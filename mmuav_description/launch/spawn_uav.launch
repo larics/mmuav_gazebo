@@ -6,6 +6,7 @@
   <arg name="x" default="0.0"/>
   <arg name="y" default="0.0"/>
   <arg name="z" default="2.10421"/>
+  <arg name="roll" default="0" />
   <arg name="enable_logging" default="false"/>
   <arg name="enable_ground_truth" default="true"/>
   <arg name="log_file" default="uav_log"/>
@@ -32,6 +33,7 @@
          -x $(arg x)
          -y $(arg y)
          -z $(arg z)
+         -R $(arg roll)
          -model $(arg name)"
    respawn="false" output="screen" >
   </node>

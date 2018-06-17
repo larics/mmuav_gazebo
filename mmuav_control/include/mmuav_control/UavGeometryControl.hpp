@@ -20,6 +20,7 @@
 #include <eigen3/Eigen/Dense>
 #include <std_msgs/Int8.h>
 #include <std_msgs/Float64MultiArray.h>
+#include <mmuav_msgs/GeomCtlStatus.h>
 
 using namespace Eigen;
 
@@ -96,6 +97,20 @@ class UavGeometryControl
 				Matrix<double, 3, 3> &omega_c_old,
 				Matrix<double, 3, 1> &M_u);
 
+		/**
+		 * Calculate and set desired angular velocity and
+		 * desired angular acceleration based on R_c[k] and R_c[k-1].
+		 *
+		 * @param R_c - Calculated R
+		 * @param R_c_old - Calculated old R
+		 * @param R_mv - Measured R
+		 * @param omega_c_old - Reference to old angular velocity value
+		 */
+		void calculateDesiredAngVelAcc(
+				const Matrix<double, 3, 3> R_c,
+				const Matrix<double, 3, 3> R_c_old,
+				const Matrix<double, 3, 3> R_mv,
+				Matrix<double, 3, 3> &omega_c_old);
 		/**
 		 * Perform quaternion to euler transformation.
 		 *
@@ -174,7 +189,7 @@ class UavGeometryControl
 		 * - Motor velocities publisher
 		 * - Attitude error publisher
 		 */
-		ros::Publisher rotor_ros_pub_, att_err_ros_pub_;
+		ros::Publisher rotor_ros_pub_, status_ros_pub_;
 
 		/**
 		 * Subscriber handle for:
@@ -234,6 +249,11 @@ class UavGeometryControl
 		Matrix<double, 3, 3> k_x_, k_v_, k_R_, k_omega_;
 
 		/**
+		 * Controller status message.
+		 */
+		mmuav_msgs::GeomCtlStatus status_msg_;
+
+		/**
 		 * Variable used for calculating time intervals in the controller loop.
 		 */
 		ros::Time t_old_;
@@ -267,6 +287,8 @@ class UavGeometryControl
 		 * 	- linear velocity control
 		 */
 		int current_control_mode_;
+
+
 };
 
 #endif /* UAV_GEOMETRY_CONTROL_H */

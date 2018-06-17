@@ -33,6 +33,12 @@ class TestTrajectory:
             queue_size=10)
         self.ang_ref_msg = Vector3()
         
+        self.euler_ref_pub = rospy.Publisher(
+            "uav/euler_desired",
+            Vector3, 
+            queue_size=10)
+        self.euler_msg = Vector3()
+        
         self.control_mode_pub = rospy.Publisher(
             "uav/control_mode",
             Int8,
@@ -40,7 +46,7 @@ class TestTrajectory:
         self.mode_ref_msg = Int8()
 
         # Crontroller rate
-        self.controller_rate = 5
+        self.controller_rate = 10
         self.rate = rospy.Rate(self.controller_rate)
         
         self.pos_ref_msg = Vector3()
@@ -50,12 +56,13 @@ class TestTrajectory:
 
         end_time = 10
         t_list = np.linspace(0, end_time, 60)
+        ang_list = np.linspace(0, 2 * pi, 60)
         
         # Position control
-        self.mode_ref_msg.data = 1;
-        self.control_mode_pub.publish(self.mode_ref_msg)
+        #self.mode_ref_msg.data = 1;
+        #self.control_mode_pub.publish(self.mode_ref_msg)
         
-        for t in t_list:
+        for t, ang in zip(t_list, ang_list):
             self.rate.sleep();
             print(t, "/", end_time)
             self.pos_ref_msg.x = 0.4 * t
@@ -66,9 +73,12 @@ class TestTrajectory:
             self.heading_ref_msg.y = sin(pi * t)
             self.heading_ref_msg.z = 0
             
+            self.euler_msg.z =  ang
+                
             self.heading_ref_pub.publish(self.heading_ref_msg)     
-            #self.pos_ref_pub.publish(self.pos_ref_msg)     
-           
+            #self.pos_ref_pub.publish(self.pos_ref_msg)
+            #self.euler_ref_pub.publish(self.euler_msg)    
+            
                 
 if __name__ == '__main__':
     rospy.init_node('test_flight', anonymous=True)
