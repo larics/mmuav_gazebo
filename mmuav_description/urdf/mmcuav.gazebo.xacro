@@ -71,6 +71,7 @@
     pose_topic="pose"
     pose_with_covariance_topic="pose_with_covariance"
     position_topic="position"
+    velocity_relative_topic="velocity_relative"
     transform_topic="transform"
     odometry_topic="odometry"
     parent_frame_id="world"
