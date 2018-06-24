@@ -110,7 +110,8 @@ class UavGeometryControl
 				const Matrix<double, 3, 3> R_c,
 				const Matrix<double, 3, 3> R_c_old,
 				const Matrix<double, 3, 3> R_mv,
-				Matrix<double, 3, 3> &omega_c_old);
+				Matrix<double, 3, 3> &omega_c_old,
+				double dt);
 		/**
 		 * Perform quaternion to euler transformation.
 		 *
@@ -171,6 +172,18 @@ class UavGeometryControl
 		 * @return saturated value
 		 */
 		double saturation(
+				double value,
+				double lowLimit,
+				double highLimit);
+
+		/**
+		 * Perform deadzone filter on given value.
+		 *
+		 * @param value
+		 * @param lowLimit
+		 * @param highLimit
+		 */
+		double deadzone(
 				double value,
 				double lowLimit,
 				double highLimit);
