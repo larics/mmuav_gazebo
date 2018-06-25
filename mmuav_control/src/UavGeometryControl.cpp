@@ -142,8 +142,8 @@ UavGeometryControl::UavGeometryControl(int rate)
 	k_x_(2, 2) = 50;
 
 	k_v_.setZero(3, 3);
-	k_v_(0, 0) = 8;
-	k_v_(1, 1) = 8;
+	k_v_(0, 0) = 9;
+	k_v_(1, 1) = 9;
 	k_v_(2, 2) = 20;
 
 	k_R_.setZero(3, 3);
@@ -584,7 +584,7 @@ void UavGeometryControl::calculateDesiredAngVelAcc(
 	// Calculate angular velocity based on R_c[k] and R_c[k-1]
 	Matrix<double, 3, 3> AA = R_c * R_c_old.adjoint();
 	double theta = acos((AA.trace() - 1 ) / 2);
-	omega_c_skew = (AA - AA.adjoint()) * theta / (2 * sin(theta) * dt);
+	omega_c_skew = (AA - AA.adjoint()) * theta / (2 * sin(theta));
 	veeOperator(omega_c_skew, omega_d_);
 
 	// Check if omega_c_skew is NAN
