@@ -70,6 +70,7 @@ target_link_libraries(mraic ${catkin_LIBRARIES} diff2 Tf2 Tf1)
 add_library(DualArmManipulatorInverseKinematics src/DualArmManipulatorInverseKinematics.cpp)
 target_link_libraries(DualArmManipulatorInverseKinematics DualArmManipulatorDirectKinematics ${catkin_LIBRARIES} yaml-cpp)
 
+
 add_executable(dual_arm_manipulator_control_node src/dual_arm_manipulator_control.cpp)
 target_link_libraries(dual_arm_manipulator_control_node DualArmManipulatorDirectKinematics DualArmManipulatorInverseKinematics ${catkin_LIBRARIES} yaml-cpp MmuavDirectKinematics Tf1 Tf2)
 

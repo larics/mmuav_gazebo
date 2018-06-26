@@ -12,7 +12,7 @@ from geometry_msgs.msg import Point
 
 class Kinematics():
     def Forward_kinematics(self, q2, q3, q4):
-        self.x = 67.5*math.sin(q4) + 117.5
+        self.x = 67.5*math.sin(q4) + 93.5
         self.y = -210*math.cos(q2 + q3) - 205*math.cos(q2) - 67.5*math.cos(q2 + q3)*math.cos(q4) - 250
         self.z = 210*math.sin(q2 + q3) + 205*math.sin(q2) + 67.5*math.sin(q2 + q3)*math.cos(q4)
         self.print_screen(1, 0, 0, 0, 0)
@@ -22,37 +22,60 @@ class Kinematics():
         q3 = [0, 0, 0, 0]
         q4 = [0, 0]
 
-        q4[0] = asin((2*w1/135) - float(47)/27)
+        q4[0] = asin((2*w1/135) - float(187)/135)
         q4[1] = pi - q4[0]
 
-        q2[0] = atan2(w3, (-w2 - 250)) + acos((42025 + w3**2 + (w2 + 250)**2 - (210 + 67.5*cos(q4[0]))**2) / (2*205*sqrt(w3**2 + (w2 + 250)**2)))
-        q2[1] = atan2(w3, (-w2 - 250)) - acos((42025 + w3**2 + (w2 + 250)**2 - (210 + 67.5*cos(q4[0]))**2) / (2*205*sqrt(w3**2 + (w2 + 250)**2)))
-        q2[2] = atan2(w3, (-w2 - 250)) + acos((42025 + w3**2 + (w2 + 250)**2 - (210 + 67.5*cos(q4[1]))**2) / (2*205*sqrt(w3**2 + (w2 + 250)**2)))
-        q2[3] = atan2(w3, (-w2 - 250)) - acos((42025 + w3**2 + (w2 + 250)**2 - (210 + 67.5*cos(q4[1]))**2) / (2*205*sqrt(w3**2 + (w2 + 250)**2)))
+        q2[0] = atan2(w3, (-w2 - 250)) + acos((42025 + w3**2 + (w2 + 250)**2 - (210 + 67.5*cos(q4[0]))**2) / (2*205*sqrt(w3**2 + (w2 + 250)**2)))+ 2.9
+        q2[1] = atan2(w3, (-w2 - 250)) - acos((42025 + w3**2 + (w2 + 250)**2 - (210 + 67.5*cos(q4[0]))**2) / (2*205*sqrt(w3**2 + (w2 + 250)**2)))+ 2.9
+        q2[2] = atan2(w3, (-w2 - 250)) + acos((42025 + w3**2 + (w2 + 250)**2 - (210 + 67.5*cos(q4[1]))**2) / (2*205*sqrt(w3**2 + (w2 + 250)**2)))+ 2.9
+        q2[3] = atan2(w3, (-w2 - 250)) - acos((42025 + w3**2 + (w2 + 250)**2 - (210 + 67.5*cos(q4[1]))**2) / (2*205*sqrt(w3**2 + (w2 + 250)**2)))+ 2.9
 
-        q3[0] = pi + acos((42025 + (210 + 67.5*cos(q4[0]))**2 - w3**2 - (w2 + 250)**2) / (2*205*(210 + 67.5*cos(q4[0]))))
-        q3[1] = pi - acos((42025 + (210 + 67.5*cos(q4[0]))**2 - w3**2 - (w2 + 250)**2) / (2*205*(210 + 67.5*cos(q4[0]))))
-        q3[2] = pi + acos((42025 + (210 + 67.5*cos(q4[1]))**2 - w3**2 - (w2 + 250)**2) / (2*205*(210 + 67.5*cos(q4[1]))))
-        q3[3] = pi - acos((42025 + (210 + 67.5*cos(q4[1]))**2 - w3**2 - (w2 + 250)**2) / (2*205*(210 + 67.5*cos(q4[1]))))
+        q3[0] = pi + acos((42025 + (210 + 67.5*cos(q4[0]))**2 - w3**2 - (w2 + 250)**2) / (2*205*(210 + 67.5*cos(q4[0]))))   - 2.9
+        q3[1] = pi - acos((42025 + (210 + 67.5*cos(q4[0]))**2 - w3**2 - (w2 + 250)**2) / (2*205*(210 + 67.5*cos(q4[0]))))   - 2.9
+        q3[2] = pi + acos((42025 + (210 + 67.5*cos(q4[1]))**2 - w3**2 - (w2 + 250)**2) / (2*205*(210 + 67.5*cos(q4[1]))))   - 2.9
+        q3[3] = pi - acos((42025 + (210 + 67.5*cos(q4[1]))**2 - w3**2 - (w2 + 250)**2) / (2*205*(210 + 67.5*cos(q4[1]))))   - 2.9
+
+        q4[0] = q4[0] - 1.5
+        q4[1] = q4[1] - 1.5
+
+
+        for i in range(0, 4):
+            if (i < 2) and (q4[i].real >= -2*pi) and (q4[i].real <= -pi):
+                q4[i] = 2*pi + q4[i].real + 1j*q4[i].imag
+            elif (i < 2) and (q4[i].real >= pi) and (q4[i].real <= 2*pi):
+                q4[i] = -2*pi + q4[i].real + 1j*q4[i].imag
+
+            if (q3[i].real >= -2*pi) and (q3[i].real <= -pi):
+                q3[i] = 2*pi + q3[i].real + 1j*q3[i].imag
+            elif (q3[i].real >= pi) and (q3[i].real <= 2*pi):
+                q3[i] = -2*pi + q3[i].real + 1j*q3[i].imag
+
+            if (q2[i].real >= -2*pi) and (q2[i].real <= -pi):
+                q2[i] = 2*pi + q2[i].real + 1j*q2[i].imag
+            elif (q2[i].real >= pi) and (q2[i].real <= 2*pi):
+                q2[i] = -2*pi + q2[i].real + 1j*q2[i].imag
+
+
+
 
         m = 0
 
-        if q4[0].imag == 0:
-            for i in range(0, 1):
-                if q2[i].imag == 0:
-                    if q3[i].imag == 0:
+        if (q4[0].imag == 0) and (q4[0].real >= -1.9) and (q4[0].real <= 2.8):
+            for i in range(0, 2):
+                if (q3[i].imag == 0) and (q3[i].real >= -2.9) and (q3[i].real <=2.9):
+                    if (q2[i].imag == 0) and (q2[i].real >= -2.9) and (q2[i].real <= 2.9):
                         self.joint_2_ref = q2[i].real
                         self.joint_3_ref = q3[i].real
                         self.joint_4_ref = q4[0].real
                         m = 1
                         break
-        elif q4[1].imag == 0:
-            for i in range(0, 1):
-                if q2[i].imag == 0:
-                    if q3[i].imag == 0:
+        if (m == 0) and (q4[1].imag == 0) and (q4[0].real >= -1.9) and (q4[0].real <= 2.8):
+            for i in range(0, 2):
+                if (q3[i].imag == 0) and (q3[i].real >= -2.9) and (q3[i].real <=2.9):
+                    if (q2[i].imag == 0) and (q2[i].real >= -2.9) and (q2[i].real <= 2.9):
                         self.joint_2_ref = q2[i].real
                         self.joint_3_ref = q3[i].real
-                        self.joint_4_ref = q4[1].real
+                        self.joint_4_ref = q4[0].real
                         m = 1
                         break
         if m == 0:
@@ -113,9 +136,10 @@ class Kinematics():
     def __init__(self):
         self.fold = 1
         self.down = 0
+        self.j = 0
 
         self.dt = 0.005
-        self.t = 1
+        self.t = 0.75
 
         self.q1 = 0
         self.q2 = 0
@@ -156,8 +180,11 @@ class Kinematics():
     def run(self):
         while not rospy.is_shutdown():
             if self.fold:
-                self.print_screen(0, 0, 0, 0, 0)
-                self.joint_4_command =  self.filter(self.joint_4_ref, self.joint_4_command)
+                if self.j == 50:
+                    self.j = 0
+                    self.print_screen(0, 0, 0, 0, 0)
+
+                self.joint_4_command = self.filter(self.joint_4_ref, self.joint_4_command)
                 self.joint_4_pub.publish(self.joint_4_command)
                 self.joint_3_command = self.filter(self.joint_3_ref, self.joint_3_command)
                 self.joint_3_pub.publish(self.joint_3_command)
@@ -168,6 +195,9 @@ class Kinematics():
                     self.joint_1_pub.publish(self.joint_1_command)
             else:
                 if self.down:
+                    if self.j == 50:
+                        self.j = 0
+                        self.print_screen(0, 0, 0, 0, 0)
                     self.joint_1_command = self.filter(self.joint_1_ref, self.joint_1_command)
                     self.joint_1_pub.publish(self.joint_1_command)
                 if (round(self.joint_1_command,2) == -0.7):
@@ -178,7 +208,10 @@ class Kinematics():
                     self.joint_3_pub.publish(self.joint_3_command)
                     self.joint_4_command = self.filter(self.joint_4_ref, self.joint_4_command)
                     self.joint_4_pub.publish(self.joint_4_command)
-                    self.Forward_kinematics(self.q2, self.q3, self.q4)
+                    if self.j == 50:
+                        self.j = 0
+                        self.Forward_kinematics(self.q2, self.q3, self.q4)
+            self.j = self.j + 1
             rospy.sleep(0.01)
 
 
