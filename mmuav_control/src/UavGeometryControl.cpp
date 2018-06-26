@@ -33,7 +33,7 @@ const Matrix<double, 3, 1> E3(0, 0, 1);
 Matrix<double, 4, 4> THRUST_TRANSFORM;
 Matrix<double, 3, 3> EYE;
 
-const double EPS = 0.001;
+const double EPS = 0.01;
 
 // Define control modes
 const int POSITION_CONTROL = 1;
@@ -41,7 +41,7 @@ const int ATTITUDE_CONTROL = 2;
 const int VELOCITY_CONTROL = 3;
 
 // Controller rate
-const int CONTROLLER_RATE = 100;
+const int CONTROLLER_RATE = 200;
 
 UavGeometryControl::UavGeometryControl(int rate)
 {
@@ -137,8 +137,8 @@ UavGeometryControl::UavGeometryControl(int rate)
 	// Initialize controller parameters
 	// Parameters initialized according to 2010-extended.pdf
 	k_x_.setZero(3, 3);
-	k_x_(0, 0) = 12;
-	k_x_(1, 1) = 12;
+	k_x_(0, 0) = 12.5;
+	k_x_(1, 1) = 12.5;
 	k_x_(2, 2) = 50;
 
 	k_v_.setZero(3, 3);
@@ -294,8 +294,8 @@ void UavGeometryControl::run()
 		t_old_ = ros::Time::now();
 
 		// Position and heading prefilter
-		x_des = x_d_; //x_old + 0.025 * (x_d_ - x_old);
-		b1_des = b1_d_; //b1_old + 0.025 * (b1_d_ - b1_old);
+		x_des = x_d_; // x_old + 0.025 * (x_d_ - x_old);
+		b1_des = b1_old + 0.04 * (b1_d_ - b1_old);
 
 		// TRAJECTORY TRACKING BLOCK
 		trajectoryTracking(
@@ -367,7 +367,7 @@ void UavGeometryControl::run()
 
 		// Construct status msg
 		status_msg_.roll_mv = euler_mv_.x;
-		status_msg_.roll_sp = f_u;
+		status_msg_.roll_sp = euler_d_(0, 0);
 		status_msg_.pitch_mv = euler_mv_.y;
 		status_msg_.pitch_sp = euler_d_(1, 0);
 		status_msg_.yaw_mv = euler_mv_.z;
@@ -386,9 +386,9 @@ void UavGeometryControl::run()
 		status_msg_.header = head;
 		status_ros_pub_.publish(status_msg_);
 
-		cout << "f_u: \n" << f_u << "\n";
-		cout << "M_u: \n" << M_u << "\n";
-		cout << "Rotor_vel: \n" << rotor_velocities << "\n";
+		//cout << "f_u: \n" << f_u << "\n";
+		//cout << "M_u: \n" << M_u << "\n";
+		//cout << "Rotor_vel: \n" << rotor_velocities << "\n";
 		cout << "\n\n";
 		cout << endl;
 	}
@@ -431,6 +431,13 @@ void UavGeometryControl::trajectoryTracking(
 		throw runtime_error("Invalid control mode given.");
 	}
 
+	Matrix<double, 3, 3> a;
+	euler2RotationMatrix(0, 0, euler_mv_.z, a);
+	cout << a << "\n";
+	e_x = a * e_x;
+	e_v = a * e_v;
+
+	/*
 	e_x(0, 0) = deadzone((double)e_x(0, 0), -EPS, EPS);
 	e_x(1, 0) = deadzone((double)e_x(1, 0), -EPS, EPS);
 	e_x(2, 0) = deadzone((double)e_x(2, 0), -EPS, EPS);
@@ -438,6 +445,7 @@ void UavGeometryControl::trajectoryTracking(
 	e_v(0, 0) = deadzone((double)e_v(0, 0), -EPS, EPS);
 	e_v(1, 0) = deadzone((double)e_v(1, 0), -EPS, EPS);
 	e_v(2, 0) = deadzone((double)e_v(2, 0), -EPS, EPS);
+	 */
 
 	// desired control force for the translational dynamics
 	Matrix<double, 3, 1> A =
@@ -447,6 +455,9 @@ void UavGeometryControl::trajectoryTracking(
 		- UAV_MASS * a_d_;
 	f_u = A.dot( R_mv_ * E3 );
 	b3_d = A / A.norm();
+	//b3_d = a.inverse() * b3_d;
+	b3_d = b3_d / b3_d.norm();
+	//cout << b3_d << "\n";
 
 	status_msg_.e_x[0] = (double)e_x(0, 0);
 	status_msg_.e_x[1] = (double)e_x(1, 0);
@@ -502,10 +513,13 @@ void UavGeometryControl::attitudeTracking(
 		R_c.setZero(3, 3);
 		R_c << b1_c, b2_c, b3_desired;
 
-		//calculateDesiredAngVelAcc(R_c, R_c_old, R_mv_, omega_c_old, dt);
+		// calculateDesiredAngVelAcc(R_c, R_c_old, R_mv_, omega_c_old, dt);
 
 		// Remap calculated to desired
 		R_d_ = R_c;
+
+		cout << R_d_ << "\n";
+		//cout << R_mv_ << "\n";
 
 		// Update old R_c
 		R_c_old = R_c;
@@ -542,13 +556,15 @@ void UavGeometryControl::attitudeTracking(
 			(double)omega_mv_(2, 0),
 			omega_mv_skew);
 
-	e_R(0, 0) = deadzone((double)e_R(0, 0), -EPS, EPS);
-	e_R(1, 0) = deadzone((double)e_R(1, 0), -EPS, EPS);
-	e_R(2, 0) = deadzone((double)e_R(2, 0), -EPS, EPS);
+	/*
+	e_R(0, 0) = deadzone((double)e_R(0, 0), -0.01, 0.01);
+	e_R(1, 0) = deadzone((double)e_R(1, 0), -0.01, 0.01);
+	//e_R(2, 0) = deadzone((double)e_R(2, 0), -EPS, EPS);
 
-	e_omega(0, 0) = deadzone((double)e_omega(0, 0), -EPS, EPS);
-	e_omega(1, 0) = deadzone((double)e_omega(1, 0), -EPS, EPS);
-	e_omega(2, 0) = deadzone((double)e_omega(2, 0), -EPS, EPS);
+	e_omega(0, 0) = deadzone((double)e_omega(0, 0), -0.02, 0.02);
+	e_omega(1, 0) = deadzone((double)e_omega(1, 0), -0.02, 0.02);
+	//e_omega(2, 0) = deadzone((double)e_omega(2, 0), -EPS, EPS);
+	*/
 
 	M_u = 	- k_R_ * e_R
 			- k_omega_ * e_omega
@@ -558,11 +574,12 @@ void UavGeometryControl::attitudeTracking(
 				omega_mv_skew * R_mv_.adjoint() * R_d_ * omega_d_
 				- R_mv_.adjoint() * R_d_ * alpha_d_
 			);
-/*
-	M_u(0, 0) = saturation((double)M_u(0, 0), -3, 3);
-	M_u(1, 0) = saturation((double)M_u(1, 0), -3, 3);
-	M_u(2, 0) = saturation((double)M_u(2, 0), -3, 3);
-*/
+
+	double sat = 60;
+	M_u(0, 0) = saturation((double)M_u(0, 0), -sat, sat);
+	M_u(1, 0) = saturation((double)M_u(1, 0), -sat, sat);
+	M_u(2, 0) = saturation((double)M_u(2, 0), -sat, sat);
+
 	status_msg_.e_R[0] = e_R(0, 0);
 	status_msg_.e_R[1] = e_R(1, 0);
 	status_msg_.e_R[2] = e_R(2, 0);
@@ -581,6 +598,7 @@ void UavGeometryControl::calculateDesiredAngVelAcc(
 {
 	Matrix<double, 3, 3> omega_c_skew, alpha_c_skew;
 
+
 	// Calculate angular velocity based on R_c[k] and R_c[k-1]
 	Matrix<double, 3, 3> AA = R_c * R_c_old.adjoint();
 	double theta = acos((AA.trace() - 1 ) / 2);
@@ -598,10 +616,15 @@ void UavGeometryControl::calculateDesiredAngVelAcc(
 	else
 	{
 		// If it's valid update
-		alpha_c_skew = (omega_c_skew - omega_c_old);
+		alpha_c_skew = (omega_c_skew - omega_c_old) / dt;
 		omega_c_old = omega_c_skew;
 	}
 
+
+	/*
+	Matrix<double, 3, 3> R_c_dot = (R_c - R_c_old);
+	omega_c_skew = R_c_dot * R_c.adjoint();
+*/
 	// Remap calculated values to desired
 	veeOperator(omega_c_skew, omega_d_);
 	//veeOperator(alpha_c_skew, alpha_d_);
@@ -638,7 +661,7 @@ void UavGeometryControl::b1d_cb(const geometry_msgs::Vector3 &msg)
 	b1_d_(0, 0) = msg.x;
 	b1_d_(1, 0) = msg.y;
 	b1_d_(2, 0) = msg.z;
-	b1_d_ = b1_d_.array() / b1_d_.norm();
+	b1_d_ = b1_d_ / b1_d_.norm();
 }
 
 void UavGeometryControl::omegad_cb(const geometry_msgs::Vector3 &msg)
