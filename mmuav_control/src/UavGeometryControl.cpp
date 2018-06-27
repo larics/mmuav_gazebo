@@ -28,6 +28,7 @@ const double ROTOR_RADIUS = 0.1524;
 const double MIN_ROTOR_VELOCITY = 0;
 const double MAX_ROTOR_VELOCITY = 1475;
 Matrix<double, 3, 3> INERTIA;
+const double D =  ARM_LENGTH + ROTOR_RADIUS / 2;
 
 const Matrix<double, 3, 1> E3(0, 0, 1);
 Matrix<double, 4, 4> THRUST_TRANSFORM;
@@ -83,12 +84,12 @@ UavGeometryControl::UavGeometryControl(int rate)
 	THRUST_TRANSFORM(0, 3) = 1;
 
 	// Second row
-	THRUST_TRANSFORM(1, 1) = ARM_LENGTH + ROTOR_RADIUS / 2;
-	THRUST_TRANSFORM(1, 3) = - ( ARM_LENGTH + ROTOR_RADIUS / 2 );
+	THRUST_TRANSFORM(1, 1) = D;
+	THRUST_TRANSFORM(1, 3) = - D;
 
 	// Third row
-	THRUST_TRANSFORM(2, 0) = - ( ARM_LENGTH + ROTOR_RADIUS / 2 );
-	THRUST_TRANSFORM(2, 2) = ARM_LENGTH + ROTOR_RADIUS / 2;
+	THRUST_TRANSFORM(2, 0) = - D;
+	THRUST_TRANSFORM(2, 2) = D;
 
 	// Fourth row
 	THRUST_TRANSFORM(3, 0) = MOMENT_CONSTANT;
@@ -393,6 +394,12 @@ void UavGeometryControl::run()
 		status_msg_.moments[0] = M_u(0, 0);
 		status_msg_.moments[1] = M_u(1, 0);
 		status_msg_.moments[2] = M_u(2, 0);
+		status_msg_.x_mv = x_mv_(0, 0);
+		status_msg_.y_mv = x_mv_(1, 0);
+		status_msg_.z_mv = x_mv_(2, 0);
+		status_msg_.x_sp = x_des(0, 0);
+		status_msg_.y_sp = x_des(1, 0);
+		status_msg_.z_sp = x_des(2, 0);
 		std_msgs::Header head;
 		head.stamp = ros::Time::now();
 		status_msg_.header = head;
@@ -448,8 +455,8 @@ void UavGeometryControl::trajectoryTracking(
 	euler2RotationMatrix(0, 0, euler_mv_.z, a);
 	cout << a << "\n";
 
-	e_x = a * e_x;
-	e_v = a * e_v;
+	// e_x = a * e_x;
+	// e_v = a * e_v;
 
 	/*
 	e_x(0, 0) = deadzone((double)e_x(0, 0), -EPS, EPS);
@@ -745,7 +752,7 @@ void UavGeometryControl::imu_cb (const sensor_msgs::Imu &msg)
     euler_mv_.y = euler[1];
     euler_mv_.z = euler[2];
 
-    if (euler_mv_.z < 0) { euler_mv_.z += 2 * 3.14; }
+    //if (euler_mv_.z < 0) { euler_mv_.z += 2 * 3.14; }
 
     // gyro measurements (p,q,r)
     p = msg.angular_velocity.x;
