@@ -42,7 +42,7 @@ const int ATTITUDE_CONTROL = 2;
 const int VELOCITY_CONTROL = 3;
 
 // Controller rate
-const int CONTROLLER_RATE = 100;
+const int CONTROLLER_RATE = 200;
 
 UavGeometryControl::UavGeometryControl(int rate)
 {
@@ -296,7 +296,7 @@ void UavGeometryControl::run()
 				euler_mv_.y,
 				euler_mv_.z,
 				R_mv_);
-		cout << R_mv_ << "\n";
+		//cout << R_mv_ << "\n";
 
 		// Construct angular velocity vector
 		omega_mv_(0, 0) = euler_rate_mv_.x;
@@ -408,8 +408,8 @@ void UavGeometryControl::run()
 		//cout << "f_u: \n" << f_u << "\n";
 		//cout << "M_u: \n" << M_u << "\n";
 		//cout << "Rotor_vel: \n" << rotor_velocities << "\n";
-		cout << "\n\n";
-		cout << endl;
+		//cout << "\n\n";
+		//cout << endl;
 	}
 }
 
@@ -428,13 +428,13 @@ void UavGeometryControl::trajectoryTracking(
 	// Calculate total thrust and b3_d (desired thrust vector)
 	if (current_control_mode_ == POSITION_CONTROL)
 	{
-		cout << "Trajectory: POSITION" << "\n";
+		//cout << "Trajectory: POSITION" << "\n";
 		e_x = (x_mv_ - pos_desired);
 		e_v = (v_mv_ - v_d_);
 	}
 	else if (current_control_mode_ == ATTITUDE_CONTROL)
 	{
-		cout << "Trajectory: ATTITUDE" << "\n";
+		//cout << "Trajectory: ATTITUDE" << "\n";
 		/**
 		 * During Attitude control only take z - component of
 		 * position and linear velocity.
@@ -450,23 +450,16 @@ void UavGeometryControl::trajectoryTracking(
 		throw runtime_error("Invalid control mode given.");
 	}
 
+	/*
+	 * Transform position and velocity errors.
 	Matrix<double, 3, 3> a;
 	cout << euler_mv_.z << "\n";
 	euler2RotationMatrix(0, 0, euler_mv_.z, a);
 	cout << a << "\n";
+	*/
 
-	// e_x = a * e_x;
-	// e_v = a * e_v;
-
-	/*
-	e_x(0, 0) = deadzone((double)e_x(0, 0), -EPS, EPS);
-	e_x(1, 0) = deadzone((double)e_x(1, 0), -EPS, EPS);
-	e_x(2, 0) = deadzone((double)e_x(2, 0), -EPS, EPS);
-
-	e_v(0, 0) = deadzone((double)e_v(0, 0), -EPS, EPS);
-	e_v(1, 0) = deadzone((double)e_v(1, 0), -EPS, EPS);
-	e_v(2, 0) = deadzone((double)e_v(2, 0), -EPS, EPS);
-	 */
+	e_x = a * e_x;
+	e_v = a * e_v;
 
 	// desired control force for the translational dynamics
 	Matrix<double, 3, 1> A =
@@ -508,7 +501,7 @@ void UavGeometryControl::attitudeTracking(
 
 	if (current_control_mode_ == POSITION_CONTROL)
 	{
-		cout << "Attitude: POSITION" << "\n";
+		//cout << "Attitude: POSITION" << "\n";
 		/**
 		 * During position control desired rotation, angular velocity
 		 * and angular acceleration matrices will be CALCULATED.
@@ -539,15 +532,15 @@ void UavGeometryControl::attitudeTracking(
 		// Remap calculated to desired
 		R_d_ = R_c;
 
-		//cout << R_d_ << "\n";
-		//cout << R_mv_ << "\n";
+		cout << "R_d:\n" << R_d_ << "\n";
+		cout << "R_mv:\n" << R_mv_ << "\n";
 
 		// Update old R_c
 		R_c_old = R_c;
 	}
 	else if (current_control_mode_ == ATTITUDE_CONTROL)
 	{
-		cout << "Attitude: ATTITUDE" << "\n";
+		//cout << "Attitude: ATTITUDE" << "\n";
 		// Do nothing here - read desired attitude values from
 		// callback functions.
 		euler2RotationMatrix(
@@ -577,16 +570,6 @@ void UavGeometryControl::attitudeTracking(
 			(double)omega_mv_(2, 0),
 			omega_mv_skew);
 
-	/*
-	e_R(0, 0) = deadzone((double)e_R(0, 0), -0.01, 0.01);
-	e_R(1, 0) = deadzone((double)e_R(1, 0), -0.01, 0.01);
-	//e_R(2, 0) = deadzone((double)e_R(2, 0), -EPS, EPS);
-
-	e_omega(0, 0) = deadzone((double)e_omega(0, 0), -0.02, 0.02);
-	e_omega(1, 0) = deadzone((double)e_omega(1, 0), -0.02, 0.02);
-	//e_omega(2, 0) = deadzone((double)e_omega(2, 0), -EPS, EPS);
-	*/
-
 	M_u = 	- k_R_ * e_R
 			- k_omega_ * e_omega
 			+ omega_mv_.cross(INERTIA * omega_mv_)
@@ -596,7 +579,7 @@ void UavGeometryControl::attitudeTracking(
 				- R_mv_.adjoint() * R_d_ * alpha_d_
 			);
 
-	double sat = 60;
+	double sat = 100;
 	M_u(0, 0) = saturation((double)M_u(0, 0), -sat, sat);
 	M_u(1, 0) = saturation((double)M_u(1, 0), -sat, sat);
 	M_u(2, 0) = saturation((double)M_u(2, 0), -sat, sat);
@@ -643,9 +626,11 @@ void UavGeometryControl::calculateDesiredAngVelAcc(
 
 
 	/*
+	 * Alternate way
 	Matrix<double, 3, 3> R_c_dot = (R_c - R_c_old);
 	omega_c_skew = R_c_dot * R_c.adjoint();
-*/
+	 */
+
 	// Remap calculated values to desired
 	veeOperator(omega_c_skew, omega_d_);
 	//veeOperator(alpha_c_skew, alpha_d_);
