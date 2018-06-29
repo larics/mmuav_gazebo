@@ -15,12 +15,14 @@
 
 #include "ros/ros.h"
 #include <rosgraph_msgs/Clock.h>
+#include <eigen3/Eigen/Dense>
 #include <sensor_msgs/Imu.h>
 #include <nav_msgs/Odometry.h>
-#include <eigen3/Eigen/Dense>
 #include <std_msgs/Int8.h>
 #include <std_msgs/Float64MultiArray.h>
 #include <mmuav_msgs/GeomCtlStatus.h>
+#include <geometry_msgs/PoseStamped.h>
+#include <geometry_msgs/TwistStamped.h>
 
 using namespace Eigen;
 
@@ -49,7 +51,8 @@ class UavGeometryControl
 	private:
 
 		void imu_cb(const sensor_msgs::Imu &msg);
-		void odom_cb(const nav_msgs::Odometry &msg);
+		void pose_cb(const geometry_msgs::PoseStamped &msg);
+		void vel_cb(const geometry_msgs::TwistStamped &msg);
 		void xd_cb(const geometry_msgs::Vector3 &msg);
 		void vd_cb(const geometry_msgs::Vector3 &msg);
 		void ad_cb(const geometry_msgs::Vector3 &msg);
@@ -194,9 +197,10 @@ class UavGeometryControl
 		ros::NodeHandle node_handle_;
 
 		/**
-		 * Subscriber handle for the IMU and odometry topics.
+		 * Subscriber handle for the IMU, position
+		 * and (relative) velocity topics.
 		 */
-		ros::Subscriber imu_ros_sub_, odom_ros_sub_;
+		ros::Subscriber imu_ros_sub_, pose_ros_sub_, velocity_ros_sub_;
 
 		/**
 		 * - Motor velocities publisher
@@ -289,9 +293,15 @@ class UavGeometryControl
 		bool imu_start_flag_;
 
 		/**
-		 * True when odometry callback function occured otherwise false.
+		 * True when pose callback function occured otherwise false.
 		 */
-		bool odometry_start_flag_;
+		bool pose_start_flag_;
+
+		/**
+		 * True when velocity callback function occured otherwise false.
+		 */
+		bool velocity_start_flag_;
+
 
 		/**
 		 * Current control mode:

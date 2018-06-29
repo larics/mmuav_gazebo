@@ -55,8 +55,8 @@ class TestTrajectory:
     def run(self):
 
         end_time = 5
-        t_list = np.linspace(0, end_time, 100)
-        ang_list = np.linspace(0, 4 * pi, 100)
+        t_list = np.linspace(0, end_time, 200)
+        ang_list = np.linspace(0, 4 * pi, 200)
         
         # Position control
         #self.mode_ref_msg.data = 1;
@@ -76,7 +76,7 @@ class TestTrajectory:
             self.euler_msg.z =  ang
                 
             self.heading_ref_pub.publish(self.heading_ref_msg)     
-            #self.pos_ref_pub.publish(self.pos_ref_msg)
+            self.pos_ref_pub.publish(self.pos_ref_msg)
             #self.euler_ref_pub.publish(self.euler_msg)    
             
                 

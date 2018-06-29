@@ -50,7 +50,8 @@ UavGeometryControl::UavGeometryControl(int rate)
 	controller_rate_ = rate;
 	sleep_duration_ = 0.5;
 	imu_start_flag_ = false;
-	odometry_start_flag_ = false;
+	pose_start_flag_ = false;
+	velocity_start_flag_ = false;
 	current_control_mode_ = POSITION_CONTROL;
 
 	// Initialize inertia matrix
@@ -138,13 +139,13 @@ UavGeometryControl::UavGeometryControl(int rate)
 	// Initialize controller parameters
 	// Parameters initialized according to 2010-extended.pdf
 	k_x_.setZero(3, 3);
-	k_x_(0, 0) = 12.5;
-	k_x_(1, 1) = 12.5;
+	k_x_(0, 0) = 11;
+	k_x_(1, 1) = 11;
 	k_x_(2, 2) = 50;
 
 	k_v_.setZero(3, 3);
-	k_v_(0, 0) = 9;
-	k_v_(1, 1) = 9;
+	k_v_(0, 0) = 8;
+	k_v_(1, 1) = 8;
 	k_v_(2, 2) = 20;
 
 	k_R_.setZero(3, 3);
@@ -161,9 +162,12 @@ UavGeometryControl::UavGeometryControl(int rate)
 	imu_ros_sub_ = node_handle_.subscribe(
 			"/uav/imu", 1,
 			&UavGeometryControl::imu_cb, this);
-	odom_ros_sub_ = node_handle_.subscribe(
-			"/uav/odometry", 1,
-			&UavGeometryControl::odom_cb, this);
+	pose_ros_sub_ = node_handle_.subscribe(
+			"/uav/pose", 1,
+			&UavGeometryControl::pose_cb, this);
+	velocity_ros_sub_ = node_handle_.subscribe(
+			"/uav/velocity_relative", 1,
+			&UavGeometryControl::vel_cb, this);
 	rotor_ros_pub_ = node_handle_.advertise<mav_msgs::Actuators>(
 			"/gazebo/command/motor_speed", 1);
 	status_ros_pub_ = node_handle_.advertise<mmuav_msgs::GeomCtlStatus>(
@@ -230,12 +234,20 @@ void UavGeometryControl::run()
 				"Waiting for first IMU measurement");
 	}
 
-	// Wait for start flag from odometry callback
-	while (!odometry_start_flag_ && ros::ok())
+	// Wait for start flag from pose callback
+	while (!pose_start_flag_ && ros::ok())
 	{
 		ros::spinOnce();
 		ROS_INFO("UavGeometricControl::run() - "
-				"Waiting for first odometry measurement");
+				"Waiting for first pose measurement");
+	}
+
+	// Wait for start flag from velocity callback
+	while (!velocity_start_flag_ && ros::ok())
+	{
+		ros::spinOnce();
+		ROS_INFO("UavGeometricControl::run() - "
+				"Waiting for first velocity measurement");
 	}
 
 	ROS_INFO("UavGeometricControl::run() - "
@@ -456,10 +468,10 @@ void UavGeometryControl::trajectoryTracking(
 	cout << euler_mv_.z << "\n";
 	euler2RotationMatrix(0, 0, euler_mv_.z, a);
 	cout << a << "\n";
-	*/
 
 	e_x = a * e_x;
 	e_v = a * e_v;
+	*/
 
 	// desired control force for the translational dynamics
 	Matrix<double, 3, 1> A =
@@ -700,17 +712,24 @@ void UavGeometryControl::rd_cb(const std_msgs::Float64MultiArray &msg)
 	R_d_(2, 2) = msg.data[8];
 }
 
-void UavGeometryControl::odom_cb(const nav_msgs::Odometry &msg)
+void UavGeometryControl::pose_cb(const geometry_msgs::PoseStamped &msg)
 {
-    if (!odometry_start_flag_) odometry_start_flag_ = true;
+	if (!pose_start_flag_) pose_start_flag_ = true;
 
-	x_mv_(0, 0) = msg.pose.pose.position.x;
-	x_mv_(1, 0) = msg.pose.pose.position.y;
-	x_mv_(2, 0) = msg.pose.pose.position.z;
+	x_mv_(0, 0) = msg.pose.position.x;
+	x_mv_(1, 0) = msg.pose.position.y;
+	x_mv_(2, 0) = msg.pose.position.z;
+}
 
-	v_mv_(0, 0) = msg.twist.twist.linear.x;
-	v_mv_(1, 0) = msg.twist.twist.linear.y;
-	v_mv_(2, 0) = msg.twist.twist.linear.z;
+void UavGeometryControl::vel_cb(const geometry_msgs::TwistStamped &msg)
+{
+	if (!velocity_start_flag_) velocity_start_flag_ = true;
+
+	v_mv_(0, 0) = cos(euler_mv_.z) * msg.twist.linear.x
+				- sin(euler_mv_.z) * msg.twist.linear.y;
+	v_mv_(1, 0) = sin(euler_mv_.z) * msg.twist.linear.x
+				+ cos(euler_mv_.z) * msg.twist.linear.y;
+	v_mv_(2, 0) = msg.twist.linear.z;
 }
 
 void UavGeometryControl::euler_cb(const geometry_msgs::Vector3 &msg)
