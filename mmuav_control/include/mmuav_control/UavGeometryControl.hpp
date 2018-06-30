@@ -16,6 +16,10 @@
 #include "ros/ros.h"
 #include <rosgraph_msgs/Clock.h>
 #include <eigen3/Eigen/Dense>
+
+#include <dynamic_reconfigure/server.h>
+#include <mmuav_control/UavGeometryControlParamsConfig.h>
+
 #include <sensor_msgs/Imu.h>
 #include <nav_msgs/Odometry.h>
 #include <std_msgs/Int8.h>
@@ -62,6 +66,9 @@ class UavGeometryControl
 		void rd_cb(const std_msgs::Float64MultiArray &msg);
 		void euler_cb(const geometry_msgs::Vector3 &msg);
 		void ctl_mode_cb(const std_msgs::Int8 &msg);
+		void param_cb(
+				mmuav_control::UavGeometryControlParamsConfig &config,
+				uint32_t level);
 
 		/**
 		 * This method will keep running until all sensors
@@ -309,6 +316,10 @@ class UavGeometryControl
 		 */
 		bool velocity_start_flag_;
 
+		/**
+		 * True when param callback occured, otherwise false.
+		 */
+		bool param_start_flag_;
 
 		/**
 		 * Current control mode:
@@ -318,7 +329,18 @@ class UavGeometryControl
 		 */
 		int current_control_mode_;
 
+		/**
+		 * Dynamic reconfigure server.
+		 */
+		dynamic_reconfigure::
+			Server<mmuav_control::UavGeometryControlParamsConfig> dyn_server_;
 
+		/**
+		 * Reconfigure callback for setting parameters.
+		 */
+		dynamic_reconfigure::
+			Server<mmuav_control::UavGeometryControlParamsConfig>::
+			CallbackType param_callback_;
 };
 
 #endif /* UAV_GEOMETRY_CONTROL_H */

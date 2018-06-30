@@ -44,7 +44,7 @@ const int ATTITUDE_CONTROL = 2;
 const int VELOCITY_CONTROL = 3;
 
 // Controller rate
-const int CONTROLLER_RATE = 200;
+const int CONTROLLER_RATE = 100;
 
 UavGeometryControl::UavGeometryControl(int rate)
 {
@@ -54,6 +54,7 @@ UavGeometryControl::UavGeometryControl(int rate)
 	imu_start_flag_ = false;
 	pose_start_flag_ = false;
 	velocity_start_flag_ = false;
+	param_start_flag_ = false;
 	current_control_mode_ = POSITION_CONTROL;
 
 	// Initialize inertia matrix
@@ -141,19 +142,19 @@ UavGeometryControl::UavGeometryControl(int rate)
 	// Initialize controller parameters
 	// Parameters initialized according to 2010-extended.pdf
 	k_x_.setZero(3, 3);
-	k_x_(0, 0) = 11;
-	k_x_(1, 1) = 11;
+	k_x_(0, 0) = 10.25;
+	k_x_(1, 1) = 10.25;
 	k_x_(2, 2) = 50;
 
 	k_v_.setZero(3, 3);
-	k_v_(0, 0) = 8;
-	k_v_(1, 1) = 8;
+	k_v_(0, 0) = 7.75;
+	k_v_(1, 1) = 7.75;
 	k_v_(2, 2) = 20;
 
 	k_R_.setZero(3, 3);
-	k_R_(0, 0) = 8;
-	k_R_(1, 1) = 8;
-	k_R_(2, 2) = 8;
+	k_R_(0, 0) = 7.5;
+	k_R_(1, 1) = 7.5;
+	k_R_(2, 2) = 7.5;
 
 	k_omega_.setZero(3, 3);
 	k_omega_(0, 0) = 1.5;
@@ -207,6 +208,10 @@ UavGeometryControl::UavGeometryControl(int rate)
 	ctl_mode_ros_sub_ = node_handle_.subscribe(
 			"/uav/control_mode", 1,
 			&UavGeometryControl::ctl_mode_cb, this);
+
+	// Initialize dynamic reconfigure
+	param_callback_ = boost::bind(&UavGeometryControl::param_cb, this, _1, _2);
+	dyn_server_.setCallback(param_callback_);
 }
 
 UavGeometryControl::~UavGeometryControl()
@@ -219,13 +224,6 @@ void UavGeometryControl::runControllerLoop()
 	// Loop time interval check
 	double dt;
 
-	// Perform sensor checks
-	sensorChecks();
-
-	ROS_INFO("UavGeometricControl::run() - "
-			"Starting geometric control in 5...");
-
-	t_old_ = ros::Time::now();
 
 	// Attitude error - scalar (PSI)
 	Matrix<double, 3, 3> att_err;
@@ -241,6 +239,8 @@ void UavGeometryControl::runControllerLoop()
 	Matrix<double, 3, 1> b3_d, M_u, x_old,
 						b1_old, x_des, b1_des,
 						v_d_old;
+	b1_old = b1_d_;
+	x_old = x_mv_;
 
 	/*
 	 * R_d 		- desired rotation matrix
@@ -256,9 +256,19 @@ void UavGeometryControl::runControllerLoop()
 
 	// Initialize rotor velocity publisher msg
 	mav_msgs::Actuators rotor_vel_msg;
+	vector<double> velocity_vector(4);
+	rotor_vel_msg.angular_velocities = velocity_vector;
 
 	// Total thrust control value
 	double f_u;
+
+	// Perform sensor checks
+	sensorChecks();
+
+	ROS_INFO("UavGeometricControl::run() - "
+			"Starting geometric control in 5...");
+
+	t_old_ = ros::Time::now();
 
 	// Start the control loop.
 	while (ros::ok())
@@ -277,9 +287,21 @@ void UavGeometryControl::runControllerLoop()
 		// Update old time
 		t_old_ = ros::Time::now();
 
+		// Construct current rotation matrix - R
+		euler2RotationMatrix(
+				euler_mv_.x,
+				euler_mv_.y,
+				euler_mv_.z,
+				R_mv_);
+
+		// Construct angular velocity vector
+		omega_mv_(0, 0) = euler_rate_mv_.x;
+		omega_mv_(1, 0) = euler_rate_mv_.y;
+		omega_mv_(2, 0) = euler_rate_mv_.z;
+
 		// Position and heading prefilter
-		x_des = x_old + 0.05 * (x_d_ - x_old);
-		b1_des = b1_old + 0.05 * (b1_d_ - b1_old);
+		x_des = x_d_; //x_old + 0.025 * (x_d_ - x_old);
+		b1_des = b1_d_; //b1_old + 0.025 * (b1_d_ - b1_old);
 
 		// TRAJECTORY TRACKING BLOCK
 		trajectoryTracking(
@@ -421,17 +443,6 @@ void UavGeometryControl::trajectoryTracking(
 		throw runtime_error("Invalid control mode given.");
 	}
 
-	/*
-	 * Transform position and velocity errors.
-	Matrix<double, 3, 3> a;
-	cout << euler_mv_.z << "\n";
-	euler2RotationMatrix(0, 0, euler_mv_.z, a);
-	cout << a << "\n";
-
-	e_x = a * e_x;
-	e_v = a * e_v;
-	*/
-
 	// desired control force for the translational dynamics
 	Matrix<double, 3, 1> A =
 		- k_x_ * e_x
@@ -440,9 +451,6 @@ void UavGeometryControl::trajectoryTracking(
 		+ UAV_MASS * a_d_;
 	f_u = A.dot( R_mv_ * E3 );
 	b3_d = A / A.norm();
-
-	b3_d = b3_d / b3_d.norm();
-	//cout << b3_d << "\n";
 
 	status_msg_.e_x[0] = (double)e_x(0, 0);
 	status_msg_.e_x[1] = (double)e_x(1, 0);
@@ -642,6 +650,50 @@ void UavGeometryControl::calculateDesiredAngularVelAndAcc(
 	veeOperator(alpha_c_skew, alpha_d_);
 }
 
+void UavGeometryControl::param_cb(
+		mmuav_control::UavGeometryControlParamsConfig &config,
+		uint32_t level)
+{
+
+	cout << "hello";
+	if (!param_start_flag_)
+	{
+		// Set parameters for the first time
+
+		config.kx_xy = k_x_(0, 0);
+		config.kx_z = k_x_(2, 2);
+		config.kv_xy = k_v_(0, 0);
+		config.kv_z = k_v_(2, 2);
+		config.kR_xy = k_R_(0, 0);
+		config.kR_z = k_R_(2, 2);
+		config.kOm_xy = k_omega_(0, 0);
+		config.kOm_z = k_omega_(2, 2);
+
+		param_start_flag_ = true;
+		dyn_server_.updateConfig(config);
+	}
+	else
+	{
+		// Update parameters
+
+		k_x_(0, 0) = config.kx_xy;
+		k_x_(1, 1) = config.kx_xy;
+		k_x_(2, 2) = config.kx_z;
+
+		k_v_(0, 0) = config.kv_xy;
+		k_v_(1, 1) = config.kv_xy;
+		k_v_(2, 2) = config.kv_z;
+
+		k_R_(0, 0) = config.kR_xy;
+		k_R_(1, 1) = config.kR_xy;
+		k_R_(2, 2) = config.kR_z;
+
+		k_omega_(0, 0) = config.kOm_xy;
+		k_omega_(1, 1) = config.kOm_xy;
+		k_omega_(2, 2) = config.kOm_z;
+	}
+}
+
 void UavGeometryControl::ctl_mode_cb(const std_msgs::Int8 &msg)
 {
 	current_control_mode_ = msg.data;
@@ -766,18 +818,6 @@ void UavGeometryControl::imu_cb (const sensor_msgs::Imu &msg)
     euler_rate_mv_.x = p + sx * ty * q + cx * ty * r;
     euler_rate_mv_.y = cx * q - sx * r;
     euler_rate_mv_.z = sx / cy * q + cx / cy * r;
-
-	// Construct current rotation matrix - R
-	euler2RotationMatrix(
-			euler_mv_.x,
-			euler_mv_.y,
-			euler_mv_.z,
-			R_mv_);
-
-	// Construct angular velocity vector
-	omega_mv_(0, 0) = euler_rate_mv_.x;
-	omega_mv_(1, 0) = euler_rate_mv_.y;
-	omega_mv_(2, 0) = euler_rate_mv_.z;
 }
 
 void UavGeometryControl::euler2RotationMatrix(

@@ -46,7 +46,7 @@ class TestTrajectory:
         self.mode_ref_msg = Int8()
 
         # Crontroller rate
-        self.controller_rate = 5
+        self.controller_rate = 10
         self.rate = rospy.Rate(self.controller_rate)
         
         self.pos_ref_msg = Vector3()
