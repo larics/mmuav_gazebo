@@ -29,11 +29,13 @@ const double MIN_ROTOR_VELOCITY = 0;
 const double MAX_ROTOR_VELOCITY = 1475;
 Matrix<double, 3, 3> INERTIA;
 const double D =  ARM_LENGTH + ROTOR_RADIUS / 2;
+const double MAXIMUM_MOMENT = 100;
 
 const Matrix<double, 3, 1> E3(0, 0, 1);
 Matrix<double, 4, 4> THRUST_TRANSFORM;
 Matrix<double, 3, 3> EYE;
 
+// Deadzone constatnt
 const double EPS = 0.01;
 
 // Define control modes
@@ -212,43 +214,13 @@ UavGeometryControl::~UavGeometryControl()
 	// TODO(lmark): Destructor..
 }
 
-void UavGeometryControl::run()
+void UavGeometryControl::runControllerLoop()
 {
 	// Loop time interval check
 	double dt;
 
-	// Wait for the ROS time server
-	while (ros::Time::now().toSec() == 0 && ros::ok())
-	{
-		ROS_INFO("UavGeometricControl::run() - "
-				"Waiting for clock server to start");
-	}
-	ROS_INFO("UavGeometricControl::run() - "
-			"Received first clock message");
-
-	// Wait for start flag from IMU callback
-	while (!imu_start_flag_ && ros::ok())
-	{
-		ros::spinOnce();
-		ROS_INFO("UavGeometricControl::run() - "
-				"Waiting for first IMU measurement");
-	}
-
-	// Wait for start flag from pose callback
-	while (!pose_start_flag_ && ros::ok())
-	{
-		ros::spinOnce();
-		ROS_INFO("UavGeometricControl::run() - "
-				"Waiting for first pose measurement");
-	}
-
-	// Wait for start flag from velocity callback
-	while (!velocity_start_flag_ && ros::ok())
-	{
-		ros::spinOnce();
-		ROS_INFO("UavGeometricControl::run() - "
-				"Waiting for first velocity measurement");
-	}
+	// Perform sensor checks
+	sensorChecks();
 
 	ROS_INFO("UavGeometricControl::run() - "
 			"Starting geometric control in 5...");
@@ -260,30 +232,30 @@ void UavGeometryControl::run()
 	std_msgs::Float64 att_err_msg;
 
 	/*
-	 * b3_d - desired thrust vector
-	 * M_u 	- control moment
-	 * x_des, x_old
-	 * b1_des, b1_old
-	 * v_d_old
+	 * b3_d 			- desired thrust vector
+	 * M_u 				- control moment
+	 * x_des, x_old		- desired position, old position
+	 * b1_des, b1_old 	- desired heading, old heading
+	 * v_d_old			- old desired velocity
 	 */
-	Matrix<double, 3, 1> b3_d, M_u, x_old, b1_old, x_des, b1_des, v_d_old;
+	Matrix<double, 3, 1> b3_d, M_u, x_old,
+						b1_old, x_des, b1_des,
+						v_d_old;
 
 	/*
-	 * R_d 	- desired rotation matrix
-	 * R_d_old - used for matrix differentiation
-	 * R_d_dot - Desired matrix derivative
+	 * R_d 		- desired rotation matrix
+	 * R_d_old 	- used for matrix differentiation
+	 * R_d_dot 	- Desired matrix derivative
 	 */
 	Matrix<double, 3, 3> R_c, R_c_old, omega_c_old;
 	R_c_old = EYE;
 	omega_c_old.setZero(3, 3);
 
-	// Rotor velocities control vector
+	// Rotor velocities, rotor signs
 	Matrix<double, 4, 1> rotor_velocities, rotor_signs;
 
 	// Initialize rotor velocity publisher msg
 	mav_msgs::Actuators rotor_vel_msg;
-	vector<double> velocity_vector(4);
-	rotor_vel_msg.angular_velocities = velocity_vector;
 
 	// Total thrust control value
 	double f_u;
@@ -302,25 +274,12 @@ void UavGeometryControl::run()
 		if (dt < 1.0 / controller_rate_)
 			continue;
 
-		// Construct current rotation matrix - R
-		euler2RotationMatrix(
-				euler_mv_.x,
-				euler_mv_.y,
-				euler_mv_.z,
-				R_mv_);
-		//cout << R_mv_ << "\n";
-
-		// Construct angular velocity vector
-		omega_mv_(0, 0) = euler_rate_mv_.x;
-		omega_mv_(1, 0) = euler_rate_mv_.y;
-		omega_mv_(2, 0) = euler_rate_mv_.z;
-
 		// Update old time
 		t_old_ = ros::Time::now();
 
 		// Position and heading prefilter
-		x_des = x_d_; // x_old + 0.025 * (x_d_ - x_old);
-		b1_des = b1_old + 0.04 * (b1_d_ - b1_old);
+		x_des = x_old + 0.05 * (x_d_ - x_old);
+		b1_des = b1_old + 0.05 * (b1_d_ - b1_old);
 
 		// TRAJECTORY TRACKING BLOCK
 		trajectoryTracking(
@@ -391,6 +350,9 @@ void UavGeometryControl::run()
 		att_err = (EYE - R_d_.adjoint() * R_mv_);
 
 		// Construct status msg
+		std_msgs::Header head;
+		head.stamp = ros::Time::now();
+		status_msg_.header = head;
 		status_msg_.roll_mv = euler_mv_.x;
 		status_msg_.roll_sp = euler_d_(0, 0);
 		status_msg_.pitch_mv = euler_mv_.y;
@@ -412,9 +374,6 @@ void UavGeometryControl::run()
 		status_msg_.x_sp = x_des(0, 0);
 		status_msg_.y_sp = x_des(1, 0);
 		status_msg_.z_sp = x_des(2, 0);
-		std_msgs::Header head;
-		head.stamp = ros::Time::now();
-		status_msg_.header = head;
 		status_ros_pub_.publish(status_msg_);
 
 		//cout << "f_u: \n" << f_u << "\n";
@@ -494,6 +453,42 @@ void UavGeometryControl::trajectoryTracking(
 	status_msg_.e_v[2] = (double)e_v(2, 0);
 }
 
+void UavGeometryControl::sensorChecks()
+{
+
+	// Wait for the ROS time server
+	while (ros::Time::now().toSec() == 0 && ros::ok())
+	{
+		ROS_INFO("UavGeometricControl::run() - "
+				"Waiting for clock server to start");
+	}
+	ROS_INFO("UavGeometricControl::run() - "
+			"Received first clock message");
+
+	// Wait for start flag from IMU callback
+	while (!imu_start_flag_ && ros::ok())
+	{
+		ros::spinOnce();
+		ROS_INFO("UavGeometricControl::run() - "
+				"Waiting for first IMU measurement");
+	}
+
+	// Wait for start flag from pose callback
+	while (!pose_start_flag_ && ros::ok())
+	{
+		ros::spinOnce();
+		ROS_INFO("UavGeometricControl::run() - "
+				"Waiting for first pose measurement");
+	}
+
+	// Wait for start flag from velocity callback
+	while (!velocity_start_flag_ && ros::ok())
+	{
+		ros::spinOnce();
+		ROS_INFO("UavGeometricControl::run() - "
+				"Waiting for first velocity measurement");
+	}
+}
 
 void UavGeometryControl::attitudeTracking(
 		const Matrix<double, 3, 1> b1_desired,
@@ -591,10 +586,9 @@ void UavGeometryControl::attitudeTracking(
 				- R_mv_.adjoint() * R_d_ * alpha_d_
 			);
 
-	double sat = 100;
-	M_u(0, 0) = saturation((double)M_u(0, 0), -sat, sat);
-	M_u(1, 0) = saturation((double)M_u(1, 0), -sat, sat);
-	M_u(2, 0) = saturation((double)M_u(2, 0), -sat, sat);
+	M_u(0, 0) = saturation((double)M_u(0, 0), -MAXIMUM_MOMENT, MAXIMUM_MOMENT);
+	M_u(1, 0) = saturation((double)M_u(1, 0), -MAXIMUM_MOMENT, MAXIMUM_MOMENT);
+	M_u(2, 0) = saturation((double)M_u(2, 0), -MAXIMUM_MOMENT, MAXIMUM_MOMENT);
 
 	status_msg_.e_R[0] = e_R(0, 0);
 	status_msg_.e_R[1] = e_R(1, 0);
@@ -605,7 +599,7 @@ void UavGeometryControl::attitudeTracking(
 	status_msg_.e_omega[2] = e_omega(2, 0);
 }
 
-void UavGeometryControl::calculateDesiredAngVelAcc(
+void UavGeometryControl::calculateDesiredAngularVelAndAcc(
 		const Matrix<double, 3, 3> R_c,
 		const Matrix<double, 3, 3> R_c_old,
 		const Matrix<double, 3, 3> R_mv,
@@ -645,7 +639,7 @@ void UavGeometryControl::calculateDesiredAngVelAcc(
 
 	// Remap calculated values to desired
 	veeOperator(omega_c_skew, omega_d_);
-	//veeOperator(alpha_c_skew, alpha_d_);
+	veeOperator(alpha_c_skew, alpha_d_);
 }
 
 void UavGeometryControl::ctl_mode_cb(const std_msgs::Int8 &msg)
@@ -772,6 +766,18 @@ void UavGeometryControl::imu_cb (const sensor_msgs::Imu &msg)
     euler_rate_mv_.x = p + sx * ty * q + cx * ty * r;
     euler_rate_mv_.y = cx * q - sx * r;
     euler_rate_mv_.z = sx / cy * q + cx / cy * r;
+
+	// Construct current rotation matrix - R
+	euler2RotationMatrix(
+			euler_mv_.x,
+			euler_mv_.y,
+			euler_mv_.z,
+			R_mv_);
+
+	// Construct angular velocity vector
+	omega_mv_(0, 0) = euler_rate_mv_.x;
+	omega_mv_(1, 0) = euler_rate_mv_.y;
+	omega_mv_(2, 0) = euler_rate_mv_.z;
 }
 
 void UavGeometryControl::euler2RotationMatrix(
@@ -857,7 +863,7 @@ int main(int argc, char** argv)
 
 	// Start the control algorithm
 	UavGeometryControl geometric_control(CONTROLLER_RATE);
-	geometric_control.run();
+	geometric_control.runControllerLoop();
 
 	return 0;
 }

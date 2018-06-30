@@ -46,7 +46,7 @@ class UavGeometryControl
 		/**
 		 * Runs the geometric control algorithm until ROS shuts down.
 		 */
-		void run();
+		void runControllerLoop();
 
 	private:
 
@@ -62,6 +62,12 @@ class UavGeometryControl
 		void rd_cb(const std_msgs::Float64MultiArray &msg);
 		void euler_cb(const geometry_msgs::Vector3 &msg);
 		void ctl_mode_cb(const std_msgs::Int8 &msg);
+
+		/**
+		 * This method will keep running until all sensors
+		 * have returned callbacks.
+		 */
+		void sensorChecks();
 
 		/**
 		 * Calculate b3_d and f_u as position tracking control inputs.
@@ -108,8 +114,9 @@ class UavGeometryControl
 		 * @param R_c_old - Calculated old R
 		 * @param R_mv - Measured R
 		 * @param omega_c_old - Reference to old angular velocity value
+		 * @param dt
 		 */
-		void calculateDesiredAngVelAcc(
+		void calculateDesiredAngularVelAndAcc(
 				const Matrix<double, 3, 3> R_c,
 				const Matrix<double, 3, 3> R_c_old,
 				const Matrix<double, 3, 3> R_mv,
