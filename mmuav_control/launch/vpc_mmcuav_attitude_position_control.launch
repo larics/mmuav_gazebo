@@ -21,7 +21,8 @@
     </node>
 
     <!-- Give the UAV capability for trajectory following -->
-    <node name="trajectory_to_position_reference" pkg="mmuav_control" type="trajectory_to_position_reference.py" output="screen">
+    <!-- Run the trajectory reference node -->
+    <node name="trajectory_to_trajectory_point" pkg="mmuav_control" type="trajectory_to_trajectory_point.py">
       <param name="rate" value="$(arg rate)"/>
     </node>
 
