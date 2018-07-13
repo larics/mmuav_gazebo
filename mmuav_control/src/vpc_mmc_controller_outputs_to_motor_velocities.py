@@ -30,7 +30,7 @@ class MergeControllerOutputs:
         self.mot_vel_ref_received_flag = False
 
         # Publisher for motor velocities
-        self.mot_vel_pub = rospy.Publisher('/gazebo/command/motor_speed', 
+        self.mot_vel_pub = rospy.Publisher('command/motors', 
             Actuators, queue_size=1)
 
         # Publishers for moving masses
