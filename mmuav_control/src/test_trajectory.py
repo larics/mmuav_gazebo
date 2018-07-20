@@ -46,7 +46,7 @@ class TestTrajectory:
         self.mode_ref_msg = Int8()
 
         # Crontroller rate
-        self.controller_rate = 10
+        self.controller_rate = 50
         self.rate = rospy.Rate(self.controller_rate)
         
         self.pos_ref_msg = Vector3()
@@ -55,8 +55,8 @@ class TestTrajectory:
     def run(self):
 
         end_time = 10
-        t_list = np.linspace(0, end_time, 100)
-        ang_list = np.linspace(0, 4 * pi, 100)
+        t_list = np.linspace(0, end_time, 800)
+        ang_list = np.linspace(0, 4 * pi, 800)
         
         # Position control
         #self.mode_ref_msg.data = 1;

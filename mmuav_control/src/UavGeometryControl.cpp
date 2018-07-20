@@ -29,7 +29,9 @@ const double MIN_ROTOR_VELOCITY = 0;
 const double MAX_ROTOR_VELOCITY = 1475;
 Matrix<double, 3, 3> INERTIA;
 const double D =  ARM_LENGTH + ROTOR_RADIUS / 2;
-const double MAXIMUM_MOMENT = 100;
+const double MAXIMUM_MOMENT =
+		MAX_ROTOR_VELOCITY * MAX_ROTOR_VELOCITY * MOTOR_CONSTANT // MAX FORCE
+		* D;
 
 const Matrix<double, 3, 1> E3(0, 0, 1);
 Matrix<double, 4, 4> THRUST_TRANSFORM;
@@ -147,19 +149,19 @@ UavGeometryControl::UavGeometryControl(int rate)
 	k_x_(2, 2) = 50;
 
 	k_v_.setZero(3, 3);
-	k_v_(0, 0) = 7.75;
-	k_v_(1, 1) = 7.75;
+	k_v_(0, 0) = 6.5;
+	k_v_(1, 1) = 6.5;
 	k_v_(2, 2) = 20;
 
 	k_R_.setZero(3, 3);
-	k_R_(0, 0) = 7.5;
-	k_R_(1, 1) = 7.5;
-	k_R_(2, 2) = 7.5;
+	k_R_(0, 0) = 13;
+	k_R_(1, 1) = 13;
+	k_R_(2, 2) = 12;
 
 	k_omega_.setZero(3, 3);
-	k_omega_(0, 0) = 1.5;
-	k_omega_(1, 1) = 1.5;
-	k_omega_(2, 2) = 1.5;
+	k_omega_(0, 0) = 1.25;
+	k_omega_(1, 1) = 1.25;
+	k_omega_(2, 2) = 1.54;
 
 	// Initialize subscribers and publishers
 	imu_ros_sub_ = node_handle_.subscribe(
@@ -210,7 +212,8 @@ UavGeometryControl::UavGeometryControl(int rate)
 			&UavGeometryControl::ctl_mode_cb, this);
 
 	// Initialize dynamic reconfigure
-	param_callback_ = boost::bind(&UavGeometryControl::param_cb, this, _1, _2);
+	param_callback_ = boost::bind(
+			&UavGeometryControl::param_cb, this, _1, _2);
 	dyn_server_.setCallback(param_callback_);
 }
 
@@ -301,7 +304,7 @@ void UavGeometryControl::runControllerLoop()
 
 		// Position and heading prefilter
 		x_des = x_d_; //x_old + 0.025 * (x_d_ - x_old);
-		b1_des = b1_d_; //b1_old + 0.025 * (b1_d_ - b1_old);
+		b1_des = b1_old + 0.05 * (b1_d_ - b1_old);
 
 		// TRAJECTORY TRACKING BLOCK
 		trajectoryTracking(
@@ -542,7 +545,7 @@ void UavGeometryControl::attitudeTracking(
 		R_c.setZero(3, 3);
 		R_c << b1_c, b2_c, b3_desired;
 
-		// calculateDesiredAngVelAcc(R_c, R_c_old, R_mv_, omega_c_old, dt);
+		calculateDesiredAngularVelAndAcc(R_c, R_c_old, R_mv_, omega_c_old, dt);
 
 		// Remap calculated to desired
 		R_d_ = R_c;
@@ -616,7 +619,7 @@ void UavGeometryControl::calculateDesiredAngularVelAndAcc(
 {
 	Matrix<double, 3, 3> omega_c_skew, alpha_c_skew;
 
-
+	/*
 	// Calculate angular velocity based on R_c[k] and R_c[k-1]
 	Matrix<double, 3, 3> AA = R_c * R_c_old.adjoint();
 	double theta = acos((AA.trace() - 1 ) / 2);
@@ -638,16 +641,16 @@ void UavGeometryControl::calculateDesiredAngularVelAndAcc(
 		omega_c_old = omega_c_skew;
 	}
 
-
+*/
 	/*
 	 * Alternate way
+	 */
 	Matrix<double, 3, 3> R_c_dot = (R_c - R_c_old);
 	omega_c_skew = R_c_dot * R_c.adjoint();
-	 */
 
 	// Remap calculated values to desired
 	veeOperator(omega_c_skew, omega_d_);
-	veeOperator(alpha_c_skew, alpha_d_);
+	//veeOperator(alpha_c_skew, alpha_d_);
 }
 
 void UavGeometryControl::param_cb(
