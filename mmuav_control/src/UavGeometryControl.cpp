@@ -48,7 +48,7 @@ const int VELOCITY_CONTROL = 3;
 // Controller rate
 const int CONTROLLER_RATE = 100;
 
-UavGeometryControl::UavGeometryControl(int rate)
+UavGeometryControl::UavGeometryControl(int rate, std::string uav_type)
 {
 	// Initialize controller variables
 	controller_rate_ = rate;
@@ -165,50 +165,50 @@ UavGeometryControl::UavGeometryControl(int rate)
 
 	// Initialize subscribers and publishers
 	imu_ros_sub_ = node_handle_.subscribe(
-			"/uav/imu", 1,
+			"/" + uav_type + "/imu", 1,
 			&UavGeometryControl::imu_cb, this);
 	pose_ros_sub_ = node_handle_.subscribe(
-			"/uav/pose", 1,
+			"/" + uav_type + "/pose", 1,
 			&UavGeometryControl::pose_cb, this);
 	velocity_ros_sub_ = node_handle_.subscribe(
-			"/uav/velocity_relative", 1,
+			"/" + uav_type + "/velocity_relative", 1,
 			&UavGeometryControl::vel_cb, this);
 	rotor_ros_pub_ = node_handle_.advertise<mav_msgs::Actuators>(
 			"/gazebo/command/motor_speed", 1);
 	status_ros_pub_ = node_handle_.advertise<mmuav_msgs::GeomCtlStatus>(
-			"/uav/uav_status", 1);
+			"/" + uav_type + "/uav_status", 1);
 
 	// Initialize position reference subscribers
 	xd_ros_sub_ = node_handle_.subscribe(
-			"/uav/x_desired", 1,
+			"/" + uav_type + "/x_desired", 1,
 			&UavGeometryControl::xd_cb, this);
 	vd_ros_sub_ = node_handle_.subscribe(
-			"/uav/v_desired", 1,
+			"/" + uav_type + "/v_desired", 1,
 			&UavGeometryControl::vd_cb, this);
 	ad_ros_sub_ = node_handle_.subscribe(
-			"/uav/a_desired", 1,
+			"/" + uav_type + "/a_desired", 1,
 			&UavGeometryControl::ad_cb, this);
 
 	// Initialize attitude reference subscribers
 	b1d_ros_sub_ = node_handle_.subscribe(
-			"/uav/b1_desired", 1,
+			"/" + uav_type + "/b1_desired", 1,
 			&UavGeometryControl::b1d_cb, this);
 	omega_d_ros_sub_ = node_handle_.subscribe(
-			"/uav/omega_desired", 1,
+			"/" + uav_type + "/omega_desired", 1,
 			&UavGeometryControl::omegad_cb, this);
 	alpha_d_ros_sub_ = node_handle_.subscribe(
-			"/uav/alpha_desired", 1,
+			"/" + uav_type + "/alpha_desired", 1,
 			&UavGeometryControl::alphad_cb, this);
 	rd_ros_sub_ = node_handle_.subscribe(
-			"/uav/R_desired", 1,
+			"/" + uav_type + "/R_desired", 1,
 			&UavGeometryControl::rd_cb, this);
 	euler_ros_sub_ = node_handle_.subscribe(
-			"/uav/euler_desired", 1,
+			"/" + uav_type + "/euler_desired", 1,
 			&UavGeometryControl::euler_cb, this);
 
 	// Control mode subscriber
 	ctl_mode_ros_sub_ = node_handle_.subscribe(
-			"/uav/control_mode", 1,
+			"/" + uav_type + "/control_mode", 1,
 			&UavGeometryControl::ctl_mode_cb, this);
 
 	// Initialize dynamic reconfigure
@@ -273,7 +273,10 @@ void UavGeometryControl::runControllerLoop()
 
 	t_old_ = ros::Time::now();
 
-	// Start the control loop.
+	R_mv_ = EYE;
+	Matrix<double, 3, 3> R_mv_old = EYE;
+
+	// Start the cntrol loop.
 	while (ros::ok())
 	{
 		// Do 1 round of callbacks
@@ -290,17 +293,16 @@ void UavGeometryControl::runControllerLoop()
 		// Update old time
 		t_old_ = ros::Time::now();
 
+		omega_mv_(0, 0) = euler_rate_mv_.x;
+		omega_mv_(1, 0) = euler_rate_mv_.y;
+		omega_mv_(2, 0) = euler_rate_mv_.z;
+
 		// Construct current rotation matrix - R
 		euler2RotationMatrix(
 				euler_mv_.x,
 				euler_mv_.y,
 				euler_mv_.z,
 				R_mv_);
-
-		// Construct angular velocity vector
-		omega_mv_(0, 0) = euler_rate_mv_.x;
-		omega_mv_(1, 0) = euler_rate_mv_.y;
-		omega_mv_(2, 0) = euler_rate_mv_.z;
 
 		// Position and heading prefilter
 		x_des = x_d_; //x_old + 0.025 * (x_d_ - x_old);
@@ -404,8 +406,8 @@ void UavGeometryControl::runControllerLoop()
 		//cout << "f_u: \n" << f_u << "\n";
 		//cout << "M_u: \n" << M_u << "\n";
 		//cout << "Rotor_vel: \n" << rotor_velocities << "\n";
-		//cout << "\n\n";
-		//cout << endl;
+		cout << "\n\n";
+		cout << endl;
 	}
 }
 
@@ -550,8 +552,6 @@ void UavGeometryControl::attitudeTracking(
 		// Remap calculated to desired
 		R_d_ = R_c;
 
-		cout << "R_d:\n" << R_d_ << "\n";
-		cout << "R_mv:\n" << R_mv_ << "\n";
 
 		// Update old R_c
 		R_c_old = R_c;
@@ -572,6 +572,9 @@ void UavGeometryControl::attitudeTracking(
 		ROS_ERROR("Invalid control mode given.");
 		throw std::runtime_error("Invalid control mode given.");
 	}
+
+	cout << "R_d:\n" << R_d_ << "\n";
+	cout << "R_mv:\n" << R_mv_ << "\n";
 
 	// ATTITUDE TRACKING
 	// Calculate control moment M
@@ -641,7 +644,7 @@ void UavGeometryControl::calculateDesiredAngularVelAndAcc(
 		omega_c_old = omega_c_skew;
 	}
 
-*/
+	 */
 	/*
 	 * Alternate way
 	 */
@@ -904,8 +907,18 @@ int main(int argc, char** argv)
 	// Initialize ROS node
 	ros::init(argc, argv, "geometry_control");
 
+	// Fetch parameters
+	double rate;
+	std::string uav_ns;
+	ros::NodeHandle nh_("~");
+	nh_.getParam("rate", rate);
+	nh_.getParam("type", uav_ns);
+
+	cout << "Rate: " << rate << "\n";
+	cout << "Type: " << uav_ns << "\n";
+
 	// Start the control algorithm
-	UavGeometryControl geometric_control(CONTROLLER_RATE);
+	UavGeometryControl geometric_control(rate, uav_ns);
 	geometric_control.runControllerLoop();
 
 	return 0;

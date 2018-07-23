@@ -39,8 +39,9 @@ class UavGeometryControl
 		 * Class constructor.
 		 *
 		 * @param rate - Controller rate.
+		 * @param uav_type - type of uav used: uav / mmcuav
 		 */
-		UavGeometryControl(int rate);
+		UavGeometryControl(int rate, std::string uav_type);
 
 		/**
 		 * Class destructor.

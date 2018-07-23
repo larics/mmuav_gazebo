@@ -8,9 +8,9 @@
 
 <launch>
     
-    <arg name="namespace" default="uav"/>
+    <arg name="namespace" default="mmcuav"/>
     <arg name="rate" default="100"/>
-    <arg name="type" default="uav"/>
+    <arg name="type" default="mmcuav"/>
     
     <node name="geometric_control" pkg="mmuav_control" type="UavGeometryControl"
         output="screen">
@@ -18,4 +18,7 @@
       <param name="type" type="string" value="$(arg type)"/>
     </node>
     
+    <!-- Load mass controllers -->
+    <include file="$(find mmuav_control)/launch/mmcuav_control.launch"/>
+   
 </launch>

@@ -174,7 +174,38 @@
 
   <!-- <xacro:camera_macro robot_namespace="${namespace}">
   </xacro:camera_macro> -->
+    
+  <!-- Added landing gear -->
+  <xacro:property name="land_gear_inertia">
+    <inertia
+    ixx="1e-6"
+    iyy="1e-6"
+    izz="1e-6"
+    ixy="0.0" ixz="0.0"  iyz="0.0" /> <!-- [kg*m^2] [kg*m^2] [kg*m^2] [kg*m^2] [kg*m^2] [kg*m^2] -->
+  </xacro:property>
 
+  <xacro:landing_gear
+      parent="base_link"
+      gear_num = "1"
+      mass = "1e-6"
+      dim_x = "0.8"
+      dim_y = "0.1"
+      dim_z = "0.05">
+      <origin xyz="0 -0.325 -0.1" rpy="0 0 0" />
+      <xacro:insert_block name="land_gear_inertia"/>
+  </xacro:landing_gear>
+
+  <xacro:landing_gear
+      parent="base_link"
+      gear_num = "2"
+      mass = "1e-6"
+      dim_x = "0.8"
+      dim_y = "0.1"
+      dim_z = "0.05">
+      <origin xyz="0 0.325 -0.1" rpy="0 0 0" />
+      <xacro:insert_block name="land_gear_inertia"/>
+  </xacro:landing_gear>
+  
   <!-- Instantinate movable mass 0 -->
   <xacro:movable_mass
     mass_number="0" 

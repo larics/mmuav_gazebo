@@ -18,7 +18,9 @@
 	<arg name="enable_logging" default="true"/>
 	<arg name="enable_ground_truth" default="true"/>
 	<arg name="log_file" default="mmuav"/>
-
+    
+    <arg name="type" default="mmcuav"/>
+    
 	<!-- Launch gazebo -->
 	<include file="$(find gazebo_ros)/launch/empty_world.launch">
 		<!--arg name="world_name" value="$(find morus_gazebo)/worlds/morus.world"/-->
@@ -29,11 +31,14 @@
 		<arg name="headless" value="$(arg headless)"/>
 	</include> 
 	
-	<include file="$(find mmuav_description)/launch/spawn_uav.launch">
-        <arg name="roll" value="0"/>
-        <arg name="z" value="1" />
+	<include file="$(find mmuav_description)/launch/spawn_$(arg type).launch">
+        <!-- arg name="roll" value="0"/>
+        <arg name="z" value="1" / -->
 	</include>
 	
-    <include file="$(find mmuav_control)/launch/uav_geometry_ctl.launch" />
-       
+    <include file="$(find mmuav_control)/launch/$(arg type)_geometry_ctl.launch">
+        <arg name="type" value="$(arg type)"/>
+        <arg name="rate" value="100"/>
+    </include>
+
 </launch>
