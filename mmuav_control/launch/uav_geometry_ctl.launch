@@ -16,6 +16,7 @@
         output="screen">
       <param name="rate" type="double" value="$(arg rate)"/>
       <param name="type" type="string" value="$(arg type)"/>
+      <param name="mass_ctl" type="boolean" value="false"/>
     </node>
     
 </launch>

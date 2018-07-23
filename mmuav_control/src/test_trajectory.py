@@ -22,25 +22,25 @@ class TestTrajectory:
 
         # Reference publishers
         self.pos_ref_pub = rospy.Publisher(
-            "uav/x_desired",
+            "mmcuav/x_desired",
             Vector3,
             queue_size=10)
         self.pos_ref_msg = Vector3()
 
         self.heading_ref_pub = rospy.Publisher(
-            "uav/b1_desired",
+            "mmcuav/b1_desired",
             Vector3,
             queue_size=10)
         self.ang_ref_msg = Vector3()
         
         self.euler_ref_pub = rospy.Publisher(
-            "uav/euler_desired",
+            "mmcuav/euler_desired",
             Vector3, 
             queue_size=10)
         self.euler_msg = Vector3()
         
         self.control_mode_pub = rospy.Publisher(
-            "uav/control_mode",
+            "mmcuav/control_mode",
             Int8,
             queue_size=10)
         self.mode_ref_msg = Int8()
@@ -55,8 +55,8 @@ class TestTrajectory:
     def run(self):
 
         end_time = 10
-        t_list = np.linspace(0, end_time, 800)
-        ang_list = np.linspace(0, 4 * pi, 800)
+        t_list = np.linspace(0, end_time, 1500)
+        ang_list = np.linspace(0, 4 * pi, 1500)
         
         # Position control
         #self.mode_ref_msg.data = 1;

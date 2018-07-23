@@ -39,9 +39,9 @@ class UavGeometryControl
 		 * Class constructor.
 		 *
 		 * @param rate - Controller rate.
-		 * @param uav_type - type of uav used: uav / mmcuav
+		 * @param uav_ns - uav namespace
 		 */
-		UavGeometryControl(int rate, std::string uav_type);
+		UavGeometryControl(int rate, std::string uav_ns);
 
 		/**
 		 * Class destructor.
@@ -52,6 +52,9 @@ class UavGeometryControl
 		 * Runs the geometric control algorithm until ROS shuts down.
 		 */
 		void runControllerLoop();
+
+		void enableMassControl();
+		void disableMassControl();
 
 	private:
 
@@ -130,6 +133,20 @@ class UavGeometryControl
 				const Matrix<double, 3, 3> R_mv,
 				Matrix<double, 3, 3> &omega_c_old,
 				double dt);
+
+		/**
+		 * Calculate rotor velocities from given vector containing
+		 * total thrust and moments M_x, M_y, M_z.
+		 *
+		 * @param thrust_moment_vec
+		 * @param transform_matrix - matrix transforms given vector to forces
+		 * @rotor_velocities
+		 */
+		void calculateRotorVelocities(
+				Matrix<double, 4, 1> thrust_moment_vec,
+				Matrix<double, 4, 4> transform_matrix,
+				Matrix<double, 4, 1>& rotor_velocities);
+
 		/**
 		 * Perform quaternion to euler transformation.
 		 *
@@ -220,8 +237,13 @@ class UavGeometryControl
 		/**
 		 * - Motor velocities publisher
 		 * - Attitude error publisher
+		 * - Mass 0 command publisher
+		 * - Mass 1 command publisher
+		 * - Mass 2 command publisher
+		 * - Mass 3 command publisher
 		 */
-		ros::Publisher rotor_ros_pub_, status_ros_pub_;
+		ros::Publisher rotor_ros_pub_, status_ros_pub_, mass0_cmd_pub_,
+					   mass1_cmd_pub_, mass2_cmd_pub_, mass3_cmd_pub_;
 
 		/**
 		 * Subscriber handle for:
@@ -297,6 +319,11 @@ class UavGeometryControl
 		int controller_rate_;
 
 		/**
+		 * True if mass control is enabled, otherwise false.
+		 */
+		bool enable_mass_control_;
+
+		/**
 		 * Sleep duration used while performing checks before starting the
 		 * run() loop.
 		 */
@@ -334,7 +361,7 @@ class UavGeometryControl
 		 * Dynamic reconfigure server.
 		 */
 		dynamic_reconfigure::
-			Server<mmuav_control::UavGeometryControlParamsConfig> dyn_server_;
+			Server<mmuav_control::UavGeometryControlParamsConfig> server_;
 
 		/**
 		 * Reconfigure callback for setting parameters.
