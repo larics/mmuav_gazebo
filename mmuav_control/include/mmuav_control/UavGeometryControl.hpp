@@ -122,17 +122,9 @@ class UavGeometryControl
 		 * desired angular acceleration based on R_c[k] and R_c[k-1].
 		 *
 		 * @param R_c - Calculated R
-		 * @param R_c_old - Calculated old R
-		 * @param R_mv - Measured R
-		 * @param omega_c_old - Reference to old angular velocity value
-		 * @param dt
 		 */
 		void calculateDesiredAngularVelAndAcc(
-				const Matrix<double, 3, 3> R_c,
-				const Matrix<double, 3, 3> R_c_old,
-				const Matrix<double, 3, 3> R_mv,
-				Matrix<double, 3, 3> &omega_c_old,
-				double dt);
+				const Matrix<double, 3, 3> R_c);
 
 		/**
 		 * Calculate rotor velocities from given vector containing
@@ -356,6 +348,10 @@ class UavGeometryControl
 		 * 	- linear velocity control
 		 */
 		int current_control_mode_;
+
+		bool calc_desired;
+		Matrix<double, 3, 3> R_c_old, R_c_dot_old, omega_c_old;
+		Matrix<double, 3, 1> x_old, x_dot_old;
 
 		/**
 		 * Dynamic reconfigure server.

@@ -173,13 +173,13 @@ UavGeometryControl::UavGeometryControl(int rate, std::string uav_ns)
 	k_v_(2, 2) = 20;
 
 	k_R_.setZero(3, 3);
-	k_R_(0, 0) = 13;
-	k_R_(1, 1) = 13;
+	k_R_(0, 0) = 10;
+	k_R_(1, 1) = 10;
 	k_R_(2, 2) = 12;
 
 	k_omega_.setZero(3, 3);
-	k_omega_(0, 0) = 1.25;
-	k_omega_(1, 1) = 1.25;
+	k_omega_(0, 0) = 5;
+	k_omega_(1, 1) = 5;
 	k_omega_(2, 2) = 1.54;
 
 	// Initialize subscribers and publishers
@@ -268,7 +268,7 @@ void UavGeometryControl::runControllerLoop()
 	 * b1_des, b1_old 	- desired heading, old heading
 	 * v_d_old			- old desired velocity
 	 */
-	Matrix<double, 3, 1> b3_d, M_u, x_old,
+	Matrix<double, 3, 1> b3_d, M_u,
 						b1_old, x_des, b1_des,
 						v_d_old;
 	b1_old = b1_d_;
@@ -279,11 +279,14 @@ void UavGeometryControl::runControllerLoop()
 	 * R_d_old 	- used for matrix differentiation
 	 * R_d_dot 	- Desired matrix derivative
 	 */
-	Matrix<double, 3, 3> R_c, R_c_old, omega_c_old;
+	Matrix<double, 3, 3> R_c;
 	R_c_old = EYE3;
+	R_c_dot_old.setZero(3, 3);
 	omega_c_old.setZero(3, 3);
+	x_dot_old.setZero(3, 1);
+	x_old.setZero(3, 1);
 
-	// Rotor velocities, rotor signs
+	// Rotor velocities
 	Matrix<double, 4, 1> rotor_velocities;
 
 	// Initialize rotor velocity publisher msg
@@ -308,6 +311,10 @@ void UavGeometryControl::runControllerLoop()
 	R_mv_ = EYE3;
 	Matrix<double, 3, 3> R_mv_old = EYE3;
 
+	// Initialize helper time variables
+	double dt_help = 0.1;
+	double counter = 0.0;
+
 	// Start the cntrol loop.
 	while (ros::ok())
 	{
@@ -321,6 +328,13 @@ void UavGeometryControl::runControllerLoop()
 		// Check if time is right
 		if (dt < 1.0 / controller_rate_)
 			continue;
+
+		counter += dt;
+		if (counter >= dt_help)
+		{
+			calc_desired = true;
+			counter = 0.0;
+		}
 
 		// Update old time
 		t_old_ = ros::Time::now();
@@ -368,6 +382,8 @@ void UavGeometryControl::runControllerLoop()
 				M_u(0, 0),
 				M_u(1, 0),
 				M_u(2, 0));
+
+		calc_desired = false;
 
 		if (enable_mass_control_)
 		{
@@ -448,8 +464,8 @@ void UavGeometryControl::runControllerLoop()
 		//cout << "f_u: \n" << f_u << "\n";
 		//cout << "M_u: \n" << M_u << "\n";
 		//cout << "Rotor_vel: \n" << rotor_velocities << "\n";
-		cout << "\n\n";
-		cout << endl;
+		// cout << "\n\n";
+		// cout << endl;
 	}
 }
 
@@ -525,7 +541,7 @@ void UavGeometryControl::trajectoryTracking(
 		 */
 
 		//v_d_ = (x_d_ - pos_old);
-		e_x = (x_mv_(2, 0) - x_d_(2, 0)) * E3;
+		e_x = (x_mv_(2, 0) - pos_desired(2, 0)) * E3;
 		e_v = (v_mv_(2, 0) - v_d_(2, 0)) * E3;
 	}
 	else
@@ -633,14 +649,14 @@ void UavGeometryControl::attitudeTracking(
 		R_c.setZero(3, 3);
 		R_c << b1_c, b2_c, b3_desired;
 
-		calculateDesiredAngularVelAndAcc(R_c, R_c_old, R_mv_, omega_c_old, dt);
+		calculateDesiredAngularVelAndAcc(R_c);
 
 		// Remap calculated to desired
 		R_d_ = R_c;
 
 
 		// Update old R_c
-		R_c_old = R_c;
+		// R_c_old = R_c;
 	}
 	else if (current_control_mode_ == ATTITUDE_CONTROL)
 	{
@@ -659,8 +675,8 @@ void UavGeometryControl::attitudeTracking(
 		throw std::runtime_error("Invalid control mode given.");
 	}
 
-	cout << "R_d:\n" << R_d_ << "\n";
-	cout << "R_mv:\n" << R_mv_ << "\n";
+	// cout << "R_d:\n" << R_d_ << "\n";
+	// cout << "R_mv:\n" << R_mv_ << "\n";
 
 	// ATTITUDE TRACKING
 	// Calculate control moment M
@@ -700,46 +716,27 @@ void UavGeometryControl::attitudeTracking(
 }
 
 void UavGeometryControl::calculateDesiredAngularVelAndAcc(
-		const Matrix<double, 3, 3> R_c,
-		const Matrix<double, 3, 3> R_c_old,
-		const Matrix<double, 3, 3> R_mv,
-		Matrix<double, 3, 3> &omega_c_old,
-		double dt)
+		const Matrix<double, 3, 3> R_c)
 {
 	Matrix<double, 3, 3> omega_c_skew, alpha_c_skew;
 
-	/*
-	// Calculate angular velocity based on R_c[k] and R_c[k-1]
-	Matrix<double, 3, 3> AA = R_c * R_c_old.adjoint();
-	double theta = acos((AA.trace() - 1 ) / 2);
-	omega_c_skew = (AA - AA.adjoint()) * theta / (2 * sin(theta));
-	veeOperator(omega_c_skew, omega_d_);
+	if (!calc_desired)	{ return; }
 
-	// Check if omega_c_skew is NAN
-	if ((double)omega_c_skew(0, 0) != (double)omega_c_skew(0, 0)
-			|| omega_d_.norm() > 15)
-	{
-		// If current value is NAN take the old value do not update
-		omega_c_skew = omega_c_old;
-		alpha_c_skew.setZero(3, 3);
-	}
-	else
-	{
-		// If it's valid update
-		alpha_c_skew = (omega_c_skew - omega_c_old) / dt;
-		omega_c_old = omega_c_skew;
-	}
+	Matrix<double, 3, 3> R_c_dot = (R_c - R_c_old) / 0.1;
+	omega_c_skew = R_c.adjoint() * R_c_dot;
 
-	 */
-	/*
-	 * Alternate way
-	 */
-	Matrix<double, 3, 3> R_c_dot = (R_c - R_c_old);
-	omega_c_skew = R_c_dot * R_c.adjoint();
+	Matrix<double, 3, 3> R_c_ddot = (R_c_dot - R_c_dot_old) / 0.1;
+	alpha_c_skew = - omega_c_skew * omega_c_skew + R_c.adjoint() * R_c_ddot;
 
 	// Remap calculated values to desired
 	veeOperator(omega_c_skew, omega_d_);
-	//veeOperator(alpha_c_skew, alpha_d_);
+	veeOperator(alpha_c_skew, alpha_d_);
+
+	cout << "omega_d: " << "\n" << omega_d_ << "\n";
+	cout << "alpha_d: " << "\n" << alpha_d_ << "\n";
+
+	R_c_old = R_c;
+	R_c_dot_old = R_c_dot;
 }
 
 void UavGeometryControl::param_cb(

@@ -22,13 +22,25 @@ class TestTrajectory:
 
         # Reference publishers
         self.pos_ref_pub = rospy.Publisher(
-            "mmcuav/x_desired",
+            "uav/x_desired",
             Vector3,
             queue_size=10)
         self.pos_ref_msg = Vector3()
-
+        
+        self.v_ref_pub = rospy.Publisher(
+            "uav/v_desired",
+            Vector3,
+            queue_size=10)
+        self.v_ref_msg = Vector3()
+        
+        self.a_ref_pub = rospy.Publisher(
+            "uav/a_desired",
+            Vector3,
+            queue_size=10)
+        self.a_ref_msg = Vector3()
+        
         self.heading_ref_pub = rospy.Publisher(
-            "mmcuav/b1_desired",
+            "uav/b1_desired",
             Vector3,
             queue_size=10)
         self.ang_ref_msg = Vector3()
@@ -68,6 +80,14 @@ class TestTrajectory:
             self.pos_ref_msg.x = 0.4 * t
             self.pos_ref_msg.y = 0.5 * sin(pi * t)
             self.pos_ref_msg.z = 0.6 * cos(pi * t) + 1
+                
+            self.v_ref_msg.x = 0.4
+            self.v_ref_msg.y = 0.5 * pi * cos(pi * t)
+            self.v_ref_msg.z = - 0.6 * pi * sin(pi * t)
+            
+            self.a_ref_msg.x = 0
+            self.a_ref_msg.y = - 0.5 * pi * pi * sin(pi * t)
+            self.a_ref_msg.y = - 0.6 * pi * pi * cos(pi * t) 
             
             self.heading_ref_msg.x = cos(pi * t)
             self.heading_ref_msg.y = sin(pi * t)
@@ -77,6 +97,9 @@ class TestTrajectory:
                 
             self.heading_ref_pub.publish(self.heading_ref_msg)     
             self.pos_ref_pub.publish(self.pos_ref_msg)
+            # self.v_ref_pub.publish(self.v_ref_msg)            
+            # self.a_ref_pub.publish(self.a_ref_msg)
+            
             #self.euler_ref_pub.publish(self.euler_msg)    
             
                 
