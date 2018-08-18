@@ -22,25 +22,25 @@ class TestTrajectory:
 
         # Reference publishers
         self.pos_ref_pub = rospy.Publisher(
-            "uav/x_desired",
+            "morus/x_desired",
             Vector3,
             queue_size=10)
         self.pos_ref_msg = Vector3()
         
         self.v_ref_pub = rospy.Publisher(
-            "uav/v_desired",
+            "morus/v_desired",
             Vector3,
             queue_size=10)
         self.v_ref_msg = Vector3()
         
         self.a_ref_pub = rospy.Publisher(
-            "uav/a_desired",
+            "morus/a_desired",
             Vector3,
             queue_size=10)
         self.a_ref_msg = Vector3()
         
         self.heading_ref_pub = rospy.Publisher(
-            "uav/b1_desired",
+            "morus/b1_desired",
             Vector3,
             queue_size=10)
         self.ang_ref_msg = Vector3()
@@ -67,38 +67,41 @@ class TestTrajectory:
     def run(self):
 
         end_time = 10
-        t_list = np.linspace(0, end_time, 1500)
-        ang_list = np.linspace(0, 4 * pi, 1500)
+        scale = 3.25
+        t_list = np.linspace(0, end_time, 500 * scale)
+        ang_list = np.linspace(0, pi, 500 * scale)
+        easy = np.linspace(3, 1, 500)
+        easy = np.append(easy, np.ones(int(500*scale) - 500))
         
         # Position control
         #self.mode_ref_msg.data = 1;
         #self.control_mode_pub.publish(self.mode_ref_msg)
         
-        for t, ang in zip(t_list, ang_list):
+        for t, ang, _easy in zip(t_list, ang_list, easy):
             self.rate.sleep();
             print(t, "/", end_time)
-            self.pos_ref_msg.x = 0.4 * t
-            self.pos_ref_msg.y = 0.5 * sin(pi * t)
-            self.pos_ref_msg.z = 0.6 * cos(pi * t) + 1
+            self.pos_ref_msg.x = 0.4 * t / _easy
+            self.pos_ref_msg.y = 0.5 * sin(pi * t / _easy) 
+            self.pos_ref_msg.z = 0.6 * cos(pi * t / _easy) + 2
                 
-            self.v_ref_msg.x = 0.4
-            self.v_ref_msg.y = 0.5 * pi * cos(pi * t)
-            self.v_ref_msg.z = - 0.6 * pi * sin(pi * t)
+            self.v_ref_msg.x = 0.4 / (scale * _easy)
+            self.v_ref_msg.y = 0.5 * pi * cos(pi * t / _easy) / ( scale )
+            self.v_ref_msg.z = - 0.6 * pi * sin(pi * t / _easy) / ( scale )
             
             self.a_ref_msg.x = 0
-            self.a_ref_msg.y = - 0.5 * pi * pi * sin(pi * t)
-            self.a_ref_msg.y = - 0.6 * pi * pi * cos(pi * t) 
+            self.a_ref_msg.y = - 0.5 * pi * pi * sin(pi * t / _easy) / (scale * scale )
+            self.a_ref_msg.y = - 0.6 * pi * pi * cos(pi * t / _easy) / (scale * scale )
             
-            self.heading_ref_msg.x = cos(pi * t)
-            self.heading_ref_msg.y = sin(pi * t)
+            self.heading_ref_msg.x = cos(pi * t / (5 * _easy))
+            self.heading_ref_msg.y = sin(pi * t / (5 * _easy))
             self.heading_ref_msg.z = 0
             
             self.euler_msg.z =  ang
                 
             self.heading_ref_pub.publish(self.heading_ref_msg)     
             self.pos_ref_pub.publish(self.pos_ref_msg)
-            # self.v_ref_pub.publish(self.v_ref_msg)            
-            # self.a_ref_pub.publish(self.a_ref_msg)
+            self.v_ref_pub.publish(self.v_ref_msg)            
+            self.a_ref_pub.publish(self.a_ref_msg)
             
             #self.euler_ref_pub.publish(self.euler_msg)    
             
