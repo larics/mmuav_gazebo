@@ -67,11 +67,11 @@ class TestTrajectory:
     def run(self):
 
         end_time = 10
-        scale = 3.25
+        scale = 3
         t_list = np.linspace(0, end_time, 500 * scale)
         ang_list = np.linspace(0, pi, 500 * scale)
-        easy = np.linspace(3, 1, 500)
-        easy = np.append(easy, np.ones(int(500*scale) - 500))
+        easy = np.linspace(3, 1, 100)
+        easy = np.append(easy, np.ones(int(500*scale) - 100))
         
         # Position control
         #self.mode_ref_msg.data = 1;
@@ -90,7 +90,7 @@ class TestTrajectory:
             
             self.a_ref_msg.x = 0
             self.a_ref_msg.y = - 0.5 * pi * pi * sin(pi * t / _easy) / (scale * scale )
-            self.a_ref_msg.y = - 0.6 * pi * pi * cos(pi * t / _easy) / (scale * scale )
+            self.a_ref_msg.z = - 0.6 * pi * pi * cos(pi * t / _easy) / (scale * scale )
             
             self.heading_ref_msg.x = cos(pi * t / (5 * _easy))
             self.heading_ref_msg.y = sin(pi * t / (5 * _easy))
@@ -104,7 +104,9 @@ class TestTrajectory:
             self.a_ref_pub.publish(self.a_ref_msg)
             
             #self.euler_ref_pub.publish(self.euler_msg)    
-            
+        
+        self.v_ref_pub.publish(Vector3(0.0, 0.0, 0.0))
+        self.a_ref_pub.publish(Vector3(0.0, 0.0, 0.0))
                 
 if __name__ == '__main__':
     rospy.init_node('test_flight', anonymous=True)

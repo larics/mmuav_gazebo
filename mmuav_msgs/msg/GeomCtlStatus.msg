@@ -2,6 +2,7 @@ Header header
 
 float64[4]  rotor_velocities
 float64[3]  moments
+float64     force
 float64     roll_sp
 float64     roll_mv 
 float64     pitch_sp
@@ -20,4 +21,10 @@ float64[3]  e_R
 float64[3]  e_omega
 float64[3]  e_x
 float64[3]  e_v
+float64[3]  omega_d
+float64[3]  alpha_d
+float64[3]  b1_d
+float64[3]  v_d
+float64[3]  a_d
+float64[3]  b1_mv
 
