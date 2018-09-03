@@ -27,6 +27,7 @@
 #include <mmuav_msgs/GeomCtlStatus.h>
 #include <geometry_msgs/PoseStamped.h>
 #include <geometry_msgs/TwistStamped.h>
+#include <control_msgs/JointControllerState.h>
 
 using namespace Eigen;
 
@@ -73,6 +74,10 @@ class UavGeometryControl
 		void param_cb(
 				mmuav_control::UavGeometryControlParamsConfig &config,
 				uint32_t level);
+		void mass0_cb(const control_msgs::JointControllerState &msg);
+		void mass1_cb(const control_msgs::JointControllerState &msg);
+		void mass2_cb(const control_msgs::JointControllerState &msg);
+		void mass3_cb(const control_msgs::JointControllerState &msg);
 
 		/**
 		 * This method will keep running until all sensors
@@ -251,7 +256,9 @@ class UavGeometryControl
 		ros::Subscriber xd_ros_sub_, vd_ros_sub_, ad_ros_sub_,
 						b1d_ros_sub_, omega_d_ros_sub_, rd_ros_sub_,
 						alpha_d_ros_sub_, ctl_mode_ros_sub_,
-						euler_ros_sub_;
+						euler_ros_sub_,
+						mass0_state_sub_, mass1_state_sub_,
+						mass2_state_sub_, mass3_state_sub_;
 
 		/**
 		 * Messages containing angle measured values and
@@ -284,6 +291,9 @@ class UavGeometryControl
 		 * R_d_  - Desired rotation matrix
 		 */
 		Matrix<double, 3, 3> R_mv_, R_d_;
+
+		// Mass positions
+		double mass0_mv_, mass1_mv_, mass2_mv_, mass3_mv_;
 
 		/**
 		 * CONTROLLER PARAMETERS:
