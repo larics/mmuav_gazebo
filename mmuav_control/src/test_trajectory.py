@@ -22,25 +22,25 @@ class TestTrajectory:
 
         # Reference publishers
         self.pos_ref_pub = rospy.Publisher(
-            "morus/x_desired",
+            "mmcuav/x_desired",
             Vector3,
             queue_size=10)
         self.pos_ref_msg = Vector3()
         
         self.v_ref_pub = rospy.Publisher(
-            "morus/v_desired",
+            "mmcuav/v_desired",
             Vector3,
             queue_size=10)
         self.v_ref_msg = Vector3()
         
         self.a_ref_pub = rospy.Publisher(
-            "morus/a_desired",
+            "mmcuav/a_desired",
             Vector3,
             queue_size=10)
         self.a_ref_msg = Vector3()
         
         self.heading_ref_pub = rospy.Publisher(
-            "morus/b1_desired",
+            "mmcuav/b1_desired",
             Vector3,
             queue_size=10)
         self.ang_ref_msg = Vector3()
@@ -67,7 +67,7 @@ class TestTrajectory:
     def run(self):
 
         end_time = 10
-        scale = 3
+        scale = 2
         t_list = np.linspace(0, end_time, 500 * scale)
         ang_list = np.linspace(0, pi, 500 * scale)
         easy = np.linspace(3, 1, 100)
@@ -80,17 +80,17 @@ class TestTrajectory:
         for t, ang, _easy in zip(t_list, ang_list, easy):
             self.rate.sleep();
             print(t, "/", end_time)
-            self.pos_ref_msg.x = 0.4 * t / _easy
-            self.pos_ref_msg.y = 0.5 * sin(pi * t / _easy) 
-            self.pos_ref_msg.z = 0.6 * cos(pi * t / _easy) + 2
+            self.pos_ref_msg.x = 0.4 * t
+            self.pos_ref_msg.y = 0.5 * sin(pi * t) 
+            self.pos_ref_msg.z = 0.6 * cos(pi * t) + 2
                 
             self.v_ref_msg.x = 0.4 / (scale * _easy)
-            self.v_ref_msg.y = 0.5 * pi * cos(pi * t / _easy) / ( scale )
-            self.v_ref_msg.z = - 0.6 * pi * sin(pi * t / _easy) / ( scale )
+            self.v_ref_msg.y = 0.5 * pi * cos(pi * t) / ( scale * _easy)
+            self.v_ref_msg.z = - 0.6 * pi * sin(pi * t) / ( scale * _easy)
             
             self.a_ref_msg.x = 0
-            self.a_ref_msg.y = - 0.5 * pi * pi * sin(pi * t / _easy) / (scale * scale )
-            self.a_ref_msg.z = - 0.6 * pi * pi * cos(pi * t / _easy) / (scale * scale )
+            self.a_ref_msg.y = - 0.5 * pi * pi * sin(pi * t) / (scale * scale * _easy)
+            self.a_ref_msg.z = - 0.6 * pi * pi * cos(pi * t) / (scale * scale * _easy)
             
             self.heading_ref_msg.x = cos(pi * t / (5 * _easy))
             self.heading_ref_msg.y = sin(pi * t / (5 * _easy))

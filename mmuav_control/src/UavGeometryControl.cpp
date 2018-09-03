@@ -25,6 +25,7 @@ const double MOTOR_CONSTANT = 8.54858e-06;
 const double ROTOR_MASS = 0.01;
 const double ROTOR_VELOCITY_SLOWDOWN_SIM = 15;
 const double ROTOR_RADIUS = 0.1524;
+const double ROTOR_OFFSET_TOP = 0.04579;
 const double MIN_ROTOR_VELOCITY = 0;
 const double MAX_ROTOR_VELOCITY = 1475;
 Matrix<double, 3, 3> INERTIA;
@@ -76,21 +77,6 @@ UavGeometryControl::UavGeometryControl(int rate, std::string uav_ns)
 	INERTIA(0, 0) = 0.0826944;
 	INERTIA(1, 1) = 0.0826944;
 	INERTIA(2, 2) = 0.0104;
-
-	Matrix<double, 3, 3> rotor_inertia;
-	rotor_inertia.setZero(3, 3);
-	rotor_inertia(0, 0) = 1/12 * ROTOR_MASS
-			* (0.031 * 0.031 + 0.005 * 0.005)
-			* ROTOR_VELOCITY_SLOWDOWN_SIM;
-	rotor_inertia(1, 1) = 1/12 * ROTOR_MASS
-			* (4 * ROTOR_RADIUS * ROTOR_RADIUS + 0.005 * 0.005)
-			* ROTOR_VELOCITY_SLOWDOWN_SIM;
-	rotor_inertia(2, 2) = 1/12 * ROTOR_MASS
-			* (4 * ROTOR_RADIUS * ROTOR_RADIUS + 0.031 * 0.031)
-			* ROTOR_VELOCITY_SLOWDOWN_SIM
-			+ ROTOR_MASS * ARM_LENGTH * ARM_LENGTH;
-
-	INERTIA = INERTIA + 4 * rotor_inertia;
 
 	// Initialize eye(3) matrix
 	EYE3.setZero(3, 3);
@@ -163,23 +149,23 @@ UavGeometryControl::UavGeometryControl(int rate, std::string uav_ns)
 	// Initialize controller parameters
 	// Parameters initialized according to 2010-extended.pdf
 	k_x_.setZero(3, 3);
-	k_x_(0, 0) = 10.25;
-	k_x_(1, 1) = 10.25;
-	k_x_(2, 2) = 50;
+	k_x_(0, 0) = 10;
+	k_x_(1, 1) = 10;
+	k_x_(2, 2) = 80;
 
 	k_v_.setZero(3, 3);
-	k_v_(0, 0) = 6.5;
-	k_v_(1, 1) = 6.5;
+	k_v_(0, 0) = 3.05;
+	k_v_(1, 1) = 3.05;
 	k_v_(2, 2) = 20;
 
 	k_R_.setZero(3, 3);
-	k_R_(0, 0) = 10;
-	k_R_(1, 1) = 10;
+	k_R_(0, 0) = 1.5;
+	k_R_(1, 1) = 1.5;
 	k_R_(2, 2) = 12;
 
 	k_omega_.setZero(3, 3);
-	k_omega_(0, 0) = 5;
-	k_omega_(1, 1) = 5;
+	k_omega_(0, 0) = 0.65;
+	k_omega_(1, 1) = 0.65;
 	k_omega_(2, 2) = 1.54;
 
 	// Initialize subscribers and publishers
@@ -459,6 +445,26 @@ void UavGeometryControl::runControllerLoop()
 		status_msg_.x_sp = x_des(0, 0);
 		status_msg_.y_sp = x_des(1, 0);
 		status_msg_.z_sp = x_des(2, 0);
+	    status_msg_.a_d[0] = a_d_(0, 0);
+		status_msg_.a_d[1] = a_d_(1, 0);
+		status_msg_.a_d[2] = a_d_(2, 0);
+
+		status_msg_.v_d[0] = v_d_(0, 0);
+		status_msg_.v_d[1] = v_d_(1, 0);
+		status_msg_.v_d[2] = v_d_(2, 0);
+
+		status_msg_.b1_d[0] = b1_des(0, 0);
+		status_msg_.b1_d[1] = b1_des(1, 0);
+		status_msg_.b1_d[2] = b1_des(2, 0);
+		status_msg_.b1_mv[0] = R_mv_(0,0);
+		status_msg_.b1_mv[1] = R_mv_(1,0);
+		status_msg_.b1_mv[2] = R_mv_(2,0);
+		status_msg_.omega_d[0] = omega_d_(0, 0);
+		status_msg_.omega_d[1] = omega_d_(1, 0);
+		status_msg_.omega_d[2] = omega_d_(2, 0);
+		status_msg_.alpha_d[0] = alpha_d_(0, 0);
+		status_msg_.alpha_d[1] = alpha_d_(1, 0);
+		status_msg_.alpha_d[2] = alpha_d_(2, 0);
 		status_ros_pub_.publish(status_msg_);
 
 		//cout << "f_u: \n" << f_u << "\n";
@@ -702,9 +708,9 @@ void UavGeometryControl::attitudeTracking(
 				- R_mv_.adjoint() * R_d_ * alpha_d_
 			);
 
-	M_u(0, 0) = saturation((double)M_u(0, 0), -MAXIMUM_MOMENT, MAXIMUM_MOMENT);
-	M_u(1, 0) = saturation((double)M_u(1, 0), -MAXIMUM_MOMENT, MAXIMUM_MOMENT);
-	M_u(2, 0) = saturation((double)M_u(2, 0), -MAXIMUM_MOMENT, MAXIMUM_MOMENT);
+	M_u(0, 0) = saturation((double)M_u(0, 0), -5, 5);
+	M_u(1, 0) = saturation((double)M_u(1, 0), -5, 5);
+	M_u(2, 0) = saturation((double)M_u(2, 0), -2.5, 2.5);
 
 	status_msg_.e_R[0] = e_R(0, 0);
 	status_msg_.e_R[1] = e_R(1, 0);
@@ -731,6 +737,15 @@ void UavGeometryControl::calculateDesiredAngularVelAndAcc(
 	// Remap calculated values to desired
 	veeOperator(omega_c_skew, omega_d_);
 	veeOperator(alpha_c_skew, alpha_d_);
+
+	/*
+	omega_d_(0, 0) = saturation((double)omega_d_(0, 0), -1, 1);
+	omega_d_(1, 0) = saturation((double)omega_d_(1, 0), -1, 1);
+	omega_d_(2, 0) = saturation((double)omega_d_(2, 0), -1, 1);
+	*/
+	alpha_d_(0, 0) = saturation((double)alpha_d_(0, 0), -0.5, 0.5);
+	alpha_d_(1, 0) = saturation((double)alpha_d_(1, 0), -0.5, 0.5);
+	alpha_d_(2, 0) = saturation((double)alpha_d_(2, 0), -0.5, 0.5);
 
 	cout << "omega_d: " << "\n" << omega_d_ << "\n";
 	cout << "alpha_d: " << "\n" << alpha_d_ << "\n";
