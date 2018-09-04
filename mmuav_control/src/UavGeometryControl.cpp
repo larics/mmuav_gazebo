@@ -155,13 +155,13 @@ UavGeometryControl::UavGeometryControl(int rate, std::string uav_ns)
 	// Initialize controller parameters
 	// Parameters initialized according to 2010-extended.pdf
 	k_x_.setZero(3, 3);
-	k_x_(0, 0) = 11.52;
-	k_x_(1, 1) = 11.52;
+	k_x_(0, 0) = 10;
+	k_x_(1, 1) = 10;
 	k_x_(2, 2) = 50;
 
 	k_v_.setZero(3, 3);
-	k_v_(0, 0) = 4.07;
-	k_v_(1, 1) = 4.07;
+	k_v_(0, 0) = 3;
+	k_v_(1, 1) = 3;
 	k_v_(2, 2) = 20;
 
 	k_R_.setZero(3, 3);
@@ -238,13 +238,13 @@ UavGeometryControl::UavGeometryControl(int rate, std::string uav_ns)
 			&UavGeometryControl::mass0_cb, this);
 	mass1_state_sub_ = node_handle_.subscribe(
 			"/" + uav_ns + "/movable_mass_1_position_controller/state", 1,
-			&UavGeometryControl::mass0_cb, this);
+			&UavGeometryControl::mass1_cb, this);
 	mass2_state_sub_ = node_handle_.subscribe(
 			"/" + uav_ns + "/movable_mass_2_position_controller/state", 1,
-			&UavGeometryControl::mass0_cb, this);
+			&UavGeometryControl::mass2_cb, this);
 	mass3_state_sub_ = node_handle_.subscribe(
 			"/" + uav_ns + "/movable_mass_3_position_controller/state", 1,
-			&UavGeometryControl::mass0_cb, this);
+			&UavGeometryControl::mass3_cb, this);
 
 	// Initialize dynamic reconfigure
 	param_callback_ = boost::bind(
@@ -321,7 +321,7 @@ void UavGeometryControl::runControllerLoop()
 	double dt_help = 0.1;
 	double counter = 0.0;
 
-	// Start the cntrol loop.
+	// Start the control loop.
 	while (ros::ok())
 	{
 		// Do 1 round of callbacks
@@ -355,6 +355,12 @@ void UavGeometryControl::runControllerLoop()
 				euler_mv_.y,
 				euler_mv_.z,
 				R_mv_);
+
+		// Calculate center of mass relative to the body frame
+		ro_cm_(0, 0) = (MM_MASS * mass0_mv_ + MM_MASS * ( -mass2_mv_)) / UAV_MASS;
+		ro_cm_(1, 0) = (MM_MASS * mass1_mv_ + MM_MASS * (- mass3_mv_)) / UAV_MASS;
+		ro_cm_(2, 0) = 0;
+		cout << ro_cm_ << "\n" << endl;
 
 		// Position and heading prefilter
 		x_des = x_d_; //x_old + 0.025 * (x_d_ - x_old);
@@ -582,6 +588,24 @@ void UavGeometryControl::trajectoryTracking(
 		- k_v_ * e_v
 		+ UAV_MASS * G * E3
 		+ UAV_MASS * a_d_;
+
+	if (enable_mass_control_)
+	{
+		Matrix<double, 3, 3> skew_omega, skew_ro;
+		hatOperator(
+			(double)omega_d_(0, 0),
+			(double)omega_d_(1, 0),
+			(double)omega_d_(2, 0),
+			skew_omega);
+		hatOperator(
+			(double)ro_cm_(0, 0),
+			(double)ro_cm_(1, 0),
+			(double)ro_cm_(2, 0),
+			skew_ro);
+		A = A
+			- UAV_MASS * (R_mv_ * ro_cm_).cross(alpha_d_)
+			- UAV_MASS * R_mv_ * skew_omega * skew_ro * omega_d_;
+	}
 	f_u = A.dot( R_mv_ * E3 );
 	b3_d = A / A.norm();
 
@@ -753,6 +777,7 @@ void UavGeometryControl::attitudeTracking(
 				+ 4 * MASS_INERTIA(2,2);
 
 		// cout << mass_inertia << "\n" << endl;
+
 		M_u = 	- k_R_ * e_R
 			- k_omega_ * e_omega
 			+ omega_mv_.cross(mass_inertia * omega_mv_)
@@ -760,7 +785,8 @@ void UavGeometryControl::attitudeTracking(
 			(
 				omega_mv_skew * R_mv_.adjoint() * R_d_ * omega_d_
 				- R_mv_.adjoint() * R_d_ * alpha_d_
-			);
+			)
+			+ UAV_MASS * ro_cm_.cross(R_mv_.adjoint()*a_d_);
 	}
 
 	M_u(0, 0) = saturation((double)M_u(0, 0), -5, 5);

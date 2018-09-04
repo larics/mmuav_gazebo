@@ -292,8 +292,15 @@ class UavGeometryControl
 		 */
 		Matrix<double, 3, 3> R_mv_, R_d_;
 
-		// Mass positions
+		/**
+		 * Moving mass positions
+		 */
 		double mass0_mv_, mass1_mv_, mass2_mv_, mass3_mv_;
+
+		/**
+		 * Center of mass
+		 */
+		Matrix<double, 3, 1> ro_cm_;
 
 		/**
 		 * CONTROLLER PARAMETERS:
