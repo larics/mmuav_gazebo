@@ -296,6 +296,13 @@ class PositionControl:
             self.start_flag = True
 
         self.pos_mv = msg.pose.position
+        self.orientation_mv = msg.pose.orientation
+        temp_euler = tf.transformations.euler_from_quaternion((self.orientation_mv.x,
+            self.orientation_mv.y, self.orientation_mv.z,
+            self.orientation_mv.w))
+        self.orientation_mv_euler.x = temp_euler[0]
+        self.orientation_mv_euler.y = temp_euler[1]
+        self.orientation_mv_euler.z = temp_euler[2]
 
     def vel_cb(self, msg):
         '''

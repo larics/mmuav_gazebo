@@ -1,0 +1,12 @@
+<launch>
+    <arg name="max_acc" default="0.7" />
+    <arg name="max_vel" default="0.4" />
+    <arg name="namespace" default="uav"/>
+
+    <node name="mav_mission_planner" pkg="mav_path_trajectory" type="mav_mission_planner" output="screen">
+        <param name="max_quadrotor_speed" value="$(arg max_vel)" />
+        <param name="max_quadrotor_acceleration" value="$(arg max_acc)" />
+        <param name="trajectory_sampling_frequency" value="20" />
+    </node>
+
+</launch>

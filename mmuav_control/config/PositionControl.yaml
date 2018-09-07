@@ -7,9 +7,9 @@ Kff_a: 0.0
 tilt_angle: 0.0
 
 pid_x:
-  Kp: 0.65
+  Kp: 0.85 #0.65
   Ki: 0.0
-  Kd: 0.03
+  Kd: 0.15 #0.03
   limit:
     high: 500
     low: -500
@@ -22,9 +22,9 @@ pid_vx:
     low: -500
 
 pid_y:
-  Kp: 0.65
+  Kp: 0.85 #0.65
   Ki: 0.0
-  Kd: 0.03
+  Kd: 0.15 #0.03
   limit:
     high: 500
     low: -500

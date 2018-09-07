@@ -8,7 +8,7 @@ from pid import PID
 from geometry_msgs.msg import Vector3, PoseWithCovarianceStamped, PoseStamped, \
     TwistStamped, Pose, Point, Quaternion
 from nav_msgs.msg import Odometry
-from std_msgs.msg import Float64, Empty
+from std_msgs.msg import Float64, Empty, Int32
 from trajectory_msgs.msg import MultiDOFJointTrajectoryPoint, MultiDOFJointTrajectory
 import copy
 
@@ -18,6 +18,8 @@ class TrajectoryToTrajectoryPoint:
         
         self.trajectory_point_pub = rospy.Publisher('trajectory_point_ref', 
             MultiDOFJointTrajectoryPoint, queue_size=1)
+        self.executing_trajectory_pub = rospy.Publisher('executing_trajectory', 
+            Int32, queue_size=1)
         rospy.Subscriber('multi_dof_trajectory', MultiDOFJointTrajectory, 
             self.multi_dof_trajectory_cb, queue_size=1)
 
@@ -35,6 +37,7 @@ class TrajectoryToTrajectoryPoint:
             rate.sleep()
 
             if self.executing_trajectory_flag == True:
+                self.executing_trajectory_pub.publish(1)
                 # Take first point from trajectory, publish it and remove it
                 # from trajectory
                 self.current_trajectory_point = self.trajectory.points[0]
@@ -43,6 +46,8 @@ class TrajectoryToTrajectoryPoint:
                 
                 if len(self.trajectory.points) == 0:
                     self.executing_trajectory_flag = False
+            else:
+                self.executing_trajectory_pub.publish(0)
 
 
     def multi_dof_trajectory_cb(self, msg):

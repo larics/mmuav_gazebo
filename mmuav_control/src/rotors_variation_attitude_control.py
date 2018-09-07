@@ -210,6 +210,10 @@ class AttitudeControl:
             pitch_rate_output = self.pid_pitch_rate.compute(pitch_rate_sv, self.euler_rate_mv.y, dt_clk) + self.pitch_rate_output_trim
 
             # Yaw
+            if (self.euler_sp_filt.z - self.euler_mv.z) > math.pi:
+                self.euler_sp_filt.z = self.euler_sp_filt.z - 2*math.pi
+            if (self.euler_sp_filt.z - self.euler_mv.z) < -math.pi:
+                self.euler_sp_filt.z = self.euler_sp_filt.z + 2*math.pi
             yaw_rate_sv = self.pid_yaw.compute(self.euler_sp_filt.z, self.euler_mv.z, dt_clk)
             # yaw rate pid compute
             yaw_rate_output = self.pid_yaw_rate.compute(yaw_rate_sv, self.euler_rate_mv.z, dt_clk)
