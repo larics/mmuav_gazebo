@@ -360,7 +360,6 @@ void UavGeometryControl::runControllerLoop()
 		ro_cm_(0, 0) = (MM_MASS * mass0_mv_ + MM_MASS * ( -mass2_mv_)) / UAV_MASS;
 		ro_cm_(1, 0) = (MM_MASS * mass1_mv_ + MM_MASS * (- mass3_mv_)) / UAV_MASS;
 		ro_cm_(2, 0) = 0;
-		cout << ro_cm_ << "\n" << endl;
 
 		// Position and heading prefilter
 		x_des = x_d_; //x_old + 0.025 * (x_d_ - x_old);
@@ -602,9 +601,10 @@ void UavGeometryControl::trajectoryTracking(
 			(double)ro_cm_(1, 0),
 			(double)ro_cm_(2, 0),
 			skew_ro);
-		A = A
-			- UAV_MASS * (R_mv_ * ro_cm_).cross(alpha_d_)
-			- UAV_MASS * R_mv_ * skew_omega * skew_ro * omega_d_;
+		Matrix<double, 3, 1> add = - UAV_MASS * (R_mv_ * ro_cm_).cross(alpha_d_)
+					- UAV_MASS * R_mv_ * skew_omega * skew_ro * omega_d_;
+		cout << "Add to A: \n" << add << "\n";
+		A = A + add;
 	}
 	f_u = A.dot( R_mv_ * E3 );
 	b3_d = A / A.norm();
@@ -777,7 +777,8 @@ void UavGeometryControl::attitudeTracking(
 				+ 4 * MASS_INERTIA(2,2);
 
 		// cout << mass_inertia << "\n" << endl;
-
+		Matrix<double, 3, 1> add = UAV_MASS * ro_cm_.cross(R_mv_.adjoint()*a_d_);
+		cout << "Add to moments: \n" << add << "\n";
 		M_u = 	- k_R_ * e_R
 			- k_omega_ * e_omega
 			+ omega_mv_.cross(mass_inertia * omega_mv_)
@@ -785,8 +786,7 @@ void UavGeometryControl::attitudeTracking(
 			(
 				omega_mv_skew * R_mv_.adjoint() * R_d_ * omega_d_
 				- R_mv_.adjoint() * R_d_ * alpha_d_
-			)
-			+ UAV_MASS * ro_cm_.cross(R_mv_.adjoint()*a_d_);
+			) + add;
 	}
 
 	M_u(0, 0) = saturation((double)M_u(0, 0), -5, 5);
