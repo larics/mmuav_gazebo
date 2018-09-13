@@ -22,9 +22,11 @@ float64[3]  e_omega
 float64[3]  e_x
 float64[3]  e_v
 float64[3]  omega_d
+float64[3]  omega_mv
 float64[3]  alpha_d
 float64[3]  b1_d
 float64[3]  v_d
 float64[3]  a_d
 float64[3]  b1_mv
-
+float64[4]  mass_offset
+float64[3]  r_cm

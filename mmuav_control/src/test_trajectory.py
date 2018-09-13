@@ -70,7 +70,7 @@ class TestTrajectory:
         scale = 2
         t_list = np.linspace(0, end_time, 500 * scale)
         ang_list = np.linspace(0, pi, 500 * scale)
-        easy = np.linspace(3, 1, 100)
+        easy = np.linspace(1, 1, 100)
         easy = np.append(easy, np.ones(int(500*scale) - 100))
         
         # Position control

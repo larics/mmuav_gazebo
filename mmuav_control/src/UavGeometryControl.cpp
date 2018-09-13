@@ -160,8 +160,8 @@ UavGeometryControl::UavGeometryControl(int rate, std::string uav_ns)
 	k_x_(2, 2) = 50;
 
 	k_v_.setZero(3, 3);
-	k_v_(0, 0) = 3;
-	k_v_(1, 1) = 3;
+	k_v_(0, 0) = 3.75;
+	k_v_(1, 1) = 3.75;
 	k_v_(2, 2) = 20;
 
 	k_R_.setZero(3, 3);
@@ -449,6 +449,7 @@ void UavGeometryControl::runControllerLoop()
 		std_msgs::Header head;
 		head.stamp = ros::Time::now();
 		status_msg_.header = head;
+		status_msg_.force = f_u;
 		status_msg_.roll_mv = euler_mv_.x;
 		status_msg_.roll_sp = euler_d_(0, 0);
 		status_msg_.pitch_mv = euler_mv_.y;
@@ -478,9 +479,6 @@ void UavGeometryControl::runControllerLoop()
 		status_msg_.v_d[1] = v_d_(1, 0);
 		status_msg_.v_d[2] = v_d_(2, 0);
 
-		status_msg_.b1_d[0] = b1_des(0, 0);
-		status_msg_.b1_d[1] = b1_des(1, 0);
-		status_msg_.b1_d[2] = b1_des(2, 0);
 		status_msg_.b1_mv[0] = R_mv_(0,0);
 		status_msg_.b1_mv[1] = R_mv_(1,0);
 		status_msg_.b1_mv[2] = R_mv_(2,0);
@@ -490,6 +488,20 @@ void UavGeometryControl::runControllerLoop()
 		status_msg_.alpha_d[0] = alpha_d_(0, 0);
 		status_msg_.alpha_d[1] = alpha_d_(1, 0);
 		status_msg_.alpha_d[2] = alpha_d_(2, 0);
+
+		status_msg_.omega_mv[0] = omega_mv_(0, 0);
+		status_msg_.omega_mv[1] = omega_mv_(1, 0);
+		status_msg_.omega_mv[2] = omega_mv_(2, 0);
+
+		status_msg_.mass_offset[0] = mass0_mv_;
+		status_msg_.mass_offset[1] = mass1_mv_;
+		status_msg_.mass_offset[2] = mass2_mv_;
+		status_msg_.mass_offset[3] = mass3_mv_;
+
+		status_msg_.r_cm[0] = ro_cm_(0, 0);
+		status_msg_.r_cm[1] = ro_cm_(1, 0);
+		status_msg_.r_cm[2] = ro_cm_(2, 0);
+
 		status_ros_pub_.publish(status_msg_);
 
 		//cout << "f_u: \n" << f_u << "\n";
@@ -592,9 +604,9 @@ void UavGeometryControl::trajectoryTracking(
 	{
 		Matrix<double, 3, 3> skew_omega, skew_ro;
 		hatOperator(
-			(double)omega_d_(0, 0),
-			(double)omega_d_(1, 0),
-			(double)omega_d_(2, 0),
+			(double)omega_mv_(0, 0),
+			(double)omega_mv_(1, 0),
+			(double)omega_mv_(2, 0),
 			skew_omega);
 		hatOperator(
 			(double)ro_cm_(0, 0),
@@ -602,8 +614,8 @@ void UavGeometryControl::trajectoryTracking(
 			(double)ro_cm_(2, 0),
 			skew_ro);
 		Matrix<double, 3, 1> add = - UAV_MASS * (R_mv_ * ro_cm_).cross(alpha_d_)
-					- UAV_MASS * R_mv_ * skew_omega * skew_ro * omega_d_;
-		cout << "Add to A: \n" << add << "\n";
+					- UAV_MASS * R_mv_ * skew_omega * skew_ro * omega_mv_;
+		// cout << "Add to A: \n" << add << "\n";
 		A = A + add;
 	}
 	f_u = A.dot( R_mv_ * E3 );
@@ -653,6 +665,8 @@ void UavGeometryControl::sensorChecks()
 		ROS_INFO("UavGeometricControl::run() - "
 				"Waiting for first velocity measurement");
 	}
+
+	sleep(3);
 }
 
 void UavGeometryControl::attitudeTracking(
@@ -692,6 +706,10 @@ void UavGeometryControl::attitudeTracking(
 
 		// Compute b1_c = Proj[b1_d] onto the plane with normal b3_d
 		b1_c = - b3_desired.cross(b13_normal) / b13_normal.norm();
+
+		status_msg_.b1_d[0] = b1_c(0, 0);
+		status_msg_.b1_d[1] = b1_c(1, 0);
+		status_msg_.b1_d[2] = b1_c(2, 0);
 
 		// Construct desired rotation matrix
 		b2_c = b3_desired.cross(b1_c);
@@ -778,7 +796,7 @@ void UavGeometryControl::attitudeTracking(
 
 		// cout << mass_inertia << "\n" << endl;
 		Matrix<double, 3, 1> add = UAV_MASS * ro_cm_.cross(R_mv_.adjoint()*a_d_);
-		cout << "Add to moments: \n" << add << "\n";
+		// cout << "Add to moments: \n" << add << "\n";
 		M_u = 	- k_R_ * e_R
 			- k_omega_ * e_omega
 			+ omega_mv_.cross(mass_inertia * omega_mv_)
