@@ -10,18 +10,26 @@
     
     <arg name="namespace" default="mmcuav"/>
     <arg name="rate" default="100"/>
-    <arg name="type" default="mmcuav"/>    
+    <arg name="type" default="mmcuav"/>
     <arg name="mass_ctl" default="false" />
     <arg name="manipulator_ctl" default="false" />
 
+
+    <!-- Start control -->
+    <include file="$(find mmuav_control)/launch/mmuav_control.launch"/>
+    
+    <group ns="$(arg type)">
+        <!-- Merge height and attitude control node -->
+        <node name="mmuav_controller_outputs_to_motor_velocities" pkg="mmuav_control" type="mmuav_controller_outputs_to_motor_velocities.py">
+          <param name="rate" value="$(arg rate)"/>
+        </node>
+    </group>
+    
     <node name="geometric_control" pkg="mmuav_control" type="UavGeometryControl"
         output="screen">
       <param name="rate" type="double" value="$(arg rate)"/>
       <param name="type" type="string" value="$(arg type)"/>
-      <param name="mass_ctl" type="boolean" value="true"/>
+      <param name="manipulator_ctl" type="boolean" value="true"/>
     </node>
-    
-    <!-- Load mass controllers -->
-    <include file="$(find mmuav_control)/launch/mmcuav_control.launch"/>
    
 </launch>

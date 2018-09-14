@@ -17,9 +17,9 @@
 	
 	<arg name="enable_logging" default="true"/>
 	<arg name="enable_ground_truth" default="true"/>
-	<arg name="log_file" default="mmuav"/>
+	<arg name="log_file" default="uav"/>
     
-    <arg name="type" default="mmcuav"/>
+    <arg name="type" default="uav"/>
     
 	<!-- Launch gazebo -->
 	<include file="$(find gazebo_ros)/launch/empty_world.launch">
@@ -39,6 +39,8 @@
     <include file="$(find mmuav_control)/launch/$(arg type)_geometry_ctl.launch">
         <arg name="type" value="$(arg type)"/>
         <arg name="rate" value="100"/>
+        <arg name="mass_ctl" value="false" />
+    	<arg name="manipulator_ctl" value="false" />
     </include>
 
 </launch>

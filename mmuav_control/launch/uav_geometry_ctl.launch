@@ -11,12 +11,15 @@
     <arg name="namespace" default="uav"/>
     <arg name="rate" default="100"/>
     <arg name="type" default="uav"/>
+    <arg name="mass_ctl" default="false" />
+    <arg name="manipulator_ctl" default="false" />
     
     <node name="geometric_control" pkg="mmuav_control" type="UavGeometryControl"
         output="screen">
       <param name="rate" type="double" value="$(arg rate)"/>
       <param name="type" type="string" value="$(arg type)"/>
-      <param name="mass_ctl" type="boolean" value="false"/>
+      <param name="mass_ctl" type="boolean" value="$(arg mass_ctl)"/>
+      <param name="manipulator_ctl" type="boolean" value="$(arg manipulator_ctl)"/>
     </node>
     
 </launch>

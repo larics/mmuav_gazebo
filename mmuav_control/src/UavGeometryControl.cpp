@@ -37,7 +37,12 @@ const double MAXIMUM_MOMENT =
 // Moving mass constants
 const double MM_MASS = 0.208;
 const double MM_FORCE = MM_MASS * G;
-const double UAV_MASS = 2.083 + 4*MM_MASS;
+double UAV_MASS = 2.083;
+
+// Payload constant
+const double PAYLOAD_MASS = 0.25;
+const double TOTAL_LINK_MASS = 0.13 * 2;
+const double PAYLOAD_FORCE = PAYLOAD_MASS * G;
 
 // Transform matrix with roll / pitch corrections
 Matrix<double, 4, 4> THRUST_TRANSFORM_FULL;
@@ -72,6 +77,7 @@ UavGeometryControl::UavGeometryControl(int rate, std::string uav_ns)
 	param_start_flag_ = false;
 	enable_mass_control_ = false;
 	current_control_mode_ = POSITION_CONTROL;
+	this->uav_ns = uav_ns;
 
 	// Initialize inertia matrix
 	INERTIA.setZero(3, 3);
@@ -222,30 +228,6 @@ UavGeometryControl::UavGeometryControl(int rate, std::string uav_ns)
 			"/" + uav_ns + "/control_mode", 1,
 			&UavGeometryControl::ctl_mode_cb, this);
 
-	// Add mass publishers if available
-	mass0_cmd_pub_ = node_handle_.advertise<std_msgs::Float64>(
-			"/" + uav_ns + "/movable_mass_0_position_controller/command", 1);
-	mass1_cmd_pub_ = node_handle_.advertise<std_msgs::Float64>(
-			"/" + uav_ns + "/movable_mass_1_position_controller/command", 1);
-	mass2_cmd_pub_ = node_handle_.advertise<std_msgs::Float64>(
-			"/" + uav_ns + "/movable_mass_2_position_controller/command", 1);
-	mass3_cmd_pub_ = node_handle_.advertise<std_msgs::Float64>(
-			"/" + uav_ns + "/movable_mass_3_position_controller/command", 1);
-
-	// Mass state subscribers
-	mass0_state_sub_ = node_handle_.subscribe(
-			"/" + uav_ns + "/movable_mass_0_position_controller/state", 1,
-			&UavGeometryControl::mass0_cb, this);
-	mass1_state_sub_ = node_handle_.subscribe(
-			"/" + uav_ns + "/movable_mass_1_position_controller/state", 1,
-			&UavGeometryControl::mass1_cb, this);
-	mass2_state_sub_ = node_handle_.subscribe(
-			"/" + uav_ns + "/movable_mass_2_position_controller/state", 1,
-			&UavGeometryControl::mass2_cb, this);
-	mass3_state_sub_ = node_handle_.subscribe(
-			"/" + uav_ns + "/movable_mass_3_position_controller/state", 1,
-			&UavGeometryControl::mass3_cb, this);
-
 	// Initialize dynamic reconfigure
 	param_callback_ = boost::bind(
 			&UavGeometryControl::param_cb, this, _1, _2);
@@ -292,17 +274,6 @@ void UavGeometryControl::runControllerLoop()
 	x_dot_old.setZero(3, 1);
 	x_old.setZero(3, 1);
 
-	// Rotor velocities
-	Matrix<double, 4, 1> rotor_velocities;
-
-	// Initialize rotor velocity publisher msg
-	mav_msgs::Actuators rotor_vel_msg;
-	vector<double> velocity_vector(4);
-	rotor_vel_msg.angular_velocities = velocity_vector;
-
-	// Initialize mass control messages
-	std_msgs::Float64 mass0_msg, mass1_msg, mass2_msg, mass3_msg;
-
 	// Total thrust control value
 	double f_u;
 
@@ -320,6 +291,50 @@ void UavGeometryControl::runControllerLoop()
 	// Initialize helper time variables
 	double dt_help = 0.1;
 	double counter = 0.0;
+
+	// Set Appropriate mass
+	if (enable_mass_control_)
+	{
+		UAV_MASS += 4*MM_MASS;
+		// Add mass publishers if available
+		mass0_cmd_pub_ = node_handle_.advertise<std_msgs::Float64>(
+				"/" + uav_ns + "/movable_mass_0_position_controller/command", 1);
+		mass1_cmd_pub_ = node_handle_.advertise<std_msgs::Float64>(
+				"/" + uav_ns + "/movable_mass_1_position_controller/command", 1);
+		mass2_cmd_pub_ = node_handle_.advertise<std_msgs::Float64>(
+				"/" + uav_ns + "/movable_mass_2_position_controller/command", 1);
+		mass3_cmd_pub_ = node_handle_.advertise<std_msgs::Float64>(
+				"/" + uav_ns + "/movable_mass_3_position_controller/command", 1);
+
+		// Mass state subscribers
+		mass0_state_sub_ = node_handle_.subscribe(
+				"/" + uav_ns + "/movable_mass_0_position_controller/state", 1,
+				&UavGeometryControl::mass0_cb, this);
+		mass1_state_sub_ = node_handle_.subscribe(
+				"/" + uav_ns + "/movable_mass_1_position_controller/state", 1,
+				&UavGeometryControl::mass1_cb, this);
+		mass2_state_sub_ = node_handle_.subscribe(
+				"/" + uav_ns + "/movable_mass_2_position_controller/state", 1,
+				&UavGeometryControl::mass2_cb, this);
+		mass3_state_sub_ = node_handle_.subscribe(
+				"/" + uav_ns + "/movable_mass_3_position_controller/state", 1,
+				&UavGeometryControl::mass3_cb, this);
+
+	}
+	else if (enable_manipulator_control_)
+	{
+		UAV_MASS += 2 * PAYLOAD_MASS + TOTAL_LINK_MASS;
+		// Add gripper publishers if available
+		gripperLeft_sub_ = node_handle_.subscribe(
+				"/" + uav_ns + "/link_gripper2_left/pose", 1,
+				&UavGeometryControl::gripperLeft_cb, this);
+		gripperRight_sub_ = node_handle_.subscribe(
+				"/" + uav_ns + "/link_gripper2_right/pose", 1,
+				&UavGeometryControl::gripperRight_cb, this);
+
+		payload_pos_pub_ = node_handle_.advertise<geometry_msgs::PoseStamped>(
+				"/" + uav_ns + "/payload_position", 1);
+	}
 
 	// Start the control loop.
 	while (ros::ok())
@@ -356,10 +371,7 @@ void UavGeometryControl::runControllerLoop()
 				euler_mv_.z,
 				R_mv_);
 
-		// Calculate center of mass relative to the body frame
-		ro_cm_(0, 0) = (MM_MASS * mass0_mv_ + MM_MASS * ( -mass2_mv_)) / UAV_MASS;
-		ro_cm_(1, 0) = (MM_MASS * mass1_mv_ + MM_MASS * (- mass3_mv_)) / UAV_MASS;
-		ro_cm_(2, 0) = 0;
+		calculateCenterOfMass();
 
 		// Position and heading prefilter
 		x_des = x_d_; //x_old + 0.025 * (x_d_ - x_old);
@@ -387,60 +399,11 @@ void UavGeometryControl::runControllerLoop()
 				omega_c_old,
 				M_u);			// OUTPUT - control moments
 
-		// Calculate thrust velocities
-		Matrix<double, 4, 1> thrust_moment_vec(
-				f_u,
-				M_u(0, 0),
-				M_u(1, 0),
-				M_u(2, 0));
-
+		// Disable calculating desired velocities / accelerations
 		calc_desired = false;
 
-		if (enable_mass_control_)
-		{
-			// Calculate height and yaw control
-			calculateRotorVelocities(
-					thrust_moment_vec,
-					THRUST_TRANSFORM_YAW,
-					rotor_velocities);
-
-			// Roll and pitch control with masses
-			double dx = (double)M_u(1, 0) / (2 * MM_FORCE);
-			double dy = (double)M_u(0, 0) / (2 * MM_FORCE);
-
-			dx = saturation(dx, -ARM_LENGTH / 2, ARM_LENGTH / 2);
-			dy = saturation(dy, -ARM_LENGTH / 2, ARM_LENGTH / 2);
-
-			// cout << "dx: " << dx << "\n";
-			// cout << "dy: " << dy << "\n";
-
-			mass0_msg.data = dx;
-			mass1_msg.data = - dy;
-			mass2_msg.data = - dx;
-			mass3_msg.data = dy;
-
-			// publish mass command values
-			mass0_cmd_pub_.publish(mass0_msg);
-			mass1_cmd_pub_.publish(mass1_msg);
-			mass2_cmd_pub_.publish(mass2_msg);
-			mass3_cmd_pub_.publish(mass3_msg);
-		}
-		else
-		{
-			// Calculate full rotor control
-			calculateRotorVelocities(
-					thrust_moment_vec,
-					THRUST_TRANSFORM_FULL,
-					rotor_velocities);
-		}
-
-		// Fill and publish rotor message
-		rotor_vel_msg.angular_velocities[0] = (double)rotor_velocities(0, 0);
-		rotor_vel_msg.angular_velocities[1] = (double)rotor_velocities(1, 0);
-		rotor_vel_msg.angular_velocities[2] = (double)rotor_velocities(2, 0);
-		rotor_vel_msg.angular_velocities[3] = (double)rotor_velocities(3, 0);
-		rotor_ros_pub_.publish(rotor_vel_msg);
-
+		// Publish control inputs
+		publishControlInputs(f_u, M_u);
 
 		// Calculate attitude error
 		att_err = (EYE3 - R_d_.adjoint() * R_mv_);
@@ -458,10 +421,6 @@ void UavGeometryControl::runControllerLoop()
 		status_msg_.yaw_sp = euler_d_(2, 0);
 		status_msg_.att_err = att_err.trace() / 2;
 		status_msg_.pos_err =sqrt((double)(x_d_ - x_mv_).dot(x_d_ - x_mv_));
-		status_msg_.rotor_velocities[0] = rotor_vel_msg.angular_velocities[0];
-		status_msg_.rotor_velocities[1] = rotor_vel_msg.angular_velocities[1];
-		status_msg_.rotor_velocities[2] = rotor_vel_msg.angular_velocities[2];
-		status_msg_.rotor_velocities[3] = rotor_vel_msg.angular_velocities[3];
 		status_msg_.moments[0] = M_u(0, 0);
 		status_msg_.moments[1] = M_u(1, 0);
 		status_msg_.moments[2] = M_u(2, 0);
@@ -503,13 +462,131 @@ void UavGeometryControl::runControllerLoop()
 		status_msg_.r_cm[2] = ro_cm_(2, 0);
 
 		status_ros_pub_.publish(status_msg_);
-
-		//cout << "f_u: \n" << f_u << "\n";
-		//cout << "M_u: \n" << M_u << "\n";
-		//cout << "Rotor_vel: \n" << rotor_velocities << "\n";
-		// cout << "\n\n";
-		// cout << endl;
 	}
+}
+
+
+void UavGeometryControl::publishControlInputs(
+		double f_u,
+		Matrix<double, 3, 1> M_u)
+{
+	// Calculate thrust velocities
+	Matrix<double, 4, 1> thrust_moment_vec(
+			f_u,
+			M_u(0, 0),
+			M_u(1, 0),
+			M_u(2, 0));
+
+	// Initialize mass control messages
+	std_msgs::Float64 mass0_msg, mass1_msg, mass2_msg, mass3_msg;
+
+	// Rotor velocities
+	Matrix<double, 4, 1> rotor_velocities;
+
+	// Calculate control inputs
+	if (enable_mass_control_)
+	{
+		// Calculate height and yaw control
+		calculateRotorVelocities(
+				thrust_moment_vec,
+				THRUST_TRANSFORM_YAW,
+				rotor_velocities);
+
+		// Roll and pitch control with masses
+		double dx = (double)M_u(1, 0) / (2 * MM_FORCE * E3.dot(R_mv_ * E3));
+		double dy = (double)M_u(0, 0) / (2 * MM_FORCE * E3.dot(R_mv_ * E3));
+
+		dx = saturation(dx, -ARM_LENGTH / 2, ARM_LENGTH / 2);
+		dy = saturation(dy, -ARM_LENGTH / 2, ARM_LENGTH / 2);
+
+		// cout << "dx: " << dx << "\n";
+		// cout << "dy: " << dy << "\n";
+
+		mass0_msg.data = dx;
+		mass1_msg.data = - dy;
+		mass2_msg.data = - dx;
+		mass3_msg.data = dy;
+
+		// publish mass command values
+		mass0_cmd_pub_.publish(mass0_msg);
+		mass1_cmd_pub_.publish(mass1_msg);
+		mass2_cmd_pub_.publish(mass2_msg);
+		mass3_cmd_pub_.publish(mass3_msg);
+	}
+	else if (enable_manipulator_control_)
+	{
+		// TODO: Manipulator control - publish dx and dy somewhere...
+		// Calculate height and yaw control
+		calculateRotorVelocities(
+				thrust_moment_vec,
+				THRUST_TRANSFORM_YAW,
+				rotor_velocities);
+
+		// Roll and pitch control with masses
+		double dx = (double)M_u(1, 0) / (PAYLOAD_FORCE * E3.dot(R_mv_ * E3));
+		double dy = (double)M_u(0, 0) / (PAYLOAD_FORCE * E3.dot(R_mv_ * E3));
+		dx = saturation(dx, -ARM_LENGTH / 4, ARM_LENGTH / 4);
+		dy = saturation(dy, -ARM_LENGTH / 4, ARM_LENGTH / 4);
+
+		geometry_msgs::PoseStamped msg;
+		msg.pose.position.x = dx;
+		msg.pose.position.y = - dy;
+
+		payload_pos_pub_.publish(msg);
+
+	}
+	else
+	{
+		// Calculate full rotor control
+		calculateRotorVelocities(
+				thrust_moment_vec,
+				THRUST_TRANSFORM_FULL,
+				rotor_velocities);
+	}
+
+	// Initialize rotor velocity publisher msg
+	mav_msgs::Actuators rotor_vel_msg;
+	vector<double> velocity_vector(4);
+	rotor_vel_msg.angular_velocities = velocity_vector;
+
+	// Fill and publish rotor message
+	rotor_vel_msg.angular_velocities[0] = (double)rotor_velocities(0, 0);
+	rotor_vel_msg.angular_velocities[1] = (double)rotor_velocities(1, 0);
+	rotor_vel_msg.angular_velocities[2] = (double)rotor_velocities(2, 0);
+	rotor_vel_msg.angular_velocities[3] = (double)rotor_velocities(3, 0);
+	rotor_ros_pub_.publish(rotor_vel_msg);
+
+	status_msg_.rotor_velocities[0] = rotor_vel_msg.angular_velocities[0];
+	status_msg_.rotor_velocities[1] = rotor_vel_msg.angular_velocities[1];
+	status_msg_.rotor_velocities[2] = rotor_vel_msg.angular_velocities[2];
+	status_msg_.rotor_velocities[3] = rotor_vel_msg.angular_velocities[3];
+}
+
+
+void UavGeometryControl::calculateCenterOfMass()
+{
+	if (enable_mass_control_)
+	{
+		// Calculate center of mass relative to the body frame
+		ro_cm_(0, 0) = (MM_MASS * mass0_mv_ + MM_MASS * ( -mass2_mv_)) / UAV_MASS;
+		ro_cm_(1, 0) = (MM_MASS * mass1_mv_ + MM_MASS * (- mass3_mv_)) / UAV_MASS;
+		ro_cm_(2, 0) = 0;
+	}
+	else if (enable_manipulator_control_)
+	{
+		ro_cm_ = (
+				PAYLOAD_MASS * gripperLeft_mv_ +
+				PAYLOAD_MASS * gripperRight_mv_
+				) / UAV_MASS;
+		ro_cm_(2, 0) = 0;
+	}
+	else
+	{
+		ro_cm_(0, 0) = 0;
+		ro_cm_(1, 0) = 0;
+		ro_cm_(2, 0) = 0;
+	}
+
 }
 
 void UavGeometryControl::calculateRotorVelocities(
@@ -613,10 +690,11 @@ void UavGeometryControl::trajectoryTracking(
 			(double)ro_cm_(1, 0),
 			(double)ro_cm_(2, 0),
 			skew_ro);
-		Matrix<double, 3, 1> add = - UAV_MASS * (R_mv_ * ro_cm_).cross(alpha_d_)
-					- UAV_MASS * R_mv_ * skew_omega * skew_ro * omega_mv_;
+		Matrix<double, 3, 1> additionalDynamics =
+				- UAV_MASS * (R_mv_ * ro_cm_).cross(alpha_d_)
+				- UAV_MASS * R_mv_ * skew_omega * skew_ro * omega_mv_;
 		// cout << "Add to A: \n" << add << "\n";
-		A = A + add;
+		A = A + additionalDynamics;
 	}
 	f_u = A.dot( R_mv_ * E3 );
 	b3_d = A / A.norm();
@@ -762,18 +840,7 @@ void UavGeometryControl::attitudeTracking(
 			omega_mv_skew);
 
 	// Add masses to inertia
-	if (!enable_mass_control_)
-	{
-		M_u = 	- k_R_ * e_R
-			- k_omega_ * e_omega
-			+ omega_mv_.cross(INERTIA * omega_mv_)
-			- INERTIA *
-			(
-				omega_mv_skew * R_mv_.adjoint() * R_d_ * omega_d_
-				- R_mv_.adjoint() * R_d_ * alpha_d_
-			);
-	}
-	else
+	if (enable_mass_control_)
 	{
 		Matrix<double, 3,3> mass_inertia;
 		mass_inertia = INERTIA;
@@ -794,9 +861,8 @@ void UavGeometryControl::attitudeTracking(
 				+ mass2_mv_ * mass2_mv_ * MM_MASS
 				+ 4 * MASS_INERTIA(2,2);
 
-		// cout << mass_inertia << "\n" << endl;
-		Matrix<double, 3, 1> add = UAV_MASS * ro_cm_.cross(R_mv_.adjoint()*a_d_);
-		// cout << "Add to moments: \n" << add << "\n";
+		Matrix<double, 3, 1> additionalDynamics =
+				UAV_MASS * ro_cm_.cross(R_mv_.adjoint()*a_d_);
 		M_u = 	- k_R_ * e_R
 			- k_omega_ * e_omega
 			+ omega_mv_.cross(mass_inertia * omega_mv_)
@@ -804,7 +870,20 @@ void UavGeometryControl::attitudeTracking(
 			(
 				omega_mv_skew * R_mv_.adjoint() * R_d_ * omega_d_
 				- R_mv_.adjoint() * R_d_ * alpha_d_
-			) + add;
+			) + additionalDynamics;
+	}
+	else
+	{
+
+		M_u = 	- k_R_ * e_R
+			- k_omega_ * e_omega
+			+ omega_mv_.cross(INERTIA * omega_mv_)
+			- INERTIA *
+			(
+				omega_mv_skew * R_mv_.adjoint() * R_d_ * omega_d_
+				- R_mv_.adjoint() * R_d_ * alpha_d_
+			);
+
 	}
 
 	M_u(0, 0) = saturation((double)M_u(0, 0), -5, 5);
@@ -846,8 +925,8 @@ void UavGeometryControl::calculateDesiredAngularVelAndAcc(
 	alpha_d_(1, 0) = saturation((double)alpha_d_(1, 0), -0.5, 0.5);
 	alpha_d_(2, 0) = saturation((double)alpha_d_(2, 0), -0.5, 0.5);
 
-	cout << "omega_d: " << "\n" << omega_d_ << "\n";
-	cout << "alpha_d: " << "\n" << alpha_d_ << "\n";
+	// cout << "omega_d: " << "\n" << omega_d_ << "\n";
+	// cout << "alpha_d: " << "\n" << alpha_d_ << "\n";
 
 	R_c_old = R_c;
 	R_c_dot_old = R_c_dot;
@@ -1047,6 +1126,22 @@ void UavGeometryControl::mass3_cb(
 	mass3_mv_ = ARM_LENGTH / 2.0 + msg.process_value;
 }
 
+void UavGeometryControl::gripperLeft_cb(
+		const geometry_msgs::PoseStamped &msg)
+{
+	gripperLeft_mv_(0, 0) = msg.pose.position.x;
+	gripperLeft_mv_(1, 0) = msg.pose.position.y;
+	gripperLeft_mv_(2, 0) = msg.pose.position.z;
+}
+
+void UavGeometryControl::gripperRight_cb(
+		const geometry_msgs::PoseStamped &msg)
+{
+	gripperRight_mv_(0, 0) = msg.pose.position.x;
+	gripperRight_mv_(1, 0) = msg.pose.position.y;
+	gripperRight_mv_(2, 0) = msg.pose.position.z;
+}
+
 void UavGeometryControl::euler2RotationMatrix(
 		const double roll,
 		const double pitch,
@@ -1125,12 +1220,26 @@ void UavGeometryControl::quaternion2euler(float *quaternion, float *euler)
 
 void UavGeometryControl::enableMassControl()
 {
+	cout << "Mass control enabled";
 	enable_mass_control_ = true;
+	enable_manipulator_control_ = false;
 }
 
 void UavGeometryControl::disableMassControl()
 {
 	enable_mass_control_ = false;
+}
+
+void UavGeometryControl::enableManipulatorControl()
+{
+	cout << "Manipulator control enabled";
+	enable_manipulator_control_ = true;
+	enable_mass_control_ = false;
+}
+
+void UavGeometryControl::disableManipulatorControl()
+{
+	enable_manipulator_control_ = false;
 }
 
 int main(int argc, char** argv)
@@ -1142,21 +1251,27 @@ int main(int argc, char** argv)
 	double rate;
 	std::string uav_namespace;
 	bool mass_ctl;
+	bool manipulator_ctl;
+
 	ros::NodeHandle nh_("~");
 	nh_.getParam("rate", rate);
 	nh_.getParam("type", uav_namespace);
 	nh_.getParam("mass_ctl", mass_ctl);
+	nh_.getParam("manipulator_ctl", manipulator_ctl);
 
 	cout << "Rate: " << rate << "\n";
 	cout << "Type: " << uav_namespace << "\n";
 	cout << "Mass_ctl: " << mass_ctl << "\n";
+	cout << "Manipulator_ctl: " << manipulator_ctl << "\n";
 
 	// Start the control algorithm
 	UavGeometryControl geometric_control(rate, uav_namespace);
 
 	// Check if masses are enabled
 	if (mass_ctl) { geometric_control.enableMassControl(); }
-	else { geometric_control.disableMassControl(); }
+
+	// Check if manipulator control is enabled
+	if (manipulator_ctl) { geometric_control.enableManipulatorControl(); }
 
 	geometric_control.runControllerLoop();
 

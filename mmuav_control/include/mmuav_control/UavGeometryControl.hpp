@@ -57,6 +57,9 @@ class UavGeometryControl
 		void enableMassControl();
 		void disableMassControl();
 
+		void enableManipulatorControl();
+		void disableManipulatorControl();
+
 	private:
 
 		void imu_cb(const sensor_msgs::Imu &msg);
@@ -78,6 +81,8 @@ class UavGeometryControl
 		void mass1_cb(const control_msgs::JointControllerState &msg);
 		void mass2_cb(const control_msgs::JointControllerState &msg);
 		void mass3_cb(const control_msgs::JointControllerState &msg);
+		void gripperLeft_cb(const geometry_msgs::PoseStamped &msg);
+		void gripperRight_cb(const geometry_msgs::PoseStamped &msg);
 
 		/**
 		 * This method will keep running until all sensors
@@ -143,6 +148,19 @@ class UavGeometryControl
 				Matrix<double, 4, 1> thrust_moment_vec,
 				Matrix<double, 4, 4> transform_matrix,
 				Matrix<double, 4, 1>& rotor_velocities);
+
+		/**
+		 * Publish control inputs based on total thrust and control moments.
+		 */
+		void publishControlInputs(
+				double f_u,
+				Matrix<double, 3, 1> M_u);
+
+		/**
+		 * Calculate center of mass with respect to the origin of the body
+		 * fixed frame.
+		 */
+		void calculateCenterOfMass();
 
 		/**
 		 * Perform quaternion to euler transformation.
@@ -240,7 +258,8 @@ class UavGeometryControl
 		 * - Mass 3 command publisher
 		 */
 		ros::Publisher rotor_ros_pub_, status_ros_pub_, mass0_cmd_pub_,
-					   mass1_cmd_pub_, mass2_cmd_pub_, mass3_cmd_pub_;
+					   mass1_cmd_pub_, mass2_cmd_pub_, mass3_cmd_pub_,
+					   payload_pos_pub_;
 
 		/**
 		 * Subscriber handle for:
@@ -252,13 +271,16 @@ class UavGeometryControl
 		 * - desired angular acceleration
 		 * - desired control mode ( position / attitude )
 		 * - orientation: roll, pitch, yaw
+		 * - mass controller subscribers
+		 * - gripper subscriber
 		 */
 		ros::Subscriber xd_ros_sub_, vd_ros_sub_, ad_ros_sub_,
 						b1d_ros_sub_, omega_d_ros_sub_, rd_ros_sub_,
 						alpha_d_ros_sub_, ctl_mode_ros_sub_,
 						euler_ros_sub_,
 						mass0_state_sub_, mass1_state_sub_,
-						mass2_state_sub_, mass3_state_sub_;
+						mass2_state_sub_, mass3_state_sub_,
+						gripperLeft_sub_, gripperRight_sub_;
 
 		/**
 		 * Messages containing angle measured values and
@@ -298,6 +320,11 @@ class UavGeometryControl
 		double mass0_mv_, mass1_mv_, mass2_mv_, mass3_mv_;
 
 		/**
+		 * Gripper positions.
+		 */
+		Matrix<double, 3, 1> gripperLeft_mv_, gripperRight_mv_;
+
+		/**
 		 * Center of mass
 		 */
 		Matrix<double, 3, 1> ro_cm_;
@@ -333,6 +360,11 @@ class UavGeometryControl
 		bool enable_mass_control_;
 
 		/**
+		 * True if mass control is enabled, otherwise false.
+		 */
+		bool enable_manipulator_control_;
+
+		/**
 		 * Sleep duration used while performing checks before starting the
 		 * run() loop.
 		 */
@@ -357,6 +389,11 @@ class UavGeometryControl
 		 * True when param callback occured, otherwise false.
 		 */
 		bool param_start_flag_;
+
+		/**
+		 * UAV namespace
+		 */
+		std::string uav_ns;
 
 		/**
 		 * Current control mode:
