@@ -9,6 +9,7 @@
 #include <mav_msgs/Actuators.h>
 #include <std_msgs/Float64.h>
 #include <std_msgs/Header.h>
+#include <geometry_msgs/Point.h>
 #include <time.h>
 
 using namespace std;
@@ -332,7 +333,7 @@ void UavGeometryControl::runControllerLoop()
 				"/" + uav_ns + "/link_gripper2_right/pose", 1,
 				&UavGeometryControl::gripperRight_cb, this);
 
-		payload_pos_pub_ = node_handle_.advertise<geometry_msgs::PoseStamped>(
+		payload_pos_pub_ = node_handle_.advertise<geometry_msgs::Point>(
 				"/" + uav_ns + "/payload_position", 1);
 	}
 
@@ -452,10 +453,13 @@ void UavGeometryControl::runControllerLoop()
 		status_msg_.omega_mv[1] = omega_mv_(1, 0);
 		status_msg_.omega_mv[2] = omega_mv_(2, 0);
 
-		status_msg_.mass_offset[0] = mass0_mv_;
-		status_msg_.mass_offset[1] = mass1_mv_;
-		status_msg_.mass_offset[2] = mass2_mv_;
-		status_msg_.mass_offset[3] = mass3_mv_;
+		if (enable_mass_control_)
+		{
+			status_msg_.mass_offset[0] = mass0_mv_;
+			status_msg_.mass_offset[1] = mass1_mv_;
+			status_msg_.mass_offset[2] = mass2_mv_;
+			status_msg_.mass_offset[3] = mass3_mv_;
+		}
 
 		status_msg_.r_cm[0] = ro_cm_(0, 0);
 		status_msg_.r_cm[1] = ro_cm_(1, 0);
@@ -523,15 +527,14 @@ void UavGeometryControl::publishControlInputs(
 				rotor_velocities);
 
 		// Roll and pitch control with masses
-		double dx = (double)M_u(1, 0) / (PAYLOAD_FORCE * E3.dot(R_mv_ * E3));
-		double dy = (double)M_u(0, 0) / (PAYLOAD_FORCE * E3.dot(R_mv_ * E3));
-		dx = saturation(dx, -ARM_LENGTH / 4, ARM_LENGTH / 4);
-		dy = saturation(dy, -ARM_LENGTH / 4, ARM_LENGTH / 4);
+		double dx = (double)M_u(1, 0) / (2 * PAYLOAD_FORCE * E3.dot(R_mv_ * E3));
+		double dy = (double)M_u(0, 0) / (2 * PAYLOAD_FORCE * E3.dot(R_mv_ * E3));
+		dx = saturation(dx, -0.05, 0.05);
+		dy = saturation(dy, -0.05, 0.05);
 
-		geometry_msgs::PoseStamped msg;
-		msg.pose.position.x = dx;
-		msg.pose.position.y = - dy;
-
+		geometry_msgs::Point msg;
+		msg.x = dx;
+		msg.y = - dy;
 		payload_pos_pub_.publish(msg);
 
 	}
@@ -578,7 +581,6 @@ void UavGeometryControl::calculateCenterOfMass()
 				PAYLOAD_MASS * gripperLeft_mv_ +
 				PAYLOAD_MASS * gripperRight_mv_
 				) / UAV_MASS;
-		ro_cm_(2, 0) = 0;
 	}
 	else
 	{
@@ -800,7 +802,6 @@ void UavGeometryControl::attitudeTracking(
 		// Remap calculated to desired
 		R_d_ = R_c;
 
-
 		// Update old R_c
 		// R_c_old = R_c;
 	}
@@ -839,52 +840,69 @@ void UavGeometryControl::attitudeTracking(
 			(double)omega_mv_(2, 0),
 			omega_mv_skew);
 
-	// Add masses to inertia
+	Matrix<double, 3,3> adjustedInertia;
+	Matrix<double, 3, 1> additionalDynamics;
+	adjustedInertia = INERTIA;
+
+	// Adjust inertia matrix
 	if (enable_mass_control_)
 	{
-		Matrix<double, 3,3> mass_inertia;
-		mass_inertia = INERTIA;
-		mass_inertia(0, 0) = mass_inertia(0, 0)
+		adjustedInertia(0, 0) = adjustedInertia(0, 0)
 				+ mass1_mv_ * mass1_mv_ * MM_MASS
 				+ mass3_mv_ * mass3_mv_ * MM_MASS
 				+ MASS_INERTIA(0, 0);
 
-		mass_inertia(1, 1) = mass_inertia(1, 1)
+		adjustedInertia(1, 1) = adjustedInertia(1, 1)
 				+ mass0_mv_ * mass0_mv_ * MM_MASS
 				+ mass2_mv_ * mass2_mv_ * MM_MASS
 				+ MASS_INERTIA(1, 1);
 
-		mass_inertia(2, 2) = mass_inertia(2, 2)
+		adjustedInertia(2, 2) = adjustedInertia(2, 2)
 				+ mass1_mv_ * mass1_mv_ * MM_MASS
 				+ mass3_mv_ * mass3_mv_ * MM_MASS
 				+ mass0_mv_ * mass0_mv_ * MM_MASS
 				+ mass2_mv_ * mass2_mv_ * MM_MASS
 				+ 4 * MASS_INERTIA(2,2);
 
-		Matrix<double, 3, 1> additionalDynamics =
+		additionalDynamics =
 				UAV_MASS * ro_cm_.cross(R_mv_.adjoint()*a_d_);
-		M_u = 	- k_R_ * e_R
-			- k_omega_ * e_omega
-			+ omega_mv_.cross(mass_inertia * omega_mv_)
-			- mass_inertia *
-			(
-				omega_mv_skew * R_mv_.adjoint() * R_d_ * omega_d_
-				- R_mv_.adjoint() * R_d_ * alpha_d_
-			) + additionalDynamics;
 	}
-	else
+	else if (enable_manipulator_control_)
 	{
+		adjustedInertia(0, 0) = adjustedInertia(0, 0)
+				+ (gripperLeft_mv_(1,0) * gripperLeft_mv_(1,0) +
+						gripperLeft_mv_(2,0) * gripperLeft_mv_(2,0)
+						) * PAYLOAD_MASS
+				+ (gripperRight_mv_(1,0) * gripperRight_mv_(1,0) +
+						gripperLeft_mv_(2,0) * gripperRight_mv_(2,0)
+						) * PAYLOAD_MASS;
 
-		M_u = 	- k_R_ * e_R
-			- k_omega_ * e_omega
-			+ omega_mv_.cross(INERTIA * omega_mv_)
-			- INERTIA *
-			(
-				omega_mv_skew * R_mv_.adjoint() * R_d_ * omega_d_
-				- R_mv_.adjoint() * R_d_ * alpha_d_
-			);
+		adjustedInertia(1, 1) = adjustedInertia(1, 1)
+						+ (gripperLeft_mv_(0,0) * gripperLeft_mv_(0,0) +
+								gripperLeft_mv_(2,0) * gripperLeft_mv_(2,0)
+								) * PAYLOAD_MASS * 2
+						+ (gripperRight_mv_(0,0) * gripperRight_mv_(0,0) +
+								gripperLeft_mv_(2,0) * gripperRight_mv_(2,0)
+								) * PAYLOAD_MASS;
 
+		adjustedInertia(2, 2) = adjustedInertia(2, 2)
+						+ (gripperLeft_mv_(0,0) * gripperLeft_mv_(0,0) +
+								gripperLeft_mv_(0,0) * gripperLeft_mv_(0,0)
+								) * PAYLOAD_MASS * 2
+						+ (gripperRight_mv_(2,0) * gripperRight_mv_(2,0) +
+								gripperLeft_mv_(2,0) * gripperRight_mv_(2,0)
+								) * PAYLOAD_MASS;
 	}
+
+
+	M_u = 	- k_R_ * e_R
+		- k_omega_ * e_omega
+		+ omega_mv_.cross(adjustedInertia * omega_mv_)
+		- adjustedInertia *
+		(
+			omega_mv_skew * R_mv_.adjoint() * R_d_ * omega_d_
+			- R_mv_.adjoint() * R_d_ * alpha_d_
+		);
 
 	M_u(0, 0) = saturation((double)M_u(0, 0), -5, 5);
 	M_u(1, 0) = saturation((double)M_u(1, 0), -5, 5);

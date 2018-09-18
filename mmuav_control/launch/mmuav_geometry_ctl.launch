@@ -20,7 +20,7 @@
     
     <group ns="$(arg type)">
         <!-- Merge height and attitude control node -->
-        <node name="mmuav_controller_outputs_to_motor_velocities" pkg="mmuav_control" type="mmuav_controller_outputs_to_motor_velocities.py">
+        <node name="mmuav_controller_outputs_to_motor_velocities" pkg="mmuav_control" type="mmuav_controller_outputs_to_motor_velocities.py" output="screen">
           <param name="rate" value="$(arg rate)"/>
         </node>
     </group>

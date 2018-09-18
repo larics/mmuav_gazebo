@@ -4,7 +4,7 @@ __author__ = 'aivanovic'
 
 import rospy
 from pid import PID
-from geometry_msgs.msg import Vector3, Vector3Stamped, PoseWithCovarianceStamped, PoseStamped
+from geometry_msgs.msg import Vector3, Vector3Stamped, PoseWithCovarianceStamped, PoseStamped, Point
 from sensor_msgs.msg import Imu
 from std_msgs.msg import Float64, Float64MultiArray
 import math
@@ -48,7 +48,7 @@ class MergeControllerOutputs:
         self.q2_right_pub = rospy.Publisher('joint2_right_controller/command', Float64, queue_size=1)
         self.q3_right_pub = rospy.Publisher('joint3_right_controller/command', Float64, queue_size=1)
 
-        rospy.Subscriber('payload_position', PoseStamped, self.payload_pos_cb, queue_size=1)
+        rospy.Subscriber('payload_position', Point, self.payload_pos_cb, queue_size=1)
         self.dx = 0
         self.dy = 0
         self.q_left = [2.463-1.57, -2.4846+1.57, -1.117]
@@ -56,7 +56,6 @@ class MergeControllerOutputs:
 
         # Sleep for few seconds then publish initial arms q
         rospy.sleep(5.0)
-        print "hello"
         self.q1_left_pub.publish(Float64(self.q1_left))
         self.q2_left_pub.publish(Float64(self.q2_left))
         self.q3_left_pub.publish(Float64(self.q3_left))
@@ -73,7 +72,8 @@ class MergeControllerOutputs:
             L1 = 0.094
             L2 = 0.061
             L3 = 0.08
-            arms_pos = [self.dx, self.dy]
+            arms_pos = [- self.dx, - self.dy]
+            
             #print arms_pos
             t0 = time.time()
             q = ArmsKinematics.ik_both_arms(self.q_right, 
@@ -83,7 +83,6 @@ class MergeControllerOutputs:
             self.q_left = copy.deepcopy(q[1])
             q_left = self.q_left
             q_right = self.q_right
-
             attitude_output = [q_left[0]+1.57, q_left[1]-1.57, q_left[2], \
                 q_right[0]-1.57, q_right[1]-1.57, q_right[2]]
             
@@ -95,8 +94,8 @@ class MergeControllerOutputs:
             self.q3_right_pub.publish(Float64(-attitude_output[5]))
 
     def payload_pos_cb(self, msg):
-        self.dx = msg.pose.position.x
-        self.dy = msg.pose.position.y
+        self.dx = msg.x
+        self.dy = msg.y
 
 if __name__ == "__main__":
     rospy.init_node('mmuav_merge_controller_outputs')

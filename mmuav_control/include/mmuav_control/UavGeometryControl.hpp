@@ -26,6 +26,7 @@
 #include <std_msgs/Float64MultiArray.h>
 #include <mmuav_msgs/GeomCtlStatus.h>
 #include <geometry_msgs/PoseStamped.h>
+#include <geometry_msgs/Point.h>
 #include <geometry_msgs/TwistStamped.h>
 #include <control_msgs/JointControllerState.h>
 
