@@ -25,11 +25,11 @@
         </node>
     </group>
     
-    <node name="geometric_control" pkg="mmuav_control" type="UavGeometryControl"
+    <!--node name="geometric_control" pkg="mmuav_control" type="UavGeometryControl"
         output="screen">
       <param name="rate" type="double" value="$(arg rate)"/>
       <param name="type" type="string" value="$(arg type)"/>
       <param name="manipulator_ctl" type="boolean" value="true"/>
-    </node>
+    </node-->
    
 </launch>
