@@ -82,8 +82,8 @@ class UavGeometryControl
 		void mass1_cb(const control_msgs::JointControllerState &msg);
 		void mass2_cb(const control_msgs::JointControllerState &msg);
 		void mass3_cb(const control_msgs::JointControllerState &msg);
-		void gripperLeft_cb(const geometry_msgs::PoseStamped &msg);
-		void gripperRight_cb(const geometry_msgs::PoseStamped &msg);
+		void gripperLeft_cb(const geometry_msgs::Point &msg);
+		void gripperRight_cb(const geometry_msgs::Point &msg);
 
 		/**
 		 * This method will keep running until all sensors

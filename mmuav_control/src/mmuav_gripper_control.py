@@ -20,7 +20,7 @@ from control_msgs.msg import JointControllerState
 class MergeControllerOutputs:
 
     def __init__(self):
-        self.rate = rospy.get_param('rate', 1)
+        self.rate = rospy.get_param('rate', 100)
         self.ros_rate = rospy.Rate(self.rate)
 
         self.roll_command = 0.0
@@ -47,6 +47,9 @@ class MergeControllerOutputs:
         self.q2_right_pub = rospy.Publisher('joint2_right_controller/command', Float64, queue_size=1)
         self.q3_right_pub = rospy.Publisher('joint3_right_controller/command', Float64, queue_size=1)
 
+        self.left_gripper_pub = rospy.Publisher('left_gripper_pos', Point, queue_size=1)
+        self.right_gripper_pub = rospy.Publisher('right_gripper_pos', Point, queue_size=1)
+
         rospy.Subscriber('payload_position', Point, self.payload_pos_cb, queue_size=1)
         rospy.Subscriber('joint1_left_controller/state', JointControllerState, self.joint1_left_cb)
         rospy.Subscriber('joint2_left_controller/state', JointControllerState, self.joint2_left_cb)
@@ -58,15 +61,18 @@ class MergeControllerOutputs:
         self.dx = 0
         self.dy = 0
 
-        self.x_right_offset = 0.149950633999
-        self.y_right_offset = -0.00240184654697
+        self.x_right_offset = 0.158342
+        self.y_right_offset = 0
 
-        self.x_left_offset = 0.150487144757
-        self.y_left_offset = -0.00204565739011
+        self.x_left_offset = 0.158342
+        self.y_left_offset = 0
 
         self.L1 = 0.094
         self.L2 = 0.061
         self.L3 = 0.08
+
+        self.dx_old = 0
+        self.dy_old = 0
         
     def run(self):
 
@@ -79,13 +85,19 @@ class MergeControllerOutputs:
         self.q1_right_pub.publish(Float64(-0.645))
         self.q2_right_pub.publish(Float64(-2.567))
         self.q3_right_pub.publish(Float64(-1.08))
-        rospy.sleep(10)
+        rospy.sleep(5.0)
 
         while not rospy.is_shutdown():
             self.ros_rate.sleep()
             
-            dqR = self.get_new_dqR(self.dx, self.dy, 0.01)
-            dqL = self.get_new_dqL(self.dx, self.dy, 0.01)
+            dx_curr = self.dx_old + 0.25 * (self.dx - self.dx_old)
+            dy_curr = self.dy_old + 0.25 * (self.dy - self.dy_old)
+            
+            dqR = self.get_new_dqR(dx_curr, dy_curr, 0.01)
+            dqL = self.get_new_dqL(dx_curr, dy_curr, 0.01)
+
+            self.dx_old = dx_curr
+            self.dy_old = dy_curr
 
             self.q1_left_pub.publish(Float64(self.q1_left + dqL[0] + 1.57))
             self.q2_left_pub.publish(Float64(self.q2_left + dqL[1] - 1.57))
@@ -95,8 +107,8 @@ class MergeControllerOutputs:
             self.q3_right_pub.publish(Float64(self.q3_right + dqL[2]))
 
     def payload_pos_cb(self, msg):
-        self.dx = msg.x
-        self.dy = msg.y
+        self.dx = - msg.y
+        self.dy = - msg.x
 
     def get_new_dqR(self, dx_pitch, dy_roll, limit):
         # Add initial offset - right manipulator
@@ -114,9 +126,15 @@ class MergeControllerOutputs:
         x_right_curr = l1 * cos(q1) + l2 * cos(q2 + q1) + l3 * cos(q3 + q2 + q1)
         y_right_curr = l1 * sin(q1) + l2 * sin(q2 + q1) + l3 * sin(q3 + q2 + q1)
 
-        print 'x_right_target: ', x_right_target, ' y_right_target: ', y_right_target
-        print 'x_right_curr: ', x_right_curr, ' y_right_curr: ', y_right_curr
-        print 'dx: ', dx_pitch, ' dy: ', dy_roll
+        right_point = Point()
+        right_point.x = x_right_curr - self.x_right_offset
+        right_point.y = y_right_curr
+        right_point.z = -0.07349
+        self.right_gripper_pub.publish(right_point)
+
+        #print 'x_right_target: ', x_right_target, ' y_right_target: ', y_right_target
+        #print 'x_right_curr: ', x_right_curr, ' y_right_curr: ', y_right_curr
+        #print 'dx: ', dx_pitch, ' dy: ', dy_roll
 
         dx_right_pitch = x_right_target - x_right_curr
         dy_right_roll = y_right_target - y_right_curr
@@ -125,19 +143,19 @@ class MergeControllerOutputs:
         dx_right_pitch = self.saturation(dx_right_pitch, limit)
         dy_right_roll = self.saturation(dy_right_roll, limit)
 
-        print 'dx_new: ', dx_right_pitch, ' dy_new: ', dy_right_roll
+        #print 'dx_new: ', dx_right_pitch, ' dy_new: ', dy_right_roll
 
         # New angle increments (right)
         try: 
-            (dq1R, dq2R, dq3R) = self.func(self.L1, self.L2, self.L3, q1, q2, q3, dx_right_pitch, dy_right_roll)
+            (dq1R, dq2R, dq3R) = self.func(self.L1, self.L2, self.L3, q1, q2, q3, -dx_right_pitch, -dy_right_roll)
         except ZeroDivisionError:
             print "ZeroDivisionError"
             dq1R = 0
             dq2R = 0
             dq3R = 0
         
-        print 'dq1R: ', dq1R, ' dq2R: ', dq2R
-        print ''
+        #print 'dq1R: ', dq1R, ' dq2R: ', dq2R
+        #print ''
 
         return (dq1R, dq2R)
 
@@ -160,14 +178,20 @@ class MergeControllerOutputs:
         l2 = self.L2
         l3 = self.L3
 
-        print ''
+        #print ''
         # Get current position of the right manipulator 
         x_left_curr = l1 * cos(q1) + l2 * cos(q2 + q1) + l3 * cos(q3 + q2 + q1)
         y_left_curr = l1 * sin(q1) + l2 * sin(q2 + q1) + l3 * sin(q3 + q2 + q1)
 
-        print 'x_left_target: ', x_left_target, ' y_left_target: ', y_left_target
-        print 'x_left_curr: ', x_left_curr, ' y_left_curr: ', y_left_curr
-        print 'dx: ', dx_pitch, ' dy: ', dy_roll
+        left_point = Point()
+        left_point.x = -(x_left_curr - self.x_left_offset)
+        left_point.y = y_left_curr
+        left_point.z = -0.07349
+        self.left_gripper_pub.publish(left_point)
+
+        #print 'x_left_target: ', x_left_target, ' y_left_target: ', y_left_target
+        #print 'x_left_curr: ', x_left_curr, ' y_left_curr: ', y_left_curr
+        #print 'dx: ', dx_pitch, ' dy: ', dy_roll
 
         # Calculate distance to the target position
         dx_left_pitch = x_left_target - x_left_curr
@@ -177,27 +201,25 @@ class MergeControllerOutputs:
         dx_left_pitch = self.saturation(dx_left_pitch, limit)
         dy_left_roll = self.saturation(dy_left_roll, limit)
 
-        print 'dx_new: ', dx_left_pitch, ' dy_new: ', dy_left_roll
+        #print 'dx_new: ', dx_left_pitch, ' dy_new: ', dy_left_roll
 
         # New angle increments (left)
         try:
-            (dq1L, dq2L, dq3L) = self.func(self.L1, self.L2, self.L3, q1, q2, q3, dx_left_pitch, dy_left_roll)
+            (dq1L, dq2L, dq3L) = self.func(self.L1, self.L2, self.L3, q1, q2, q3, -dx_left_pitch, -dy_left_roll)
         except ZeroDivisionError:
             print "ZeroDivisionError"
-            # TODO Handle zero division
-
-            #dq2r - any value
             dq2L = 0
             dq1L = 0
             dq3L = 0
 
-        print 'dq1L: ', dq1L, ' dq2L: ', dq2L
-        print ''
+        #print 'dq1L: ', dq1L, ' dq2L: ', dq2L
+        #print ''
         
         return (dq1L, dq2L, dq3L) 
 
 
     def func(self, L_C1, L_C2, L_C3, q1, q2, q3, dx, dy):
+        # Pseudoinverse
         dq1 = (L_C2*L_C3**2*sin(q1 + q2) + L_C1*L_C2**2*sin(q1) + 2*L_C1*L_C3**2*sin(q1) - 2*L_C1*L_C3**2*sin(q1 + 2*q2 + 2*q3) - L_C1*L_C2**2*sin(q1 + 2*q2) \
                 - L_C2*L_C3**2*sin(q1 + q2 + 2*q3) + L_C1*L_C2*L_C3*sin(q1 - q3) - 2*L_C1*L_C2*L_C3*sin(q1 + 2*q2 + q3) + L_C1*L_C2*L_C3*sin(q1 + q3)) * dx / \
                 (L_C1**2*L_C2**2 + 2*L_C1**2*L_C3**2 + 2*L_C2**2*L_C3**2 - 2*L_C1**2*L_C3**2*cos(2*q2 + 2*q3) - L_C1**2*L_C2**2*cos(2*q2) - 2*L_C2**2*L_C3**2*cos(2*q3) + \

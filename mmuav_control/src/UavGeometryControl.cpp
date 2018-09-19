@@ -327,10 +327,10 @@ void UavGeometryControl::runControllerLoop()
 		UAV_MASS += 2 * PAYLOAD_MASS + TOTAL_LINK_MASS;
 		// Add gripper publishers if available
 		gripperLeft_sub_ = node_handle_.subscribe(
-				"/" + uav_ns + "/link_gripper2_left/pose", 1,
+				"/" + uav_ns + "/left_gripper_pos", 1,
 				&UavGeometryControl::gripperLeft_cb, this);
 		gripperRight_sub_ = node_handle_.subscribe(
-				"/" + uav_ns + "/link_gripper2_right/pose", 1,
+				"/" + uav_ns + "/right_gripper_pos", 1,
 				&UavGeometryControl::gripperRight_cb, this);
 
 		payload_pos_pub_ = node_handle_.advertise<geometry_msgs::Point>(
@@ -529,8 +529,8 @@ void UavGeometryControl::publishControlInputs(
 		// Roll and pitch control with masses
 		double dx = (double)M_u(1, 0) / (2 * PAYLOAD_FORCE * E3.dot(R_mv_ * E3));
 		double dy = (double)M_u(0, 0) / (2 * PAYLOAD_FORCE * E3.dot(R_mv_ * E3));
-		dx = saturation(dx, -0.05, 0.05);
-		dy = saturation(dy, -0.05, 0.05);
+		dx = saturation(dx, -0.15, 0.15);
+		dy = saturation(dy, -0.15, 0.15);
 
 		geometry_msgs::Point msg;
 		msg.x = dx;
@@ -1145,19 +1145,19 @@ void UavGeometryControl::mass3_cb(
 }
 
 void UavGeometryControl::gripperLeft_cb(
-		const geometry_msgs::PoseStamped &msg)
+		const geometry_msgs::Point &msg)
 {
-	gripperLeft_mv_(0, 0) = msg.pose.position.x;
-	gripperLeft_mv_(1, 0) = msg.pose.position.y;
-	gripperLeft_mv_(2, 0) = msg.pose.position.z;
+	gripperLeft_mv_(0, 0) = msg.x;
+	gripperLeft_mv_(1, 0) = msg.y;
+	gripperLeft_mv_(2, 0) = msg.z;
 }
 
 void UavGeometryControl::gripperRight_cb(
-		const geometry_msgs::PoseStamped &msg)
+		const geometry_msgs::Point &msg)
 {
-	gripperRight_mv_(0, 0) = msg.pose.position.x;
-	gripperRight_mv_(1, 0) = msg.pose.position.y;
-	gripperRight_mv_(2, 0) = msg.pose.position.z;
+	gripperRight_mv_(0, 0) = msg.x;
+	gripperRight_mv_(1, 0) = msg.y;
+	gripperRight_mv_(2, 0) = msg.z;
 }
 
 void UavGeometryControl::euler2RotationMatrix(

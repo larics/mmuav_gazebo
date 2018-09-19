@@ -22,37 +22,37 @@ class TestTrajectory:
 
         # Reference publishers
         self.pos_ref_pub = rospy.Publisher(
-            "mmcuav/x_desired",
+            "mmuav/x_desired",
             Vector3,
             queue_size=10)
         self.pos_ref_msg = Vector3()
         
         self.v_ref_pub = rospy.Publisher(
-            "mmcuav/v_desired",
+            "mmuav/v_desired",
             Vector3,
             queue_size=10)
         self.v_ref_msg = Vector3()
         
         self.a_ref_pub = rospy.Publisher(
-            "mmcuav/a_desired",
+            "mmuav/a_desired",
             Vector3,
             queue_size=10)
         self.a_ref_msg = Vector3()
         
         self.heading_ref_pub = rospy.Publisher(
-            "mmcuav/b1_desired",
+            "mmuav/b1_desired",
             Vector3,
             queue_size=10)
         self.ang_ref_msg = Vector3()
         
         self.euler_ref_pub = rospy.Publisher(
-            "mmcuav/euler_desired",
+            "mmuav/euler_desired",
             Vector3, 
             queue_size=10)
         self.euler_msg = Vector3()
         
         self.control_mode_pub = rospy.Publisher(
-            "mmcuav/control_mode",
+            "mmuav/control_mode",
             Int8,
             queue_size=10)
         self.mode_ref_msg = Int8()
@@ -67,7 +67,7 @@ class TestTrajectory:
     def run(self):
 
         end_time = 10
-        scale = 2
+        scale = 3.5
         t_list = np.linspace(0, end_time, 500 * scale)
         ang_list = np.linspace(0, pi, 500 * scale)
         easy = np.linspace(1, 1, 100)
