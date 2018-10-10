@@ -67,11 +67,11 @@ class TestTrajectory:
     def run(self):
 
         end_time = 10
-        scale = 3
+        scale = 2
         t_list = np.linspace(0, end_time, 500 * scale)
         ang_list = np.linspace(0, pi, 500 * scale)
-        easy = np.linspace(1, 1, 100)
-        easy = np.append(easy, np.ones(int(500*scale) - 100))
+        easy = np.linspace(2.5, 1, 200)
+        easy = np.append(easy, np.ones(int(500*scale) - 200))
         
         # Position control
         #self.mode_ref_msg.data = 1;
@@ -80,8 +80,8 @@ class TestTrajectory:
         for t, ang, _easy in zip(t_list, ang_list, easy):
             self.rate.sleep();
             print(t, "/", end_time)
-            self.pos_ref_msg.x = 0.4 * t
-            self.pos_ref_msg.y = 0.5 * sin(pi * t) 
+            self.pos_ref_msg.x = 0.4 * t / _easy
+            self.pos_ref_msg.y = 0.5 * sin(pi * t) / _easy 
             self.pos_ref_msg.z = 0.6 * cos(pi * t) + 2
                 
             self.v_ref_msg.x = 0.4 / (scale * _easy)

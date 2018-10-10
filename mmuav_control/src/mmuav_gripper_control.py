@@ -90,8 +90,8 @@ class MergeControllerOutputs:
         while not rospy.is_shutdown():
             self.ros_rate.sleep()
             
-            dx_curr = self.dx_old + 0.25 * (self.dx - self.dx_old)
-            dy_curr = self.dy_old + 0.25 * (self.dy - self.dy_old)
+            dx_curr = self.dx_old + 1 * (self.dx - self.dx_old)
+            dy_curr = self.dy_old + 1 * (self.dy - self.dy_old)
             
             dqR = self.get_new_dqR(dx_curr, dy_curr, 0.01)
             dqL = self.get_new_dqL(dx_curr, dy_curr, 0.01)
@@ -127,8 +127,8 @@ class MergeControllerOutputs:
         y_right_curr = l1 * sin(q1) + l2 * sin(q2 + q1) + l3 * sin(q3 + q2 + q1)
 
         right_point = Point()
-        right_point.x = x_right_curr - self.x_right_offset
-        right_point.y = y_right_curr
+        right_point.y = (x_right_curr - self.x_right_offset)
+        right_point.x = y_right_curr
         right_point.z = -0.07349
         self.right_gripper_pub.publish(right_point)
 
@@ -184,8 +184,8 @@ class MergeControllerOutputs:
         y_left_curr = l1 * sin(q1) + l2 * sin(q2 + q1) + l3 * sin(q3 + q2 + q1)
 
         left_point = Point()
-        left_point.x = -(x_left_curr - self.x_left_offset)
-        left_point.y = y_left_curr
+        left_point.y = - (x_left_curr - self.x_left_offset)
+        left_point.x = - y_left_curr
         left_point.z = -0.07349
         self.left_gripper_pub.publish(left_point)
 

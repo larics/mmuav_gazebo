@@ -162,18 +162,18 @@ UavGeometryControl::UavGeometryControl(int rate, std::string uav_ns)
 	// Initialize controller parameters
 	// Parameters initialized according to 2010-extended.pdf
 	k_x_.setZero(3, 3);
-	k_x_(0, 0) = 6;
-	k_x_(1, 1) = 6;
+	k_x_(0, 0) = 7.2;
+	k_x_(1, 1) = 7.2;
 	k_x_(2, 2) = 50;
 
 	k_v_.setZero(3, 3);
-	k_v_(0, 0) = 2.5;
-	k_v_(1, 1) = 2.5;
+	k_v_(0, 0) = 2.6;
+	k_v_(1, 1) = 2.6;
 	k_v_(2, 2) = 20;
 
 	k_R_.setZero(3, 3);
-	k_R_(0, 0) = 1.5;
-	k_R_(1, 1) = 1.5;
+	k_R_(0, 0) = 1.52;
+	k_R_(1, 1) = 1.52;
 	k_R_(2, 2) = 12;
 
 	k_omega_.setZero(3, 3);
@@ -649,19 +649,15 @@ void UavGeometryControl::trajectoryTracking(
 	// Calculate total thrust and b3_d (desired thrust vector)
 	if (current_control_mode_ == POSITION_CONTROL)
 	{
-		//cout << "Trajectory: POSITION" << "\n";
 		e_x = (x_mv_ - pos_desired);
 		e_v = (v_mv_ - v_d_);
 	}
 	else if (current_control_mode_ == ATTITUDE_CONTROL)
 	{
-		//cout << "Trajectory: ATTITUDE" << "\n";
 		/**
 		 * During Attitude control only take z - component of
 		 * position and linear velocity.
 		 */
-
-		//v_d_ = (x_d_ - pos_old);
 		e_x = (x_mv_(2, 0) - pos_desired(2, 0)) * E3;
 		e_v = (v_mv_(2, 0) - v_d_(2, 0)) * E3;
 	}
@@ -678,7 +674,7 @@ void UavGeometryControl::trajectoryTracking(
 		+ UAV_MASS * G * E3
 		+ UAV_MASS * a_d_;
 
-	if (enable_mass_control_)
+	if (enable_mass_control_ || enable_manipulator_control_)
 	{
 		Matrix<double, 3, 3> skew_omega, skew_ro;
 		hatOperator(
@@ -891,6 +887,9 @@ void UavGeometryControl::attitudeTracking(
 						+ (gripperRight_mv_(2,0) * gripperRight_mv_(2,0) +
 								gripperLeft_mv_(2,0) * gripperRight_mv_(2,0)
 								) * PAYLOAD_MASS;
+
+		additionalDynamics =
+						UAV_MASS * ro_cm_.cross(R_mv_.adjoint()*a_d_);
 	}
 
 
@@ -901,7 +900,7 @@ void UavGeometryControl::attitudeTracking(
 		(
 			omega_mv_skew * R_mv_.adjoint() * R_d_ * omega_d_
 			- R_mv_.adjoint() * R_d_ * alpha_d_
-		);
+		) + additionalDynamics;
 
 	M_u(0, 0) = saturation((double)M_u(0, 0), -5, 5);
 	M_u(1, 0) = saturation((double)M_u(1, 0), -5, 5);
