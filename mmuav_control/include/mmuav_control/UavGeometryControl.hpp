@@ -95,16 +95,11 @@ class UavGeometryControl
 		 * Calculate b3_d and f_u as position tracking control inputs.
 		 *
 		 * @param pos_desired - desired position reference
-		 * 						(may change due to prefilter)
-		 * @param pos_old - old position
-		 * @param dt - time interval
 		 * @param b3_d - thrust heading reference, assigned in method
 		 * @param f_u - thrust magnitude value, assigned in method
 		 */
 		void trajectoryTracking(
 				const Matrix<double, 3, 1> pos_desired,
-				const Matrix<double, 3, 1> pos_old,
-				const double dt,
 				Matrix<double, 3, 1> &b3_d,
 				double &f_u);
 

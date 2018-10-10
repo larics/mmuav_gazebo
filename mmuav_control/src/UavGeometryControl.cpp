@@ -162,13 +162,13 @@ UavGeometryControl::UavGeometryControl(int rate, std::string uav_ns)
 	// Initialize controller parameters
 	// Parameters initialized according to 2010-extended.pdf
 	k_x_.setZero(3, 3);
-	k_x_(0, 0) = 10;
-	k_x_(1, 1) = 10;
+	k_x_(0, 0) = 6;
+	k_x_(1, 1) = 6;
 	k_x_(2, 2) = 50;
 
 	k_v_.setZero(3, 3);
-	k_v_(0, 0) = 3.75;
-	k_v_(1, 1) = 3.75;
+	k_v_(0, 0) = 2.5;
+	k_v_(1, 1) = 2.5;
 	k_v_(2, 2) = 20;
 
 	k_R_.setZero(3, 3);
@@ -255,11 +255,9 @@ void UavGeometryControl::runControllerLoop()
 	 * M_u 				- control moment
 	 * x_des, x_old		- desired position, old position
 	 * b1_des, b1_old 	- desired heading, old heading
-	 * v_d_old			- old desired velocity
 	 */
 	Matrix<double, 3, 1> b3_d, M_u,
-						b1_old, x_des, b1_des,
-						v_d_old;
+						b1_old, x_des, b1_des;
 	b1_old = b1_d_;
 	x_old = x_mv_;
 
@@ -273,7 +271,6 @@ void UavGeometryControl::runControllerLoop()
 	R_c_dot_old.setZero(3, 3);
 	omega_c_old.setZero(3, 3);
 	x_dot_old.setZero(3, 1);
-	x_old.setZero(3, 1);
 
 	// Total thrust control value
 	double f_u;
@@ -351,6 +348,11 @@ void UavGeometryControl::runControllerLoop()
 		if (dt < 1.0 / controller_rate_)
 			continue;
 
+		/*
+		 *	Initialize auxiliary counter used
+		 *	for calculations happening at a different
+		 *	rate than the control loop.
+		 */
 		counter += dt;
 		if (counter >= dt_help)
 		{
@@ -361,6 +363,7 @@ void UavGeometryControl::runControllerLoop()
 		// Update old time
 		t_old_ = ros::Time::now();
 
+		// Assign angular velocities
 		omega_mv_(0, 0) = euler_rate_mv_.x;
 		omega_mv_(1, 0) = euler_rate_mv_.y;
 		omega_mv_(2, 0) = euler_rate_mv_.z;
@@ -372,6 +375,7 @@ void UavGeometryControl::runControllerLoop()
 				euler_mv_.z,
 				R_mv_);
 
+		// Calculate center of mass
 		calculateCenterOfMass();
 
 		// Position and heading prefilter
@@ -381,15 +385,12 @@ void UavGeometryControl::runControllerLoop()
 		// TRAJECTORY TRACKING BLOCK
 		trajectoryTracking(
 				x_des,		// Input - desired position
-				x_old,		// Input - old position
-				dt,			// Input - time interval
 				b3_d,		// OUTPUT - thrust vector
 				f_u);		// OUTPUT - total thrust
 
 		// Update old position
 		b1_old = b1_des;
 		x_old = x_des;
-		v_d_old = v_d_;
 
 		// ATTITUDE TRACKING BLOCK
 		attitudeTracking(
@@ -637,8 +638,6 @@ void UavGeometryControl::calculateRotorVelocities(
 
 void UavGeometryControl::trajectoryTracking(
 		const Matrix<double, 3, 1> pos_desired,
-		const Matrix<double, 3, 1> pos_old,
-		const double dt,
 		Matrix<double, 3, 1> &b3_d,
 		double &f_u)
 {

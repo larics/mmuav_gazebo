@@ -67,7 +67,7 @@ class TestTrajectory:
     def run(self):
 
         end_time = 10
-        scale = 3.5
+        scale = 3
         t_list = np.linspace(0, end_time, 500 * scale)
         ang_list = np.linspace(0, pi, 500 * scale)
         easy = np.linspace(1, 1, 100)
