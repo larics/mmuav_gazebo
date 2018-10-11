@@ -8,6 +8,7 @@
 #include <mmuav_control/UavGeometryControl.hpp>
 #include <mmuav_control/MmuavParameters.hpp>
 #include <mmuav_control/NonlinearFilters.hpp>
+#include <mmuav_control/GeometricHelper.hpp>
 
 #include <mav_msgs/Actuators.h>
 #include <std_msgs/Float64.h>
@@ -283,18 +284,6 @@ void UavGeometryControl::runControllerLoop()
 
 		// Update old time
 		t_old = ros::Time::now();
-
-		// Assign angular velocities
-		omega_mv_(0, 0) = euler_rate_mv_.x;
-		omega_mv_(1, 0) = euler_rate_mv_.y;
-		omega_mv_(2, 0) = euler_rate_mv_.z;
-
-		// Construct current rotation matrix - R
-		euler2RotationMatrix(
-				euler_mv_.x,
-				euler_mv_.y,
-				euler_mv_.z,
-				R_mv_);
 
 		// Calculate center of mass
 		calculateCenterOfMass();
@@ -602,12 +591,12 @@ void UavGeometryControl::trajectoryTracking(
 	if (enable_mass_control_ || enable_manipulator_control_)
 	{
 		Matrix<double, 3, 3> skew_omega, skew_ro;
-		hatOperator(
+		geom_helper::hatOperator(
 			(double)omega_mv_(0, 0),
 			(double)omega_mv_(1, 0),
 			(double)omega_mv_(2, 0),
 			skew_omega);
-		hatOperator(
+		geom_helper::hatOperator(
 			(double)ro_cm_(0, 0),
 			(double)ro_cm_(1, 0),
 			(double)ro_cm_(2, 0),
@@ -734,7 +723,7 @@ void UavGeometryControl::attitudeTracking(
 		//cout << "Attitude: ATTITUDE" << "\n";
 		// Do nothing here - read desired attitude values from
 		// callback functions.
-		euler2RotationMatrix(
+		geom_helper::euler2RotationMatrix(
 				(double)euler_d_(0,0),
 				(double)euler_d_(1,0),
 				(double)euler_d_(2,0),
@@ -752,13 +741,13 @@ void UavGeometryControl::attitudeTracking(
 	// ATTITUDE TRACKING
 	// Calculate control moment M
 	e_R_skew = (R_d_.adjoint() * R_mv_ - R_mv_.adjoint() * R_d_) / 2;
-	veeOperator(e_R_skew, e_R);
+	geom_helper::veeOperator(e_R_skew, e_R);
 	e_omega = (omega_mv_ - R_mv_.adjoint() * R_d_ * omega_d_);
 	if (e_omega(0, 0) != e_omega(0, 0))
 	{
 		throw std::runtime_error("STOP");
 	}
-	hatOperator(
+	geom_helper::hatOperator(
 			(double)omega_mv_(0, 0),
 			(double)omega_mv_(1, 0),
 			(double)omega_mv_(2, 0),
@@ -861,8 +850,8 @@ void UavGeometryControl::calculateDesiredAngularVelAndAcc(
 	alpha_c_skew = - omega_c_skew * omega_c_skew + R_c.adjoint() * R_c_ddot;
 
 	// Remap calculated values to desired
-	veeOperator(omega_c_skew, omega_d_);
-	veeOperator(alpha_c_skew, alpha_d_);
+	geom_helper::veeOperator(omega_c_skew, omega_d_);
+	geom_helper::veeOperator(alpha_c_skew, alpha_d_);
 
 	/*
 	omega_d_(0, 0) = nonlinear_filters::saturation(
@@ -1033,7 +1022,7 @@ void UavGeometryControl::imu_cb (const sensor_msgs::Imu &msg)
     quaternion[3] = msg.orientation.z;
     quaternion[0] = msg.orientation.w;
 
-    quaternion2euler(quaternion, euler);
+    geom_helper::quaternion2euler(quaternion, euler);
     euler_mv_.x = euler[0];
     euler_mv_.y = euler[1];
     euler_mv_.z = euler[2];
@@ -1054,6 +1043,18 @@ void UavGeometryControl::imu_cb (const sensor_msgs::Imu &msg)
     euler_rate_mv_.x = p + sx * ty * q + cx * ty * r;
     euler_rate_mv_.y = cx * q - sx * r;
     euler_rate_mv_.z = sx / cy * q + cx / cy * r;
+
+    // Assign angular velocities
+	omega_mv_(0, 0) = euler_rate_mv_.x;
+	omega_mv_(1, 0) = euler_rate_mv_.y;
+	omega_mv_(2, 0) = euler_rate_mv_.z;
+
+	// Construct current rotation matrix - R
+	geom_helper::euler2RotationMatrix(
+			euler_mv_.x,
+			euler_mv_.y,
+			euler_mv_.z,
+			R_mv_);
 }
 
 void UavGeometryControl::mass0_cb(
@@ -1094,63 +1095,6 @@ void UavGeometryControl::gripperRight_cb(
 	gripperRight_mv_(0, 0) = msg.x;
 	gripperRight_mv_(1, 0) = msg.y;
 	gripperRight_mv_(2, 0) = msg.z;
-}
-
-void UavGeometryControl::euler2RotationMatrix(
-		const double roll,
-		const double pitch,
-		const double yaw,
-		Matrix<double, 3, 3> &rotMatrix)
-{
-	rotMatrix.setZero(3, 3);
-	rotMatrix(0, 0) = cos(yaw) * cos(pitch);
-	rotMatrix(0, 1) = cos(yaw) * sin(pitch) * sin(roll) - sin(yaw) * cos(roll);
-	rotMatrix(0, 2) = cos(yaw) * sin(pitch) * cos(roll) + sin(yaw) * sin(roll);
-	rotMatrix(1, 0) = sin(yaw) * cos(pitch);
-	rotMatrix(1, 1) = sin(yaw) * sin(pitch) * sin(roll) + cos(yaw) * cos(roll);
-	rotMatrix(1, 2) = sin(yaw) * sin(pitch) * cos(roll) - cos(yaw) * sin(roll);
-	rotMatrix(2, 0) = - sin(pitch);
-	rotMatrix(2, 1) = cos(pitch) * sin(roll);
-	rotMatrix(2, 2) = cos(pitch) * cos(roll);
-}
-
-void UavGeometryControl::hatOperator(
-		const double x,
-		const double y,
-		const double z,
-		Matrix<double, 3, 3> &hatMatrix)
-{
-	hatMatrix.setZero(3,3);
-	hatMatrix(0, 1) = -z;
-	hatMatrix(0, 2) =  y;
-	hatMatrix(1, 0) =  z;
-	hatMatrix(1, 2) = -x;
-	hatMatrix(2, 0) = -y;
-	hatMatrix(2, 1) =  x;
-}
-
-void UavGeometryControl::veeOperator(
-		Matrix<double, 3, 3> hatMatrix,
-		Matrix<double, 3, 1> &veeVector)
-{
-	veeVector.setZero(3, 1);
-	veeVector(0, 0) = hatMatrix(2, 1); 			// x component
-	veeVector(1, 0) = hatMatrix(0, 2);			// y component
-	veeVector(2, 0) = hatMatrix(1, 0);			// z component
-}
-
-void UavGeometryControl::quaternion2euler(float *quaternion, float *euler)
-{
-  euler[0] = atan2(2 * (quaternion[0] * quaternion[1] +
-    quaternion[2] * quaternion[3]), 1 - 2 * (quaternion[1] * quaternion[1]
-    + quaternion[2] * quaternion[2]));
-
-  euler[1] = asin(2 * (quaternion[0] * quaternion[2] -
-    quaternion[3] * quaternion[1]));
-
-  euler[2] = atan2(2 * (quaternion[0]*quaternion[3] +
-    quaternion[1]*quaternion[2]), 1 - 2 * (quaternion[2]*quaternion[2] +
-    quaternion[3] * quaternion[3]));
 }
 
 void UavGeometryControl::enableMassControl()
