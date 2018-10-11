@@ -352,11 +352,6 @@ class UavGeometryControl
 		mmuav_msgs::GeomCtlStatus status_msg_;
 
 		/**
-		 * Variable used for calculating time intervals in the controller loop.
-		 */
-		ros::Time t_old_;
-
-		/**
 		 * Controller rate. Frequency at which the loop in run method
 		 * will be executed.
 		 */

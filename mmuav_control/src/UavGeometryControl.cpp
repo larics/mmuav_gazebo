@@ -134,8 +134,6 @@ UavGeometryControl::UavGeometryControl(int rate, std::string uav_ns)
 	cout << THRUST_TRANSFORM_YAW << "\n";
 	cout << endl;
 
-	sleep(3);
-
 	// Initialize desired position values
 	x_d_.setZero(3,1);
 	v_d_.setZero(3,1);
@@ -242,17 +240,19 @@ UavGeometryControl::~UavGeometryControl()
 
 void UavGeometryControl::runControllerLoop()
 {
-	// Loop time interval check
+	/**
+	 * Initialize time variables used for calculating
+	 * time intervals.
+	 */
 	double dt;
+	ros::Time t_old = ros::Time::now();
 
 	/*
 	 * b3_d 			- desired thrust vector
-	 * x_des, x_old		- desired position, old position
 	 * b1_des, b1_old 	- desired heading, old heading
 	 */
-	Matrix<double, 3, 1> b3_d, b1_old, x_des, b1_des;
+	Matrix<double, 3, 1> b3_d, b1_old, b1_des;
 	b1_old = b1_d_;
-	x_old = x_mv_;
 
 	/*
 	 * R_d 		- desired rotation matrix
@@ -265,18 +265,19 @@ void UavGeometryControl::runControllerLoop()
 	omega_c_old.setZero(3, 3);
 	x_dot_old.setZero(3, 1);
 
-	// Total thrust control value
+	/**
+	 * Controller outputs:
+	 * 	- f_u: Total control force
+	 * 	- M_u: Total control moment
+	 */
 	double f_u;
-	// Total control moments
 	Matrix<double, 3, 1> M_u;
 
 	// Perform sensor checks
 	blockingSensorChecks();
-
 	ROS_INFO("UavGeometricControl::run() - "
 			"Starting geometric control in 5...");
-
-	t_old_ = ros::Time::now();
+	sleep(5);
 
 	R_mv_ = EYE3;
 	Matrix<double, 3, 3> R_mv_old = EYE3;
@@ -284,50 +285,6 @@ void UavGeometryControl::runControllerLoop()
 	// Initialize helper time variables
 	double dt_help = 0.1;
 	double counter = 0.0;
-
-	// Set Appropriate mass
-	if (enable_mass_control_)
-	{
-		UAV_MASS += 4*MM_MASS;
-		// Add mass publishers if available
-		mass0_cmd_pub_ = node_handle_.advertise<std_msgs::Float64>(
-				"/" + uav_ns + "/movable_mass_0_position_controller/command", 1);
-		mass1_cmd_pub_ = node_handle_.advertise<std_msgs::Float64>(
-				"/" + uav_ns + "/movable_mass_1_position_controller/command", 1);
-		mass2_cmd_pub_ = node_handle_.advertise<std_msgs::Float64>(
-				"/" + uav_ns + "/movable_mass_2_position_controller/command", 1);
-		mass3_cmd_pub_ = node_handle_.advertise<std_msgs::Float64>(
-				"/" + uav_ns + "/movable_mass_3_position_controller/command", 1);
-
-		// Mass state subscribers
-		mass0_state_sub_ = node_handle_.subscribe(
-				"/" + uav_ns + "/movable_mass_0_position_controller/state", 1,
-				&UavGeometryControl::mass0_cb, this);
-		mass1_state_sub_ = node_handle_.subscribe(
-				"/" + uav_ns + "/movable_mass_1_position_controller/state", 1,
-				&UavGeometryControl::mass1_cb, this);
-		mass2_state_sub_ = node_handle_.subscribe(
-				"/" + uav_ns + "/movable_mass_2_position_controller/state", 1,
-				&UavGeometryControl::mass2_cb, this);
-		mass3_state_sub_ = node_handle_.subscribe(
-				"/" + uav_ns + "/movable_mass_3_position_controller/state", 1,
-				&UavGeometryControl::mass3_cb, this);
-
-	}
-	else if (enable_manipulator_control_)
-	{
-		UAV_MASS += 2 * PAYLOAD_MASS + TOTAL_LINK_MASS;
-		// Add gripper publishers if available
-		gripperLeft_sub_ = node_handle_.subscribe(
-				"/" + uav_ns + "/left_gripper_pos", 1,
-				&UavGeometryControl::gripperLeft_cb, this);
-		gripperRight_sub_ = node_handle_.subscribe(
-				"/" + uav_ns + "/right_gripper_pos", 1,
-				&UavGeometryControl::gripperRight_cb, this);
-
-		payload_pos_pub_ = node_handle_.advertise<geometry_msgs::Point>(
-				"/" + uav_ns + "/payload_position", 1);
-	}
 
 	// Start the control loop.
 	while (ros::ok())
@@ -337,7 +294,7 @@ void UavGeometryControl::runControllerLoop()
 
 		// Calculate time difference
 		double current_time = ros::Time::now().toSec();
-		dt = current_time - t_old_.toSec();
+		dt = current_time - t_old.toSec();
 
 		// Check if time is right
 		if (dt < 1.0 / controller_rate_)
@@ -356,7 +313,7 @@ void UavGeometryControl::runControllerLoop()
 		}
 
 		// Update old time
-		t_old_ = ros::Time::now();
+		t_old = ros::Time::now();
 
 		// Assign angular velocities
 		omega_mv_(0, 0) = euler_rate_mv_.x;
@@ -374,18 +331,16 @@ void UavGeometryControl::runControllerLoop()
 		calculateCenterOfMass();
 
 		// Position and heading prefilter
-		x_des = x_d_; //x_old + 0.025 * (x_d_ - x_old);
 		b1_des = b1_old + 0.05 * (b1_d_ - b1_old);
 
 		// TRAJECTORY TRACKING BLOCK
 		trajectoryTracking(
-				x_des,		// Input - desired position
+				x_d_,		// Input - desired position
 				b3_d,		// OUTPUT - thrust vector
 				f_u);		// OUTPUT - total thrust
 
 		// Update old position
 		b1_old = b1_des;
-		x_old = x_des;
 
 		// ATTITUDE TRACKING BLOCK
 		attitudeTracking(
@@ -709,41 +664,45 @@ void UavGeometryControl::trajectoryTracking(
 
 void UavGeometryControl::blockingSensorChecks()
 {
-
+	ROS_INFO("UavGeometricControl::blockingSensorChecks() - "
+			"Waiting for first clock message");
 	// Wait for the ROS time server
 	while (ros::Time::now().toSec() == 0 && ros::ok())
 	{
-		ROS_INFO("UavGeometricControl::run() - "
-				"Waiting for clock server to start");
+		ros::spinOnce();
 	}
-	ROS_INFO("UavGeometricControl::run() - "
+	ROS_INFO("UavGeometricControl::blockingSensorChecks() - "
 			"Received first clock message");
 
+	ROS_INFO("UavGeometricControl::blockingSensorChecks() - "
+			"Waiting for first IMU message");
 	// Wait for start flag from IMU callback
 	while (!imu_start_flag_ && ros::ok())
 	{
 		ros::spinOnce();
-		ROS_INFO("UavGeometricControl::run() - "
-				"Waiting for first IMU measurement");
 	}
+	ROS_INFO("UavGeometricControl::blockingSensorChecks() - "
+			"Received first IMU message");
 
+	ROS_INFO("UavGeometricControl::blockingSensorChecks() - "
+			"Waiting for first Pose message");
 	// Wait for start flag from pose callback
 	while (!pose_start_flag_ && ros::ok())
 	{
 		ros::spinOnce();
-		ROS_INFO("UavGeometricControl::run() - "
-				"Waiting for first pose measurement");
 	}
+	ROS_INFO("UavGeometricControl::blockingSensorChecks() - "
+			"Received first Pose message");
 
+	ROS_INFO("UavGeometricControl::blockingSensorChecks() - "
+			"Waiting for first Velocity message");
 	// Wait for start flag from velocity callback
 	while (!velocity_start_flag_ && ros::ok())
 	{
 		ros::spinOnce();
-		ROS_INFO("UavGeometricControl::run() - "
-				"Waiting for first velocity measurement");
 	}
-
-	sleep(3);
+	ROS_INFO("UavGeometricControl::blockingSensorChecks() - "
+			"Received first Velocity message");
 }
 
 void UavGeometryControl::attitudeTracking(
@@ -1238,9 +1197,35 @@ void UavGeometryControl::quaternion2euler(float *quaternion, float *euler)
 
 void UavGeometryControl::enableMassControl()
 {
-	cout << "Mass control enabled";
+	ROS_INFO("UavGeometryControl::enableMassControl() - "
+			"Mass control enabled.");
 	enable_mass_control_ = true;
 	enable_manipulator_control_ = false;
+
+	UAV_MASS += 4*MM_MASS;
+	// Add mass publishers if available
+	mass0_cmd_pub_ = node_handle_.advertise<std_msgs::Float64>(
+			"/" + uav_ns + "/movable_mass_0_position_controller/command", 1);
+	mass1_cmd_pub_ = node_handle_.advertise<std_msgs::Float64>(
+			"/" + uav_ns + "/movable_mass_1_position_controller/command", 1);
+	mass2_cmd_pub_ = node_handle_.advertise<std_msgs::Float64>(
+			"/" + uav_ns + "/movable_mass_2_position_controller/command", 1);
+	mass3_cmd_pub_ = node_handle_.advertise<std_msgs::Float64>(
+			"/" + uav_ns + "/movable_mass_3_position_controller/command", 1);
+
+	// Mass state subscribers
+	mass0_state_sub_ = node_handle_.subscribe(
+			"/" + uav_ns + "/movable_mass_0_position_controller/state", 1,
+			&UavGeometryControl::mass0_cb, this);
+	mass1_state_sub_ = node_handle_.subscribe(
+			"/" + uav_ns + "/movable_mass_1_position_controller/state", 1,
+			&UavGeometryControl::mass1_cb, this);
+	mass2_state_sub_ = node_handle_.subscribe(
+			"/" + uav_ns + "/movable_mass_2_position_controller/state", 1,
+			&UavGeometryControl::mass2_cb, this);
+	mass3_state_sub_ = node_handle_.subscribe(
+			"/" + uav_ns + "/movable_mass_3_position_controller/state", 1,
+			&UavGeometryControl::mass3_cb, this);
 }
 
 void UavGeometryControl::disableMassControl()
@@ -1250,9 +1235,22 @@ void UavGeometryControl::disableMassControl()
 
 void UavGeometryControl::enableManipulatorControl()
 {
-	cout << "Manipulator control enabled";
+	ROS_INFO("UavGeometryControl::enableManipulatorControl() - "
+			"Manipulator control enabled.");
 	enable_manipulator_control_ = true;
 	enable_mass_control_ = false;
+
+	UAV_MASS += 2 * PAYLOAD_MASS + TOTAL_LINK_MASS;
+	// Add gripper publishers if available
+	gripperLeft_sub_ = node_handle_.subscribe(
+			"/" + uav_ns + "/left_gripper_pos", 1,
+			&UavGeometryControl::gripperLeft_cb, this);
+	gripperRight_sub_ = node_handle_.subscribe(
+			"/" + uav_ns + "/right_gripper_pos", 1,
+			&UavGeometryControl::gripperRight_cb, this);
+
+	payload_pos_pub_ = node_handle_.advertise<geometry_msgs::Point>(
+			"/" + uav_ns + "/payload_position", 1);
 }
 
 void UavGeometryControl::disableManipulatorControl()
