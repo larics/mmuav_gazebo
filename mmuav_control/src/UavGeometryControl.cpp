@@ -6,6 +6,8 @@
  */
 
 #include <mmuav_control/UavGeometryControl.hpp>
+#include <mmuav_control/MmuavParameters.hpp>
+
 #include <mav_msgs/Actuators.h>
 #include <std_msgs/Float64.h>
 #include <std_msgs/Header.h>
@@ -14,36 +16,9 @@
 
 using namespace std;
 
-const double G = 9.81;
-
-// UAV constants
-const double ARM_LENGTH = 0.314;
-const double MOMENT_CONSTANT = 0.016;
-const double MOTOR_CONSTANT = 8.54858e-06;
-
-// ROTOR constants
-const double ROTOR_MASS = 0.01;
-const double ROTOR_VELOCITY_SLOWDOWN_SIM = 15;
-const double ROTOR_RADIUS = 0.1524;
-const double ROTOR_OFFSET_TOP = 0.04579;
-const double MIN_ROTOR_VELOCITY = 0;
-const double MAX_ROTOR_VELOCITY = 1475;
 Matrix<double, 3, 3> INERTIA;
 Matrix<double, 3, 3> MASS_INERTIA;
-const double D =  ARM_LENGTH + ROTOR_RADIUS / 2;
-const double MAXIMUM_MOMENT =
-		MAX_ROTOR_VELOCITY * MAX_ROTOR_VELOCITY * MOTOR_CONSTANT // MAX FORCE
-		* D;
-
-// Moving mass constants
-const double MM_MASS = 0.208;
-const double MM_FORCE = MM_MASS * G;
 double UAV_MASS = 2.083;
-
-// Payload constant
-const double PAYLOAD_MASS = 0.25;
-const double TOTAL_LINK_MASS = 0.13 * 2;
-const double PAYLOAD_FORCE = PAYLOAD_MASS * G;
 
 // Transform matrix with roll / pitch corrections
 Matrix<double, 4, 4> THRUST_TRANSFORM_FULL;
@@ -55,14 +30,10 @@ const Matrix<double, 3, 1> E3(0, 0, 1);
 Matrix<double, 3, 3> EYE3;
 Matrix<double, 4, 4> EYE4;
 
-// Deadzone constatnt
-const double EPS = 0.01;
-
 // Define control modes
 const int POSITION_CONTROL = 1;
 const int ATTITUDE_CONTROL = 2;
 const int VELOCITY_CONTROL = 3;
-
 
 // Controller rate
 const int CONTROLLER_RATE = 100;
