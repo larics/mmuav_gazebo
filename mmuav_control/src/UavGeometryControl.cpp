@@ -245,19 +245,12 @@ void UavGeometryControl::runControllerLoop()
 	// Loop time interval check
 	double dt;
 
-
-	// Attitude error - scalar (PSI)
-	Matrix<double, 3, 3> att_err;
-	std_msgs::Float64 att_err_msg;
-
 	/*
 	 * b3_d 			- desired thrust vector
-	 * M_u 				- control moment
 	 * x_des, x_old		- desired position, old position
 	 * b1_des, b1_old 	- desired heading, old heading
 	 */
-	Matrix<double, 3, 1> b3_d, M_u,
-						b1_old, x_des, b1_des;
+	Matrix<double, 3, 1> b3_d, b1_old, x_des, b1_des;
 	b1_old = b1_d_;
 	x_old = x_mv_;
 
@@ -274,9 +267,11 @@ void UavGeometryControl::runControllerLoop()
 
 	// Total thrust control value
 	double f_u;
+	// Total control moments
+	Matrix<double, 3, 1> M_u;
 
 	// Perform sensor checks
-	sensorChecks();
+	blockingSensorChecks();
 
 	ROS_INFO("UavGeometricControl::run() - "
 			"Starting geometric control in 5...");
@@ -407,69 +402,76 @@ void UavGeometryControl::runControllerLoop()
 		// Publish control inputs
 		publishControlInputs(f_u, M_u);
 
-		// Calculate attitude error
-		att_err = (EYE3 - R_d_.adjoint() * R_mv_);
-
-		// Construct status msg
-		std_msgs::Header head;
-		head.stamp = ros::Time::now();
-		status_msg_.header = head;
-		status_msg_.force = f_u;
-		status_msg_.roll_mv = euler_mv_.x;
-		status_msg_.roll_sp = euler_d_(0, 0);
-		status_msg_.pitch_mv = euler_mv_.y;
-		status_msg_.pitch_sp = euler_d_(1, 0);
-		status_msg_.yaw_mv = euler_mv_.z;
-		status_msg_.yaw_sp = euler_d_(2, 0);
-		status_msg_.att_err = att_err.trace() / 2;
-		status_msg_.pos_err =sqrt((double)(x_d_ - x_mv_).dot(x_d_ - x_mv_));
-		status_msg_.moments[0] = M_u(0, 0);
-		status_msg_.moments[1] = M_u(1, 0);
-		status_msg_.moments[2] = M_u(2, 0);
-		status_msg_.x_mv = x_mv_(0, 0);
-		status_msg_.y_mv = x_mv_(1, 0);
-		status_msg_.z_mv = x_mv_(2, 0);
-		status_msg_.x_sp = x_des(0, 0);
-		status_msg_.y_sp = x_des(1, 0);
-		status_msg_.z_sp = x_des(2, 0);
-	    status_msg_.a_d[0] = a_d_(0, 0);
-		status_msg_.a_d[1] = a_d_(1, 0);
-		status_msg_.a_d[2] = a_d_(2, 0);
-
-		status_msg_.v_d[0] = v_d_(0, 0);
-		status_msg_.v_d[1] = v_d_(1, 0);
-		status_msg_.v_d[2] = v_d_(2, 0);
-
-		status_msg_.b1_mv[0] = R_mv_(0,0);
-		status_msg_.b1_mv[1] = R_mv_(1,0);
-		status_msg_.b1_mv[2] = R_mv_(2,0);
-		status_msg_.omega_d[0] = omega_d_(0, 0);
-		status_msg_.omega_d[1] = omega_d_(1, 0);
-		status_msg_.omega_d[2] = omega_d_(2, 0);
-		status_msg_.alpha_d[0] = alpha_d_(0, 0);
-		status_msg_.alpha_d[1] = alpha_d_(1, 0);
-		status_msg_.alpha_d[2] = alpha_d_(2, 0);
-
-		status_msg_.omega_mv[0] = omega_mv_(0, 0);
-		status_msg_.omega_mv[1] = omega_mv_(1, 0);
-		status_msg_.omega_mv[2] = omega_mv_(2, 0);
-
-		if (enable_mass_control_)
-		{
-			status_msg_.mass_offset[0] = mass0_mv_;
-			status_msg_.mass_offset[1] = mass1_mv_;
-			status_msg_.mass_offset[2] = mass2_mv_;
-			status_msg_.mass_offset[3] = mass3_mv_;
-		}
-
-		status_msg_.r_cm[0] = ro_cm_(0, 0);
-		status_msg_.r_cm[1] = ro_cm_(1, 0);
-		status_msg_.r_cm[2] = ro_cm_(2, 0);
-
-		status_ros_pub_.publish(status_msg_);
+		// Publish controller status
+		publishStatusMessage(f_u, M_u);
 	}
 }
 
+void UavGeometryControl::publishStatusMessage(
+		double f_u,
+		Matrix<double, 3, 1> M_u)
+{
+	// Attitude error - scalar (PSI)
+	Matrix<double, 3, 3> att_err = (EYE3 - R_d_.adjoint() * R_mv_);
+
+	// Construct status msg
+	std_msgs::Header head;
+	head.stamp = ros::Time::now();
+	status_msg_.header = head;
+	status_msg_.force = f_u;
+	status_msg_.roll_mv = euler_mv_.x;
+	status_msg_.roll_sp = euler_d_(0, 0);
+	status_msg_.pitch_mv = euler_mv_.y;
+	status_msg_.pitch_sp = euler_d_(1, 0);
+	status_msg_.yaw_mv = euler_mv_.z;
+	status_msg_.yaw_sp = euler_d_(2, 0);
+	status_msg_.att_err = att_err.trace() / 2;
+	status_msg_.pos_err =sqrt((double)(x_d_ - x_mv_).dot(x_d_ - x_mv_));
+	status_msg_.moments[0] = M_u(0, 0);
+	status_msg_.moments[1] = M_u(1, 0);
+	status_msg_.moments[2] = M_u(2, 0);
+	status_msg_.x_mv = x_mv_(0, 0);
+	status_msg_.y_mv = x_mv_(1, 0);
+	status_msg_.z_mv = x_mv_(2, 0);
+	status_msg_.x_sp = x_d_(0, 0);
+	status_msg_.y_sp = x_d_(1, 0);
+	status_msg_.z_sp = x_d_(2, 0);
+	status_msg_.a_d[0] = a_d_(0, 0);
+	status_msg_.a_d[1] = a_d_(1, 0);
+	status_msg_.a_d[2] = a_d_(2, 0);
+
+	status_msg_.v_d[0] = v_d_(0, 0);
+	status_msg_.v_d[1] = v_d_(1, 0);
+	status_msg_.v_d[2] = v_d_(2, 0);
+
+	status_msg_.b1_mv[0] = R_mv_(0,0);
+	status_msg_.b1_mv[1] = R_mv_(1,0);
+	status_msg_.b1_mv[2] = R_mv_(2,0);
+	status_msg_.omega_d[0] = omega_d_(0, 0);
+	status_msg_.omega_d[1] = omega_d_(1, 0);
+	status_msg_.omega_d[2] = omega_d_(2, 0);
+	status_msg_.alpha_d[0] = alpha_d_(0, 0);
+	status_msg_.alpha_d[1] = alpha_d_(1, 0);
+	status_msg_.alpha_d[2] = alpha_d_(2, 0);
+
+	status_msg_.omega_mv[0] = omega_mv_(0, 0);
+	status_msg_.omega_mv[1] = omega_mv_(1, 0);
+	status_msg_.omega_mv[2] = omega_mv_(2, 0);
+
+	if (enable_mass_control_)
+	{
+		status_msg_.mass_offset[0] = mass0_mv_;
+		status_msg_.mass_offset[1] = mass1_mv_;
+		status_msg_.mass_offset[2] = mass2_mv_;
+		status_msg_.mass_offset[3] = mass3_mv_;
+	}
+
+	status_msg_.r_cm[0] = ro_cm_(0, 0);
+	status_msg_.r_cm[1] = ro_cm_(1, 0);
+	status_msg_.r_cm[2] = ro_cm_(2, 0);
+
+	status_ros_pub_.publish(status_msg_);
+}
 
 void UavGeometryControl::publishControlInputs(
 		double f_u,
@@ -705,7 +707,7 @@ void UavGeometryControl::trajectoryTracking(
 	status_msg_.e_v[2] = (double)e_v(2, 0);
 }
 
-void UavGeometryControl::sensorChecks()
+void UavGeometryControl::blockingSensorChecks()
 {
 
 	// Wait for the ROS time server

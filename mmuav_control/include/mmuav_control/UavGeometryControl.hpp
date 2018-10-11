@@ -63,6 +63,9 @@ class UavGeometryControl
 
 	private:
 
+		/**
+		 * Callback functions.
+		 */
 		void imu_cb(const sensor_msgs::Imu &msg);
 		void pose_cb(const geometry_msgs::PoseStamped &msg);
 		void vel_cb(const geometry_msgs::TwistStamped &msg);
@@ -89,7 +92,7 @@ class UavGeometryControl
 		 * This method will keep running until all sensors
 		 * have returned callbacks.
 		 */
-		void sensorChecks();
+		void blockingSensorChecks();
 
 		/**
 		 * Calculate b3_d and f_u as position tracking control inputs.
@@ -149,6 +152,15 @@ class UavGeometryControl
 		 * Publish control inputs based on total thrust and control moments.
 		 */
 		void publishControlInputs(
+				double f_u,
+				Matrix<double, 3, 1> M_u);
+
+		/**
+		 * Publish geometric control status message consisting of
+		 * all exposed controller data including controller outputs
+		 * f_u and M_u.
+		 */
+		void publishStatusMessage(
 				double f_u,
 				Matrix<double, 3, 1> M_u);
 
