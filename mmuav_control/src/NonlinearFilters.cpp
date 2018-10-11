@@ -7,7 +7,7 @@
 
 #include <mmuav_control/NonlinearFilters.hpp>
 
-double saturation(
+double nonlinear_filters::saturation(
 		double value,
 		double lowLimit,
 		double highLimit)
@@ -17,7 +17,7 @@ double saturation(
 	else { return value; }
 }
 
-double deadzone(
+double nonlinear_filters::deadzone(
 		double value,
 		double lowLimit,
 		double highLimit)

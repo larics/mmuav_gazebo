@@ -221,6 +221,21 @@ class UavGeometryControl
 				Matrix<double, 3, 3> &rotMatrix);
 
 		/**
+		 * Inertia matrix.
+		 */
+		Matrix<double, 3, 3> inertia_;
+
+		/**
+		 * Moving mass inertia matrix.
+		 */
+		Matrix<double, 3, 3> mass_inertia_;
+
+		/**
+		 * UAV Body mass.
+		 */
+		double uav_mass_ = 2.083;
+
+		/**
 		 * Node handle used for setting up subscribers and publishers.
 		 */
 		ros::NodeHandle node_handle_;

@@ -17,9 +17,6 @@
 
 using namespace std;
 
-Matrix<double, 3, 3> INERTIA;
-Matrix<double, 3, 3> MASS_INERTIA;
-double UAV_MASS = 2.083;
 
 // Transform matrix with roll / pitch corrections
 Matrix<double, 4, 4> THRUST_TRANSFORM_FULL;
@@ -53,15 +50,15 @@ UavGeometryControl::UavGeometryControl(int rate, std::string uav_ns)
 	this->uav_ns = uav_ns;
 
 	// Initialize inertia matrix
-	INERTIA.setZero(3, 3);
-	INERTIA(0, 0) = 0.0826944;
-	INERTIA(1, 1) = 0.0826944;
-	INERTIA(2, 2) = 0.0104;
+	inertia_.setZero(3, 3);
+	inertia_(0, 0) = 0.0826944;
+	inertia_(1, 1) = 0.0826944;
+	inertia_(2, 2) = 0.0104;
 
-	MASS_INERTIA.setZero(3, 3);
-	MASS_INERTIA(0, 0) = MM_MASS * 0.085 * 0.085;
-	MASS_INERTIA(1, 1) = MM_MASS * 0.085 * 0.085;
-	MASS_INERTIA(2, 2) = MM_MASS * 0.085 * 0.085;
+	mass_inertia_.setZero(3, 3);
+	mass_inertia_(0, 0) = MM_MASS * 0.085 * 0.085;
+	mass_inertia_(1, 1) = MM_MASS * 0.085 * 0.085;
+	mass_inertia_(2, 2) = MM_MASS * 0.085 * 0.085;
 
 	// Initialize eye(3) matrix
 	EYE3.setZero(3, 3);
@@ -430,8 +427,8 @@ void UavGeometryControl::publishControlInputs(
 		double dx = (double)M_u(1, 0) / (2 * MM_FORCE * E3.dot(R_mv_ * E3));
 		double dy = (double)M_u(0, 0) / (2 * MM_FORCE * E3.dot(R_mv_ * E3));
 
-		dx = saturation(dx, -ARM_LENGTH / 2, ARM_LENGTH / 2);
-		dy = saturation(dy, -ARM_LENGTH / 2, ARM_LENGTH / 2);
+		dx = nonlinear_filters::saturation(dx, -ARM_LENGTH / 2, ARM_LENGTH / 2);
+		dy = nonlinear_filters::saturation(dy, -ARM_LENGTH / 2, ARM_LENGTH / 2);
 
 		// cout << "dx: " << dx << "\n";
 		// cout << "dy: " << dy << "\n";
@@ -459,14 +456,13 @@ void UavGeometryControl::publishControlInputs(
 		// Roll and pitch control with masses
 		double dx = (double)M_u(1, 0) / (2 * PAYLOAD_FORCE * E3.dot(R_mv_ * E3));
 		double dy = (double)M_u(0, 0) / (2 * PAYLOAD_FORCE * E3.dot(R_mv_ * E3));
-		dx = saturation(dx, -0.15, 0.15);
-		dy = saturation(dy, -0.15, 0.15);
+		dx = nonlinear_filters::saturation(dx, -0.15, 0.15);
+		dy = nonlinear_filters::saturation(dy, -0.15, 0.15);
 
 		geometry_msgs::Point msg;
 		msg.x = dx;
 		msg.y = - dy;
 		payload_pos_pub_.publish(msg);
-
 	}
 	else
 	{
@@ -501,8 +497,8 @@ void UavGeometryControl::calculateCenterOfMass()
 	if (enable_mass_control_)
 	{
 		// Calculate center of mass relative to the body frame
-		ro_cm_(0, 0) = (MM_MASS * mass0_mv_ + MM_MASS * ( -mass2_mv_)) / UAV_MASS;
-		ro_cm_(1, 0) = (MM_MASS * mass1_mv_ + MM_MASS * (- mass3_mv_)) / UAV_MASS;
+		ro_cm_(0, 0) = (MM_MASS * mass0_mv_ + MM_MASS * ( -mass2_mv_)) / uav_mass_;
+		ro_cm_(1, 0) = (MM_MASS * mass1_mv_ + MM_MASS * (- mass3_mv_)) / uav_mass_;
 		ro_cm_(2, 0) = 0;
 	}
 	else if (enable_manipulator_control_)
@@ -510,7 +506,7 @@ void UavGeometryControl::calculateCenterOfMass()
 		ro_cm_ = (
 				PAYLOAD_MASS * gripperLeft_mv_ +
 				PAYLOAD_MASS * gripperRight_mv_
-				) / UAV_MASS;
+				) / uav_mass_;
 	}
 	else
 	{
@@ -539,26 +535,26 @@ void UavGeometryControl::calculateRotorVelocities(
 
 	rotor_velocities(0, 0) =
 			rotor_signs(0, 0) *
-			saturation(
+			nonlinear_filters::saturation(
 					(double)rotor_velocities(0, 0),
 					- MAX_ROTOR_VELOCITY,
 					MAX_ROTOR_VELOCITY);
 	rotor_velocities(1, 0) =
 			rotor_signs(1, 0) *
-			saturation(
+			nonlinear_filters::saturation(
 					(double)rotor_velocities(1, 0),
 					- MAX_ROTOR_VELOCITY,
 					MAX_ROTOR_VELOCITY);
 	rotor_velocities(2, 0) =
 			rotor_signs(2, 0) *
-			saturation(
+			nonlinear_filters::saturation(
 					(double)rotor_velocities(2, 0),
 					- MAX_ROTOR_VELOCITY,
 					MAX_ROTOR_VELOCITY);
 
 	rotor_velocities(3, 0) =
 			rotor_signs(3, 0) *
-			saturation(
+			nonlinear_filters::saturation(
 					(double)rotor_velocities(3, 0),
 					- MAX_ROTOR_VELOCITY,
 					MAX_ROTOR_VELOCITY);
@@ -600,8 +596,8 @@ void UavGeometryControl::trajectoryTracking(
 	Matrix<double, 3, 1> A =
 		- k_x_ * e_x
 		- k_v_ * e_v
-		+ UAV_MASS * G * E3
-		+ UAV_MASS * a_d_;
+		+ uav_mass_ * G * E3
+		+ uav_mass_ * a_d_;
 
 	if (enable_mass_control_ || enable_manipulator_control_)
 	{
@@ -617,8 +613,8 @@ void UavGeometryControl::trajectoryTracking(
 			(double)ro_cm_(2, 0),
 			skew_ro);
 		Matrix<double, 3, 1> additionalDynamics =
-				- UAV_MASS * (R_mv_ * ro_cm_).cross(alpha_d_)
-				- UAV_MASS * R_mv_ * skew_omega * skew_ro * omega_mv_;
+				- uav_mass_ * (R_mv_ * ro_cm_).cross(alpha_d_)
+				- uav_mass_ * R_mv_ * skew_omega * skew_ro * omega_mv_;
 		// cout << "Add to A: \n" << add << "\n";
 		A = A + additionalDynamics;
 	}
@@ -770,7 +766,7 @@ void UavGeometryControl::attitudeTracking(
 
 	Matrix<double, 3,3> adjustedInertia;
 	Matrix<double, 3, 1> additionalDynamics;
-	adjustedInertia = INERTIA;
+	adjustedInertia = inertia_;
 
 	// Adjust inertia matrix
 	if (enable_mass_control_)
@@ -778,22 +774,22 @@ void UavGeometryControl::attitudeTracking(
 		adjustedInertia(0, 0) = adjustedInertia(0, 0)
 				+ mass1_mv_ * mass1_mv_ * MM_MASS
 				+ mass3_mv_ * mass3_mv_ * MM_MASS
-				+ MASS_INERTIA(0, 0);
+				+ mass_inertia_(0, 0);
 
 		adjustedInertia(1, 1) = adjustedInertia(1, 1)
 				+ mass0_mv_ * mass0_mv_ * MM_MASS
 				+ mass2_mv_ * mass2_mv_ * MM_MASS
-				+ MASS_INERTIA(1, 1);
+				+ mass_inertia_(1, 1);
 
 		adjustedInertia(2, 2) = adjustedInertia(2, 2)
 				+ mass1_mv_ * mass1_mv_ * MM_MASS
 				+ mass3_mv_ * mass3_mv_ * MM_MASS
 				+ mass0_mv_ * mass0_mv_ * MM_MASS
 				+ mass2_mv_ * mass2_mv_ * MM_MASS
-				+ 4 * MASS_INERTIA(2,2);
+				+ 4 * mass_inertia_(2,2);
 
 		additionalDynamics =
-				UAV_MASS * ro_cm_.cross(R_mv_.adjoint()*a_d_);
+				uav_mass_ * ro_cm_.cross(R_mv_.adjoint()*a_d_);
 	}
 	else if (enable_manipulator_control_)
 	{
@@ -822,7 +818,7 @@ void UavGeometryControl::attitudeTracking(
 								) * PAYLOAD_MASS;
 
 		additionalDynamics =
-						UAV_MASS * ro_cm_.cross(R_mv_.adjoint()*a_d_);
+						uav_mass_ * ro_cm_.cross(R_mv_.adjoint()*a_d_);
 	}
 
 
@@ -835,9 +831,12 @@ void UavGeometryControl::attitudeTracking(
 			- R_mv_.adjoint() * R_d_ * alpha_d_
 		) + additionalDynamics;
 
-	M_u(0, 0) = saturation((double)M_u(0, 0), -5, 5);
-	M_u(1, 0) = saturation((double)M_u(1, 0), -5, 5);
-	M_u(2, 0) = saturation((double)M_u(2, 0), -2.5, 2.5);
+	M_u(0, 0) = nonlinear_filters::saturation(
+			(double)M_u(0, 0), -5, 5);
+	M_u(1, 0) = nonlinear_filters::saturation(
+			(double)M_u(1, 0), -5, 5);
+	M_u(2, 0) = nonlinear_filters::saturation(
+			(double)M_u(2, 0), -2.5, 2.5);
 
 	status_msg_.e_R[0] = e_R(0, 0);
 	status_msg_.e_R[1] = e_R(1, 0);
@@ -866,13 +865,19 @@ void UavGeometryControl::calculateDesiredAngularVelAndAcc(
 	veeOperator(alpha_c_skew, alpha_d_);
 
 	/*
-	omega_d_(0, 0) = saturation((double)omega_d_(0, 0), -1, 1);
-	omega_d_(1, 0) = saturation((double)omega_d_(1, 0), -1, 1);
-	omega_d_(2, 0) = saturation((double)omega_d_(2, 0), -1, 1);
+	omega_d_(0, 0) = nonlinear_filters::saturation(
+		(double)omega_d_(0, 0), -1, 1);
+	omega_d_(1, 0) = nonlinear_filters::saturation(
+		(double)omega_d_(1, 0), -1, 1);
+	omega_d_(2, 0) = nonlinear_filters::saturation(
+		(double)omega_d_(2, 0), -1, 1);
 	*/
-	alpha_d_(0, 0) = saturation((double)alpha_d_(0, 0), -0.5, 0.5);
-	alpha_d_(1, 0) = saturation((double)alpha_d_(1, 0), -0.5, 0.5);
-	alpha_d_(2, 0) = saturation((double)alpha_d_(2, 0), -0.5, 0.5);
+	alpha_d_(0, 0) = nonlinear_filters::saturation(
+			(double)alpha_d_(0, 0), -0.5, 0.5);
+	alpha_d_(1, 0) = nonlinear_filters::saturation(
+			(double)alpha_d_(1, 0), -0.5, 0.5);
+	alpha_d_(2, 0) = nonlinear_filters::saturation(
+			(double)alpha_d_(2, 0), -0.5, 0.5);
 
 	// cout << "omega_d: " << "\n" << omega_d_ << "\n";
 	// cout << "alpha_d: " << "\n" << alpha_d_ << "\n";
@@ -1155,7 +1160,7 @@ void UavGeometryControl::enableMassControl()
 	enable_mass_control_ = true;
 	enable_manipulator_control_ = false;
 
-	UAV_MASS += 4*MM_MASS;
+	uav_mass_ += 4*MM_MASS;
 	// Add mass publishers if available
 	mass0_cmd_pub_ = node_handle_.advertise<std_msgs::Float64>(
 			"/" + uav_ns + "/movable_mass_0_position_controller/command", 1);
@@ -1193,7 +1198,7 @@ void UavGeometryControl::enableManipulatorControl()
 	enable_manipulator_control_ = true;
 	enable_mass_control_ = false;
 
-	UAV_MASS += 2 * PAYLOAD_MASS + TOTAL_LINK_MASS;
+	uav_mass_ += 2 * PAYLOAD_MASS + TOTAL_LINK_MASS;
 	// Add gripper publishers if available
 	gripperLeft_sub_ = node_handle_.subscribe(
 			"/" + uav_ns + "/left_gripper_pos", 1,
