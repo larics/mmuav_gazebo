@@ -7,6 +7,7 @@
 
 #include <mmuav_control/UavGeometryControl.hpp>
 #include <mmuav_control/MmuavParameters.hpp>
+#include <mmuav_control/NonlinearFilters.hpp>
 
 #include <mav_msgs/Actuators.h>
 #include <std_msgs/Float64.h>
@@ -1131,25 +1132,6 @@ void UavGeometryControl::veeOperator(
 	veeVector(0, 0) = hatMatrix(2, 1); 			// x component
 	veeVector(1, 0) = hatMatrix(0, 2);			// y component
 	veeVector(2, 0) = hatMatrix(1, 0);			// z component
-}
-
-double UavGeometryControl::saturation(
-		double value,
-		double lowLimit,
-		double highLimit)
-{
-	if (value > highLimit) { return highLimit; }
-	else if (value < lowLimit) { return lowLimit; }
-	else { return value; }
-}
-
-double UavGeometryControl::deadzone(
-		double value,
-		double lowLimit,
-		double highLimit)
-{
-	if (value < highLimit && value > lowLimit) { return 0; }
-	else { return value; }
 }
 
 void UavGeometryControl::quaternion2euler(float *quaternion, float *euler)

@@ -221,32 +221,6 @@ class UavGeometryControl
 				Matrix<double, 3, 3> &rotMatrix);
 
 		/**
-		 * Perform saturation filter on the given value;
-		 *
-		 * @param value
-		 * @param lowLimit
-		 * @param highLimit
-		 *
-		 * @return saturated value
-		 */
-		double saturation(
-				double value,
-				double lowLimit,
-				double highLimit);
-
-		/**
-		 * Perform deadzone filter on given value.
-		 *
-		 * @param value
-		 * @param lowLimit
-		 * @param highLimit
-		 */
-		double deadzone(
-				double value,
-				double lowLimit,
-				double highLimit);
-
-		/**
 		 * Node handle used for setting up subscribers and publishers.
 		 */
 		ros::NodeHandle node_handle_;

@@ -36,8 +36,11 @@ include_directories(
   ${catkin_INCLUDE_DIRS}
 )
 
+add_library(NonlinearFilters src/NonlinearFilters.cpp)
+target_link_libraries(NonlinearFilters ${catkin_LIBRARIES})
+
 add_executable(UavGeometryControl src/UavGeometryControl.cpp)
-target_link_libraries(UavGeometryControl ${catkin_LIBRARIES})
+target_link_libraries(UavGeometryControl ${catkin_LIBRARIES} NonlinearFilters)
 
 #install(DIRECTORY config
 #  DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION})
