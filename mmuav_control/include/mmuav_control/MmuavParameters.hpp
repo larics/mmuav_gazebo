@@ -16,6 +16,7 @@
 const double G = 9.81;
 
 // UAV constants
+const double UAV_MASS = 2.083;
 const double ARM_LENGTH = 0.314;
 const double MOMENT_CONSTANT = 0.016;
 const double MOTOR_CONSTANT = 8.54858e-06;

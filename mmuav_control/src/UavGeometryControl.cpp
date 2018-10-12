@@ -46,6 +46,7 @@ UavGeometryControl::UavGeometryControl(int rate, std::string uav_ns)
 	// Initialize inertia matrices
 	mmuav_params::initializeBodyInertia(inertia_);
 	mmuav_params::initializeMovableMassInertia(mass_inertia_);
+	uav_mass_ = UAV_MASS;
 
 	// Initialize eye(3) matrix
 	EYE3.setZero(3, 3);
@@ -119,17 +120,6 @@ void UavGeometryControl::runControllerLoop()
 	Matrix<double, 3, 1> b3_d, b1_old, b1_des;
 	b1_old = b1_d_;
 
-	/*
-	 * R_d 		- desired rotation matrix
-	 * R_d_old 	- used for matrix differentiation
-	 * R_d_dot 	- Desired matrix derivative
-	 */
-	Matrix<double, 3, 3> R_c;
-	R_c_old = EYE3;
-	R_c_dot_old.setZero(3, 3);
-	omega_c_old.setZero(3, 3);
-	x_dot_old.setZero(3, 1);
-
 	/**
 	 * Controller outputs:
 	 * 	- f_u: Total control force
@@ -143,7 +133,6 @@ void UavGeometryControl::runControllerLoop()
 	ROS_INFO("UavGeometricControl::run() - Starting geometric control in 5...");
 	sleep(5);
 
-	R_mv_ = EYE3;
 	Matrix<double, 3, 3> R_mv_old = EYE3;
 
 	// Initialize helper time variables
@@ -172,7 +161,7 @@ void UavGeometryControl::runControllerLoop()
 		counter += dt;
 		if (counter >= dt_help)
 		{
-			calc_desired = true;
+			calc_desired_flag_ = true;
 			counter = 0.0;
 		}
 
@@ -198,13 +187,10 @@ void UavGeometryControl::runControllerLoop()
 		attitudeTracking(
 				b1_des,			// Input - desired heading
 				b3_d,			// Input - desired thrust vector
-				dt,				// Input - time interval
-				R_c_old,
-				omega_c_old,
 				M_u);			// OUTPUT - control moments
 
 		// Disable calculating desired velocities / accelerations
-		calc_desired = false;
+		calc_desired_flag_ = false;
 
 		// Publish control inputs
 		publishControlInputs(f_u, M_u);
@@ -246,7 +232,14 @@ void UavGeometryControl::setInitialValues()
 	// Initialize measured
 	omega_mv_.setZero(3, 1);
 	alpha_mv_.setZero(3, 1);
-	R_mv_.setZero(3,3);
+
+	/**
+	 * TODO: When not starting from stable initial
+	 * position this needs to change.
+	 */
+	R_mv_ = EYE3;
+	R_c_old_ = EYE3;
+	R_c_dot_old_.setZero(3, 3);
 }
 
 void UavGeometryControl::initializeSubsPubs()
@@ -647,9 +640,6 @@ void UavGeometryControl::blockingSensorChecks()
 void UavGeometryControl::attitudeTracking(
 		const Matrix<double, 3, 1> b1_desired,
 		const Matrix<double, 3, 1> b3_desired,
-		const double dt,
-		Matrix<double, 3, 3> &R_c_old,
-		Matrix<double, 3, 3> &omega_c_old,
 		Matrix<double, 3, 1> &M_u)
 {
 
@@ -657,12 +647,10 @@ void UavGeometryControl::attitudeTracking(
 	Matrix<double, 3, 1> e_omega, e_R;
 
 	// Auxiliary skew matrices
-	Matrix<double, 3, 3> e_R_skew, omega_mv_skew, omega_c_skew,
-						 alpha_c_skew;
+	Matrix<double, 3, 3> e_R_skew, omega_mv_skew, omega_c_skew, alpha_c_skew;
 
 	if (current_control_mode_ == POSITION_CONTROL)
 	{
-		//cout << "Attitude: POSITION" << "\n";
 		/**
 		 * During position control desired rotation, angular velocity
 		 * and angular acceleration matrices will be CALCULATED.
@@ -696,13 +684,9 @@ void UavGeometryControl::attitudeTracking(
 
 		// Remap calculated to desired
 		R_d_ = R_c;
-
-		// Update old R_c
-		// R_c_old = R_c;
 	}
 	else if (current_control_mode_ == ATTITUDE_CONTROL)
 	{
-		//cout << "Attitude: ATTITUDE" << "\n";
 		// Do nothing here - read desired attitude values from
 		// callback functions.
 		geom_helper::euler2RotationMatrix(
@@ -727,6 +711,7 @@ void UavGeometryControl::attitudeTracking(
 	e_omega = (omega_mv_ - R_mv_.adjoint() * R_d_ * omega_d_);
 	if (e_omega(0, 0) != e_omega(0, 0))
 	{
+		// Something went wrong...
 		throw std::runtime_error("Angular velocity error is NAN");
 	}
 	geom_helper::hatOperator(
@@ -823,26 +808,18 @@ void UavGeometryControl::calculateDesiredAngularVelAndAcc(
 {
 	Matrix<double, 3, 3> omega_c_skew, alpha_c_skew;
 
-	if (!calc_desired)	{ return; }
+	if (!calc_desired_flag_)	{ return; }
 
-	Matrix<double, 3, 3> R_c_dot = (R_c - R_c_old) / 0.1;
+	Matrix<double, 3, 3> R_c_dot = (R_c - R_c_old_) / 0.1;
 	omega_c_skew = R_c.adjoint() * R_c_dot;
 
-	Matrix<double, 3, 3> R_c_ddot = (R_c_dot - R_c_dot_old) / 0.1;
+	Matrix<double, 3, 3> R_c_ddot = (R_c_dot - R_c_dot_old_) / 0.1;
 	alpha_c_skew = - omega_c_skew * omega_c_skew + R_c.adjoint() * R_c_ddot;
 
 	// Remap calculated values to desired
 	geom_helper::veeOperator(omega_c_skew, omega_d_);
 	geom_helper::veeOperator(alpha_c_skew, alpha_d_);
 
-	/*
-	omega_d_(0, 0) = nonlinear_filters::saturation(
-		(double)omega_d_(0, 0), -1, 1);
-	omega_d_(1, 0) = nonlinear_filters::saturation(
-		(double)omega_d_(1, 0), -1, 1);
-	omega_d_(2, 0) = nonlinear_filters::saturation(
-		(double)omega_d_(2, 0), -1, 1);
-	*/
 	alpha_d_(0, 0) = nonlinear_filters::saturation(
 			(double)alpha_d_(0, 0), -0.5, 0.5);
 	alpha_d_(1, 0) = nonlinear_filters::saturation(
@@ -853,8 +830,8 @@ void UavGeometryControl::calculateDesiredAngularVelAndAcc(
 	// cout << "omega_d: " << "\n" << omega_d_ << "\n";
 	// cout << "alpha_d: " << "\n" << alpha_d_ << "\n";
 
-	R_c_old = R_c;
-	R_c_dot_old = R_c_dot;
+	R_c_old_ = R_c;
+	R_c_dot_old_ = R_c_dot;
 }
 
 void UavGeometryControl::param_cb(

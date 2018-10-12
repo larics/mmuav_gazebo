@@ -127,19 +127,13 @@ class UavGeometryControl
 		 *
 		 * @param b1_d - desired heading
 		 * @param b3_d - desired thrust vector
-		 * @param dt - time interval
 		 * @param R_c_old - reference for old calculated rotation matrix
 		 * 					(Position tracking)
-		 * @param omega_c_old - reference for old calculated angular velocity
-		 * 						(Position tracking)
 		 * @param M_u - control moments, assigned in method
 		 */
 		void attitudeTracking(
 				const Matrix<double, 3, 1> b1_desired,
 				const Matrix<double, 3, 1> b3_desired,
-				const double dt,
-				Matrix<double, 3, 3> &R_c_old,
-				Matrix<double, 3, 3> &omega_c_old,
 				Matrix<double, 3, 1> &M_u);
 
 		/**
@@ -199,7 +193,7 @@ class UavGeometryControl
 		/**
 		 * UAV Body mass.
 		 */
-		double uav_mass_ = 2.083;
+		double uav_mass_;
 
 		/**
 		 * Node handle used for setting up subscribers and publishers.
@@ -361,9 +355,17 @@ class UavGeometryControl
 		 */
 		int current_control_mode_;
 
-		bool calc_desired;
-		Matrix<double, 3, 3> R_c_old, R_c_dot_old, omega_c_old;
-		Matrix<double, 3, 1> x_old, x_dot_old;
+		/**
+		 * Flag used for calculating desired control values at
+		 * a different rate from the controller.
+		 */
+		bool calc_desired_flag_;
+
+		/**
+		 * Previous calculated rotation matrix values used for
+		 * matrix differentiation.
+		 */
+		Matrix<double, 3, 3> R_c_old_, R_c_dot_old_;
 
 		/**
 		 * Dynamic reconfigure server.
