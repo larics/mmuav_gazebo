@@ -36,6 +36,9 @@ include_directories(
   ${catkin_INCLUDE_DIRS}
 )
 
+add_library(MmuavParameters src/MmuavParameters.cpp)
+target_link_libraries(MmuavParameters ${catkin_LIBRARIES})
+
 add_library(NonlinearFilters src/NonlinearFilters.cpp)
 target_link_libraries(NonlinearFilters ${catkin_LIBRARIES})
 
@@ -44,7 +47,7 @@ target_link_libraries(GeometricHelper ${catkin_LIBRARIES})
 
 add_executable(UavGeometryControl src/UavGeometryControl.cpp)
 target_link_libraries(UavGeometryControl ${catkin_LIBRARIES} 
-    NonlinearFilters GeometricHelper)
+    NonlinearFilters GeometricHelper MmuavParameters)
 
 #install(DIRECTORY config
 #  DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION})

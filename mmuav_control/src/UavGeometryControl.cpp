@@ -39,27 +39,13 @@ const int CONTROLLER_RATE = 100;
 
 UavGeometryControl::UavGeometryControl(int rate, std::string uav_ns)
 {
-	// Initialize controller variables
+	uav_ns_ = uav_ns;
 	controller_rate_ = rate;
-	sleep_duration_ = 0.5;
-	imu_start_flag_ = false;
-	pose_start_flag_ = false;
-	velocity_start_flag_ = false;
-	param_start_flag_ = false;
-	enable_mass_control_ = false;
-	current_control_mode_ = POSITION_CONTROL;
-	this->uav_ns = uav_ns;
+	setInitialValues();
 
-	// Initialize inertia matrix
-	inertia_.setZero(3, 3);
-	inertia_(0, 0) = 0.0826944;
-	inertia_(1, 1) = 0.0826944;
-	inertia_(2, 2) = 0.0104;
-
-	mass_inertia_.setZero(3, 3);
-	mass_inertia_(0, 0) = MM_MASS * 0.085 * 0.085;
-	mass_inertia_(1, 1) = MM_MASS * 0.085 * 0.085;
-	mass_inertia_(2, 2) = MM_MASS * 0.085 * 0.085;
+	// Initialize inertia matrices
+	mmuav_params::initializeBodyInertia(inertia_);
+	mmuav_params::initializeMovableMassInertia(mass_inertia_);
 
 	// Initialize eye(3) matrix
 	EYE3.setZero(3, 3);
@@ -72,31 +58,8 @@ UavGeometryControl::UavGeometryControl(int rate, std::string uav_ns)
 	EYE4(0, 0) = 1;
 	EYE4(3, 3) = 1;
 
-	// Initialize thrust transform matrix
-	THRUST_TRANSFORM_FULL.setZero(4, 4);
-
-	// First row
-	THRUST_TRANSFORM_FULL(0, 0) = 1;
-	THRUST_TRANSFORM_FULL(0, 1) = 1;
-	THRUST_TRANSFORM_FULL(0, 2) = 1;
-	THRUST_TRANSFORM_FULL(0, 3) = 1;
-
-	// Second row
-	THRUST_TRANSFORM_FULL(1, 1) = D;
-	THRUST_TRANSFORM_FULL(1, 3) = - D;
-
-	// Third row
-	THRUST_TRANSFORM_FULL(2, 0) = - D;
-	THRUST_TRANSFORM_FULL(2, 2) = D;
-
-	// Fourth row
-	THRUST_TRANSFORM_FULL(3, 0) = MOMENT_CONSTANT;
-	THRUST_TRANSFORM_FULL(3, 1) = - MOMENT_CONSTANT;
-	THRUST_TRANSFORM_FULL(3, 2) = MOMENT_CONSTANT;
-	THRUST_TRANSFORM_FULL(3, 3) = - MOMENT_CONSTANT;
-
-	// Invert the matrix
-	THRUST_TRANSFORM_FULL = THRUST_TRANSFORM_FULL.inverse().eval();
+	// Initialize thrust transform
+	mmuav_params::initializeThrustTransform(THRUST_TRANSFORM_FULL);
 	THRUST_TRANSFORM_YAW = THRUST_TRANSFORM_FULL * EYE4;
 
 	cout << "Thrust transform: \n";
@@ -104,31 +67,8 @@ UavGeometryControl::UavGeometryControl(int rate, std::string uav_ns)
 	cout << THRUST_TRANSFORM_YAW << "\n";
 	cout << endl;
 
-	// Initialize desired position values
-	x_d_.setZero(3,1);
-	v_d_.setZero(3,1);
-	a_d_.setZero(3,1);
-
-	// Initial measured position values
-	x_mv_.setZero(3,1);
-	v_mv_.setZero(3,1);
-	a_mv_.setZero(3,1);
-
-	// Initialize desired attitude
-	omega_d_.setZero(3, 1);
-	alpha_d_.setZero(3, 1);
-	b1_d_.setZero(3,1);
-	b1_d_(0,0) = 1;
-	R_d_.setZero(3, 3);
-	euler_d_.setZero(3, 1);
-
-	// Initialize measured
-	omega_mv_.setZero(3, 1);
-	alpha_mv_.setZero(3, 1);
-	R_mv_.setZero(3,3);
-
 	// Initialize controller parameters
-	// Parameters initialized according to 2010-extended.pdf
+	// TODO: Read controller parameters via YAML files
 	k_x_.setZero(3, 3);
 	k_x_(0, 0) = 7.2;
 	k_x_(1, 1) = 7.2;
@@ -150,52 +90,7 @@ UavGeometryControl::UavGeometryControl(int rate, std::string uav_ns)
 	k_omega_(2, 2) = 1.54;
 
 	// Initialize subscribers and publishers
-	imu_ros_sub_ = node_handle_.subscribe(
-			"/" + uav_ns + "/imu", 1,
-			&UavGeometryControl::imu_cb, this);
-	pose_ros_sub_ = node_handle_.subscribe(
-			"/" + uav_ns + "/pose", 1,
-			&UavGeometryControl::pose_cb, this);
-	velocity_ros_sub_ = node_handle_.subscribe(
-			"/" + uav_ns + "/velocity_relative", 1,
-			&UavGeometryControl::vel_cb, this);
-	rotor_ros_pub_ = node_handle_.advertise<mav_msgs::Actuators>(
-			"/gazebo/command/motor_speed", 1);
-	status_ros_pub_ = node_handle_.advertise<mmuav_msgs::GeomCtlStatus>(
-			"/" + uav_ns + "/uav_status", 1);
-
-	// Initialize position reference subscribers
-	xd_ros_sub_ = node_handle_.subscribe(
-			"/" + uav_ns + "/x_desired", 1,
-			&UavGeometryControl::xd_cb, this);
-	vd_ros_sub_ = node_handle_.subscribe(
-			"/" + uav_ns + "/v_desired", 1,
-			&UavGeometryControl::vd_cb, this);
-	ad_ros_sub_ = node_handle_.subscribe(
-			"/" + uav_ns + "/a_desired", 1,
-			&UavGeometryControl::ad_cb, this);
-
-	// Initialize attitude reference subscribers
-	b1d_ros_sub_ = node_handle_.subscribe(
-			"/" + uav_ns + "/b1_desired", 1,
-			&UavGeometryControl::b1d_cb, this);
-	omega_d_ros_sub_ = node_handle_.subscribe(
-			"/" + uav_ns + "/omega_desired", 1,
-			&UavGeometryControl::omegad_cb, this);
-	alpha_d_ros_sub_ = node_handle_.subscribe(
-			"/" + uav_ns + "/alpha_desired", 1,
-			&UavGeometryControl::alphad_cb, this);
-	rd_ros_sub_ = node_handle_.subscribe(
-			"/" + uav_ns + "/R_desired", 1,
-			&UavGeometryControl::rd_cb, this);
-	euler_ros_sub_ = node_handle_.subscribe(
-			"/" + uav_ns + "/euler_desired", 1,
-			&UavGeometryControl::euler_cb, this);
-
-	// Control mode subscriber
-	ctl_mode_ros_sub_ = node_handle_.subscribe(
-			"/" + uav_ns + "/control_mode", 1,
-			&UavGeometryControl::ctl_mode_cb, this);
+	initializeSubsPubs();
 
 	// Initialize dynamic reconfigure
 	param_callback_ = boost::bind(
@@ -245,8 +140,7 @@ void UavGeometryControl::runControllerLoop()
 
 	// Perform sensor checks
 	blockingSensorChecks();
-	ROS_INFO("UavGeometricControl::run() - "
-			"Starting geometric control in 5...");
+	ROS_INFO("UavGeometricControl::run() - Starting geometric control in 5...");
 	sleep(5);
 
 	R_mv_ = EYE3;
@@ -318,6 +212,92 @@ void UavGeometryControl::runControllerLoop()
 		// Publish controller status
 		publishStatusMessage(f_u, M_u);
 	}
+}
+
+void UavGeometryControl::setInitialValues()
+{
+	// Initialize controller variables
+	sleep_duration_ = 0.5;
+	imu_start_flag_ = false;
+	pose_start_flag_ = false;
+	velocity_start_flag_ = false;
+	param_start_flag_ = false;
+	enable_mass_control_ = false;
+	current_control_mode_ = POSITION_CONTROL;
+
+	// Initialize desired position values
+	x_d_.setZero(3,1);
+	v_d_.setZero(3,1);
+	a_d_.setZero(3,1);
+
+	// Initial measured position values
+	x_mv_.setZero(3,1);
+	v_mv_.setZero(3,1);
+	a_mv_.setZero(3,1);
+
+	// Initialize desired attitude
+	omega_d_.setZero(3, 1);
+	alpha_d_.setZero(3, 1);
+	b1_d_.setZero(3,1);
+	b1_d_(0,0) = 1;
+	R_d_.setZero(3, 3);
+	euler_d_.setZero(3, 1);
+
+	// Initialize measured
+	omega_mv_.setZero(3, 1);
+	alpha_mv_.setZero(3, 1);
+	R_mv_.setZero(3,3);
+}
+
+void UavGeometryControl::initializeSubsPubs()
+{
+	// Initialize subscribers and publishers
+	imu_ros_sub_ = node_handle_.subscribe(
+			"/" + uav_ns_ + "/imu", 1,
+			&UavGeometryControl::imu_cb, this);
+	pose_ros_sub_ = node_handle_.subscribe(
+			"/" + uav_ns_ + "/pose", 1,
+			&UavGeometryControl::pose_cb, this);
+	velocity_ros_sub_ = node_handle_.subscribe(
+			"/" + uav_ns_ + "/velocity_relative", 1,
+			&UavGeometryControl::vel_cb, this);
+	rotor_ros_pub_ = node_handle_.advertise<mav_msgs::Actuators>(
+			"/gazebo/command/motor_speed", 1);
+	status_ros_pub_ = node_handle_.advertise<mmuav_msgs::GeomCtlStatus>(
+			"/" + uav_ns_ + "/uav_status", 1);
+
+	// Initialize position reference subscribers
+	xd_ros_sub_ = node_handle_.subscribe(
+			"/" + uav_ns_ + "/x_desired", 1,
+			&UavGeometryControl::xd_cb, this);
+	vd_ros_sub_ = node_handle_.subscribe(
+			"/" + uav_ns_ + "/v_desired", 1,
+			&UavGeometryControl::vd_cb, this);
+	ad_ros_sub_ = node_handle_.subscribe(
+			"/" + uav_ns_ + "/a_desired", 1,
+			&UavGeometryControl::ad_cb, this);
+
+	// Initialize attitude reference subscribers
+	b1d_ros_sub_ = node_handle_.subscribe(
+			"/" + uav_ns_ + "/b1_desired", 1,
+			&UavGeometryControl::b1d_cb, this);
+	omega_d_ros_sub_ = node_handle_.subscribe(
+			"/" + uav_ns_ + "/omega_desired", 1,
+			&UavGeometryControl::omegad_cb, this);
+	alpha_d_ros_sub_ = node_handle_.subscribe(
+			"/" + uav_ns_ + "/alpha_desired", 1,
+			&UavGeometryControl::alphad_cb, this);
+	rd_ros_sub_ = node_handle_.subscribe(
+			"/" + uav_ns_ + "/R_desired", 1,
+			&UavGeometryControl::rd_cb, this);
+	euler_ros_sub_ = node_handle_.subscribe(
+			"/" + uav_ns_ + "/euler_desired", 1,
+			&UavGeometryControl::euler_cb, this);
+
+	// Control mode subscriber
+	ctl_mode_ros_sub_ = node_handle_.subscribe(
+			"/" + uav_ns_ + "/control_mode", 1,
+			&UavGeometryControl::ctl_mode_cb, this);
 }
 
 void UavGeometryControl::publishStatusMessage(
@@ -486,8 +466,10 @@ void UavGeometryControl::calculateCenterOfMass()
 	if (enable_mass_control_)
 	{
 		// Calculate center of mass relative to the body frame
-		ro_cm_(0, 0) = (MM_MASS * mass0_mv_ + MM_MASS * ( -mass2_mv_)) / uav_mass_;
-		ro_cm_(1, 0) = (MM_MASS * mass1_mv_ + MM_MASS * (- mass3_mv_)) / uav_mass_;
+		ro_cm_(0, 0) = (MM_MASS * mass0_mv_ + MM_MASS * ( -mass2_mv_))
+				/ uav_mass_;
+		ro_cm_(1, 0) = (MM_MASS * mass1_mv_ + MM_MASS * (- mass3_mv_))
+				/ uav_mass_;
 		ro_cm_(2, 0) = 0;
 	}
 	else if (enable_manipulator_control_)
@@ -745,7 +727,7 @@ void UavGeometryControl::attitudeTracking(
 	e_omega = (omega_mv_ - R_mv_.adjoint() * R_d_ * omega_d_);
 	if (e_omega(0, 0) != e_omega(0, 0))
 	{
-		throw std::runtime_error("STOP");
+		throw std::runtime_error("Angular velocity error is NAN");
 	}
 	geom_helper::hatOperator(
 			(double)omega_mv_(0, 0),
@@ -879,8 +861,6 @@ void UavGeometryControl::param_cb(
 		mmuav_control::UavGeometryControlParamsConfig &config,
 		uint32_t level)
 {
-
-	cout << "hello";
 	if (!param_start_flag_)
 	{
 		// Set parameters for the first time
@@ -900,7 +880,6 @@ void UavGeometryControl::param_cb(
 	else
 	{
 		// Update parameters
-
 		k_x_(0, 0) = config.kx_xy;
 		k_x_(1, 1) = config.kx_xy;
 		k_x_(2, 2) = config.kx_z;
@@ -1107,26 +1086,26 @@ void UavGeometryControl::enableMassControl()
 	uav_mass_ += 4*MM_MASS;
 	// Add mass publishers if available
 	mass0_cmd_pub_ = node_handle_.advertise<std_msgs::Float64>(
-			"/" + uav_ns + "/movable_mass_0_position_controller/command", 1);
+			"/" + uav_ns_ + "/movable_mass_0_position_controller/command", 1);
 	mass1_cmd_pub_ = node_handle_.advertise<std_msgs::Float64>(
-			"/" + uav_ns + "/movable_mass_1_position_controller/command", 1);
+			"/" + uav_ns_ + "/movable_mass_1_position_controller/command", 1);
 	mass2_cmd_pub_ = node_handle_.advertise<std_msgs::Float64>(
-			"/" + uav_ns + "/movable_mass_2_position_controller/command", 1);
+			"/" + uav_ns_ + "/movable_mass_2_position_controller/command", 1);
 	mass3_cmd_pub_ = node_handle_.advertise<std_msgs::Float64>(
-			"/" + uav_ns + "/movable_mass_3_position_controller/command", 1);
+			"/" + uav_ns_ + "/movable_mass_3_position_controller/command", 1);
 
 	// Mass state subscribers
 	mass0_state_sub_ = node_handle_.subscribe(
-			"/" + uav_ns + "/movable_mass_0_position_controller/state", 1,
+			"/" + uav_ns_ + "/movable_mass_0_position_controller/state", 1,
 			&UavGeometryControl::mass0_cb, this);
 	mass1_state_sub_ = node_handle_.subscribe(
-			"/" + uav_ns + "/movable_mass_1_position_controller/state", 1,
+			"/" + uav_ns_ + "/movable_mass_1_position_controller/state", 1,
 			&UavGeometryControl::mass1_cb, this);
 	mass2_state_sub_ = node_handle_.subscribe(
-			"/" + uav_ns + "/movable_mass_2_position_controller/state", 1,
+			"/" + uav_ns_ + "/movable_mass_2_position_controller/state", 1,
 			&UavGeometryControl::mass2_cb, this);
 	mass3_state_sub_ = node_handle_.subscribe(
-			"/" + uav_ns + "/movable_mass_3_position_controller/state", 1,
+			"/" + uav_ns_ + "/movable_mass_3_position_controller/state", 1,
 			&UavGeometryControl::mass3_cb, this);
 }
 
@@ -1145,14 +1124,14 @@ void UavGeometryControl::enableManipulatorControl()
 	uav_mass_ += 2 * PAYLOAD_MASS + TOTAL_LINK_MASS;
 	// Add gripper publishers if available
 	gripperLeft_sub_ = node_handle_.subscribe(
-			"/" + uav_ns + "/left_gripper_pos", 1,
+			"/" + uav_ns_ + "/left_gripper_pos", 1,
 			&UavGeometryControl::gripperLeft_cb, this);
 	gripperRight_sub_ = node_handle_.subscribe(
-			"/" + uav_ns + "/right_gripper_pos", 1,
+			"/" + uav_ns_ + "/right_gripper_pos", 1,
 			&UavGeometryControl::gripperRight_cb, this);
 
 	payload_pos_pub_ = node_handle_.advertise<geometry_msgs::Point>(
-			"/" + uav_ns + "/payload_position", 1);
+			"/" + uav_ns_ + "/payload_position", 1);
 }
 
 void UavGeometryControl::disableManipulatorControl()

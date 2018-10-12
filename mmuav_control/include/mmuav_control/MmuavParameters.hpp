@@ -11,6 +11,8 @@
 #ifndef MMUAV_PARAMETERS_H
 #define MMUAV_PARAMETERS_H
 
+#include <eigen3/Eigen/Dense>
+
 const double G = 9.81;
 
 // UAV constants
@@ -38,5 +40,26 @@ const double MM_FORCE = MM_MASS * G;
 const double PAYLOAD_MASS = 0.25;
 const double TOTAL_LINK_MASS = 0.13 * 2;
 const double PAYLOAD_FORCE = PAYLOAD_MASS * G;
+
+using namespace Eigen;
+
+namespace mmuav_params
+{
+	/**
+	 * Set initial values for UAV body inertia matrix.
+	 */
+	void initializeBodyInertia(Matrix<double, 3, 3> &inertia);
+
+	/**
+	 * Set initial values for movable mass inertia matrix.
+	 */
+	void initializeMovableMassInertia(Matrix<double, 3, 3> &inertia);
+
+	/**
+	 * Initialize transformation matrix which converts
+	 * total force and moments to forces produced by each rotor.
+	 */
+	void initializeThrustTransform(Matrix<double, 4, 4> &transform);
+}
 
 #endif /* MMUAV_PARAMETERS_H */

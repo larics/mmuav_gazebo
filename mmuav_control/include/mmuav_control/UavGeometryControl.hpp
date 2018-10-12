@@ -101,6 +101,16 @@ class UavGeometryControl
 		void blockingSensorChecks();
 
 		/**
+		 * Initialize main subscribers and publishers.
+		 */
+		void initializeSubsPubs();
+
+		/**
+		 * Sets initial values of various flags and variables.
+		 */
+		void setInitialValues();
+
+		/**
 		 * Calculate b3_d and f_u as position tracking control inputs.
 		 *
 		 * @param pos_desired - desired position reference
@@ -339,9 +349,9 @@ class UavGeometryControl
 		bool param_start_flag_;
 
 		/**
-		 * UAV namespace
+		 * UAV namespace.
 		 */
-		std::string uav_ns;
+		std::string uav_ns_;
 
 		/**
 		 * Current control mode:
