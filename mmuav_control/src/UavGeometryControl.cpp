@@ -16,19 +16,6 @@
 #include <geometry_msgs/Point.h>
 #include <time.h>
 
-using namespace std;
-
-
-// Transform matrix with roll / pitch corrections
-Matrix<double, 4, 4> THRUST_TRANSFORM_FULL;
-
-// Transform matrix without roll / pitch corrections
-Matrix<double, 4, 4> THRUST_TRANSFORM_YAW;
-
-const Matrix<double, 3, 1> E3(0, 0, 1);
-Matrix<double, 3, 3> EYE3;
-Matrix<double, 4, 4> EYE4;
-
 // Define control modes
 const int POSITION_CONTROL = 1;
 const int ATTITUDE_CONTROL = 2;
@@ -50,24 +37,19 @@ UavGeometryControl::UavGeometryControl(int rate, std::string uav_ns)
 	mmuav_params::initializePayloadInertia(payload_inertia_);
 	uav_mass_ = UAV_MASS;
 
-	// Initialize eye(3) matrix
-	EYE3.setZero(3, 3);
-	EYE3(0, 0) = 1;
-	EYE3(1, 1) = 1;
-	EYE3(2, 2) = 1;
-
-	// Initialize eye(4) matrix
-	EYE4.setZero(4, 4);
-	EYE4(0, 0) = 1;
-	EYE4(3, 3) = 1;
+	// Initialize (almost)eye(4) matrix
+	Matrix<double, 4, 4> eye4;
+	eye4.setZero(4, 4);
+	eye4(0, 0) = 1;
+	eye4(3, 3) = 1;
 
 	// Initialize thrust transform
-	mmuav_params::initializeThrustTransform(THRUST_TRANSFORM_FULL);
-	THRUST_TRANSFORM_YAW = THRUST_TRANSFORM_FULL * EYE4;
+	mmuav_params::initializeThrustTransform(thrust_transform_full_);
+	thrust_transform_yaw_ = thrust_transform_full_ * eye4;
 
 	cout << "Thrust transform: \n";
-	cout << THRUST_TRANSFORM_FULL << "\n";
-	cout << THRUST_TRANSFORM_YAW << "\n";
+	cout << thrust_transform_full_ << "\n";
+	cout << thrust_transform_yaw_ << "\n";
 	cout << endl;
 
 	// Initialize controller parameters
@@ -382,7 +364,7 @@ void UavGeometryControl::publishControlInputs(
 		// Calculate height and yaw control
 		calculateRotorVelocities(
 				thrust_moment_vec,
-				THRUST_TRANSFORM_YAW,
+				thrust_transform_yaw_,
 				rotor_velocities);
 
 		// Roll and pitch control with masses
@@ -412,7 +394,7 @@ void UavGeometryControl::publishControlInputs(
 		// Calculate height and yaw control
 		calculateRotorVelocities(
 				thrust_moment_vec,
-				THRUST_TRANSFORM_YAW,
+				thrust_transform_yaw_,
 				rotor_velocities);
 
 		// Roll and pitch control with masses
@@ -431,7 +413,7 @@ void UavGeometryControl::publishControlInputs(
 		// Calculate full rotor control
 		calculateRotorVelocities(
 				thrust_moment_vec,
-				THRUST_TRANSFORM_FULL,
+				thrust_transform_full_,
 				rotor_velocities);
 	}
 

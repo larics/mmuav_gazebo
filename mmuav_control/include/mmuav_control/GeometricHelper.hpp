@@ -13,6 +13,15 @@
 #include <eigen3/Eigen/Dense>
 
 using namespace Eigen;
+/**
+ * Set of eigen vector constants.
+ */
+const Matrix<double, 3, 1> E1(1, 0, 0);
+const Matrix<double, 3, 1> E2(0, 1, 0);
+const Matrix<double, 3, 1> E3(0, 0, 1);
+
+// Eigen matrix
+const Matrix<double, 3, 3> EYE3 = Matrix3d::Identity(3, 3);
 
 namespace geom_helper
 {

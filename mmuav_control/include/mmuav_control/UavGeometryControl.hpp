@@ -31,6 +31,7 @@
 #include <control_msgs/JointControllerState.h>
 
 using namespace Eigen;
+using namespace std;
 
 class UavGeometryControl
 {
@@ -293,6 +294,11 @@ class UavGeometryControl
 		 *	- k_omega: angular velocity error gain (eOmega)
 		 */
 		Matrix<double, 3, 3> k_x_, k_v_, k_R_, k_omega_;
+
+		/**
+		 * Transform matrices with and without roll / pitch corrections.
+		 */
+		Matrix<double, 4, 4> thrust_transform_full_, thrust_transform_yaw_;
 
 		/**
 		 * Controller status message.
