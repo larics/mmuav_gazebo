@@ -138,12 +138,11 @@ class UavGeometryControl
 
 		/**
 		 * Calculate and set desired angular velocity and
-		 * desired angular acceleration based on R_c[k] and R_c[k-1].
+		 * desired angular acceleration based on R_d[k] and R_d[k-1].
 		 *
-		 * @param R_c - Calculated R
+		 * t_d - Discretization time constant
 		 */
-		void calculateDesiredAngularVelAndAcc(
-				const Matrix<double, 3, 3> R_c);
+		void calculateDesiredAngularVelAndAcc(const double t_d);
 
 		/**
 		 * Calculate rotor velocities from given vector containing
@@ -181,14 +180,14 @@ class UavGeometryControl
 		void calculateCenterOfMass();
 
 		/**
-		 * Inertia matrix.
+		 * Calculate inertia matrix based on mass / payload offset.
 		 */
-		Matrix<double, 3, 3> inertia_;
+		void calculateAdjustedInertia(Matrix<double, 3, 3> &adjustedInertia);
 
 		/**
-		 * Moving mass inertia matrix.
+		 * Inertia matrix.
 		 */
-		Matrix<double, 3, 3> mass_inertia_;
+		Matrix<double, 3, 3> inertia_, mass_inertia_, payload_inertia_;
 
 		/**
 		 * UAV Body mass.

@@ -53,3 +53,11 @@ void mmuav_params::initializeThrustTransform(Matrix<double, 4, 4> &transform)
 	// Invert the matrix
 	transform = transform.inverse().eval();
 }
+
+void mmuav_params::initializePayloadInertia(Matrix<double, 3, 3> &inertia)
+{
+	inertia.setZero(3, 3);
+	inertia(0, 0) = 0.00015;
+	inertia(1, 1) = 0.00015;
+	inertia(2, 2) = 0.00015;
+}

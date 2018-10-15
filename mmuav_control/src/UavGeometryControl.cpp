@@ -36,6 +36,7 @@ const int VELOCITY_CONTROL = 3;
 
 // Controller rate
 const int CONTROLLER_RATE = 100;
+const int DISCRETIZATION_RATE = 10;
 
 UavGeometryControl::UavGeometryControl(int rate, std::string uav_ns)
 {
@@ -46,6 +47,7 @@ UavGeometryControl::UavGeometryControl(int rate, std::string uav_ns)
 	// Initialize inertia matrices
 	mmuav_params::initializeBodyInertia(inertia_);
 	mmuav_params::initializeMovableMassInertia(mass_inertia_);
+	mmuav_params::initializePayloadInertia(payload_inertia_);
 	uav_mass_ = UAV_MASS;
 
 	// Initialize eye(3) matrix
@@ -136,8 +138,8 @@ void UavGeometryControl::runControllerLoop()
 	Matrix<double, 3, 3> R_mv_old = EYE3;
 
 	// Initialize helper time variables
-	double dt_help = 0.1;
-	double counter = 0.0;
+	double desiredTimeInterval = 1.0 / DISCRETIZATION_RATE;
+	double desiredCounter = 0.0;
 
 	// Start the control loop.
 	while (ros::ok())
@@ -158,11 +160,12 @@ void UavGeometryControl::runControllerLoop()
 		 *	for calculations happening at a different
 		 *	rate than the control loop.
 		 */
-		counter += dt;
-		if (counter >= dt_help)
+		desiredCounter += dt;
+		if (desiredCounter >= desiredTimeInterval)
 		{
 			calc_desired_flag_ = true;
-			counter = 0.0;
+			calculateDesiredAngularVelAndAcc(desiredTimeInterval);
+			desiredCounter = 0.0;
 		}
 
 		// Update old time
@@ -188,9 +191,6 @@ void UavGeometryControl::runControllerLoop()
 				b1_des,			// Input - desired heading
 				b3_d,			// Input - desired thrust vector
 				M_u);			// OUTPUT - control moments
-
-		// Disable calculating desired velocities / accelerations
-		calc_desired_flag_ = false;
 
 		// Publish control inputs
 		publishControlInputs(f_u, M_u);
@@ -680,8 +680,6 @@ void UavGeometryControl::attitudeTracking(
 		R_c.setZero(3, 3);
 		R_c << b1_c, b2_c, b3_desired;
 
-		calculateDesiredAngularVelAndAcc(R_c);
-
 		// Remap calculated to desired
 		R_d_ = R_c;
 	}
@@ -701,9 +699,6 @@ void UavGeometryControl::attitudeTracking(
 		throw std::runtime_error("Invalid control mode given.");
 	}
 
-	// cout << "R_d:\n" << R_d_ << "\n";
-	// cout << "R_mv:\n" << R_mv_ << "\n";
-
 	// ATTITUDE TRACKING
 	// Calculate control moment M
 	e_R_skew = (R_d_.adjoint() * R_mv_ - R_mv_.adjoint() * R_d_) / 2;
@@ -720,63 +715,18 @@ void UavGeometryControl::attitudeTracking(
 			(double)omega_mv_(2, 0),
 			omega_mv_skew);
 
+	// Calculate adjusted inertia matrix
 	Matrix<double, 3,3> adjustedInertia;
+	calculateAdjustedInertia(adjustedInertia);
+
+	// Calculate additional dynamics
 	Matrix<double, 3, 1> additionalDynamics;
-	adjustedInertia = inertia_;
-
-	// Adjust inertia matrix
-	if (enable_mass_control_)
+	additionalDynamics.setZero(3, 1);
+	if (enable_manipulator_control_ || enable_mass_control_)
 	{
-		adjustedInertia(0, 0) = adjustedInertia(0, 0)
-				+ mass1_mv_ * mass1_mv_ * MM_MASS
-				+ mass3_mv_ * mass3_mv_ * MM_MASS
-				+ mass_inertia_(0, 0);
-
-		adjustedInertia(1, 1) = adjustedInertia(1, 1)
-				+ mass0_mv_ * mass0_mv_ * MM_MASS
-				+ mass2_mv_ * mass2_mv_ * MM_MASS
-				+ mass_inertia_(1, 1);
-
-		adjustedInertia(2, 2) = adjustedInertia(2, 2)
-				+ mass1_mv_ * mass1_mv_ * MM_MASS
-				+ mass3_mv_ * mass3_mv_ * MM_MASS
-				+ mass0_mv_ * mass0_mv_ * MM_MASS
-				+ mass2_mv_ * mass2_mv_ * MM_MASS
-				+ 4 * mass_inertia_(2,2);
-
 		additionalDynamics =
 				uav_mass_ * ro_cm_.cross(R_mv_.adjoint()*a_d_);
 	}
-	else if (enable_manipulator_control_)
-	{
-		adjustedInertia(0, 0) = adjustedInertia(0, 0)
-				+ (gripperLeft_mv_(1,0) * gripperLeft_mv_(1,0) +
-						gripperLeft_mv_(2,0) * gripperLeft_mv_(2,0)
-						) * PAYLOAD_MASS
-				+ (gripperRight_mv_(1,0) * gripperRight_mv_(1,0) +
-						gripperLeft_mv_(2,0) * gripperRight_mv_(2,0)
-						) * PAYLOAD_MASS;
-
-		adjustedInertia(1, 1) = adjustedInertia(1, 1)
-						+ (gripperLeft_mv_(0,0) * gripperLeft_mv_(0,0) +
-								gripperLeft_mv_(2,0) * gripperLeft_mv_(2,0)
-								) * PAYLOAD_MASS * 2
-						+ (gripperRight_mv_(0,0) * gripperRight_mv_(0,0) +
-								gripperLeft_mv_(2,0) * gripperRight_mv_(2,0)
-								) * PAYLOAD_MASS;
-
-		adjustedInertia(2, 2) = adjustedInertia(2, 2)
-						+ (gripperLeft_mv_(0,0) * gripperLeft_mv_(0,0) +
-								gripperLeft_mv_(0,0) * gripperLeft_mv_(0,0)
-								) * PAYLOAD_MASS * 2
-						+ (gripperRight_mv_(2,0) * gripperRight_mv_(2,0) +
-								gripperLeft_mv_(2,0) * gripperRight_mv_(2,0)
-								) * PAYLOAD_MASS;
-
-		additionalDynamics =
-						uav_mass_ * ro_cm_.cross(R_mv_.adjoint()*a_d_);
-	}
-
 
 	M_u = 	- k_R_ * e_R
 		- k_omega_ * e_omega
@@ -803,18 +753,77 @@ void UavGeometryControl::attitudeTracking(
 	status_msg_.e_omega[2] = e_omega(2, 0);
 }
 
-void UavGeometryControl::calculateDesiredAngularVelAndAcc(
-		const Matrix<double, 3, 3> R_c)
+void UavGeometryControl::calculateAdjustedInertia(
+		Matrix<double, 3, 3> &adjustedInertia)
 {
+	adjustedInertia = inertia_;
+
+	// Adjust inertia matrix
+	if (enable_mass_control_)
+	{
+		adjustedInertia(0, 0) = adjustedInertia(0, 0)
+				+ mass1_mv_ * mass1_mv_ * MM_MASS
+				+ mass3_mv_ * mass3_mv_ * MM_MASS
+				+ mass_inertia_(0, 0);
+
+		adjustedInertia(1, 1) = adjustedInertia(1, 1)
+				+ mass0_mv_ * mass0_mv_ * MM_MASS
+				+ mass2_mv_ * mass2_mv_ * MM_MASS
+				+ mass_inertia_(1, 1);
+
+		adjustedInertia(2, 2) = adjustedInertia(2, 2)
+				+ mass1_mv_ * mass1_mv_ * MM_MASS
+				+ mass3_mv_ * mass3_mv_ * MM_MASS
+				+ mass0_mv_ * mass0_mv_ * MM_MASS
+				+ mass2_mv_ * mass2_mv_ * MM_MASS
+				+ 4 * mass_inertia_(2,2);
+	}
+	else if (enable_manipulator_control_)
+	{
+		adjustedInertia(0, 0) = adjustedInertia(0, 0)
+				+ (gripperLeft_mv_(1,0) * gripperLeft_mv_(1,0) +
+						gripperLeft_mv_(2,0) * gripperLeft_mv_(2,0)
+						) * PAYLOAD_MASS
+				+ (gripperRight_mv_(1,0) * gripperRight_mv_(1,0) +
+						gripperLeft_mv_(2,0) * gripperRight_mv_(2,0)
+						) * PAYLOAD_MASS
+				+ 2 * payload_inertia_(0, 0);
+
+		adjustedInertia(1, 1) = adjustedInertia(1, 1)
+				+ (gripperLeft_mv_(0,0) * gripperLeft_mv_(0,0) +
+						gripperLeft_mv_(2,0) * gripperLeft_mv_(2,0)
+						) * PAYLOAD_MASS * 2
+				+ (gripperRight_mv_(0,0) * gripperRight_mv_(0,0) +
+								gripperLeft_mv_(2,0) * gripperRight_mv_(2,0)
+								) * PAYLOAD_MASS
+				+ 2 * payload_inertia_(1, 1);
+
+		adjustedInertia(2, 2) = adjustedInertia(2, 2)
+				+ (gripperLeft_mv_(0,0) * gripperLeft_mv_(0,0) +
+						gripperLeft_mv_(0,0) * gripperLeft_mv_(0,0)
+						) * PAYLOAD_MASS * 2
+				+ (gripperRight_mv_(2,0) * gripperRight_mv_(2,0) +
+								gripperLeft_mv_(2,0) * gripperRight_mv_(2,0)
+								) * PAYLOAD_MASS
+				+ 2 * payload_inertia_(2, 2);
+	}
+}
+
+void UavGeometryControl::calculateDesiredAngularVelAndAcc(const double t_d)
+{
+	/**
+	 * Do nothing if not in position control mode or
+	 * calc desired flag is not up.
+	 */
+	if (!calc_desired_flag_ ||
+			current_control_mode_ != POSITION_CONTROL)	{ return; }
+
 	Matrix<double, 3, 3> omega_c_skew, alpha_c_skew;
+	Matrix<double, 3, 3> R_c_dot = (R_d_ - R_c_old_) / t_d;
+	omega_c_skew = R_d_.adjoint() * R_c_dot;
 
-	if (!calc_desired_flag_)	{ return; }
-
-	Matrix<double, 3, 3> R_c_dot = (R_c - R_c_old_) / 0.1;
-	omega_c_skew = R_c.adjoint() * R_c_dot;
-
-	Matrix<double, 3, 3> R_c_ddot = (R_c_dot - R_c_dot_old_) / 0.1;
-	alpha_c_skew = - omega_c_skew * omega_c_skew + R_c.adjoint() * R_c_ddot;
+	Matrix<double, 3, 3> R_c_ddot = (R_c_dot - R_c_dot_old_) / t_d;
+	alpha_c_skew = - omega_c_skew * omega_c_skew + R_d_.adjoint() * R_c_ddot;
 
 	// Remap calculated values to desired
 	geom_helper::veeOperator(omega_c_skew, omega_d_);
@@ -827,11 +836,9 @@ void UavGeometryControl::calculateDesiredAngularVelAndAcc(
 	alpha_d_(2, 0) = nonlinear_filters::saturation(
 			(double)alpha_d_(2, 0), -0.5, 0.5);
 
-	// cout << "omega_d: " << "\n" << omega_d_ << "\n";
-	// cout << "alpha_d: " << "\n" << alpha_d_ << "\n";
-
-	R_c_old_ = R_c;
+	R_c_old_ = R_d_;
 	R_c_dot_old_ = R_c_dot;
+	calc_desired_flag_ = false;
 }
 
 void UavGeometryControl::param_cb(

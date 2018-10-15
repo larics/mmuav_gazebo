@@ -57,6 +57,11 @@ namespace mmuav_params
 	void initializeMovableMassInertia(Matrix<double, 3, 3> &inertia);
 
 	/**
+	 * Set initial values for payload inertia.
+	 */
+	void initializePayloadInertia(Matrix<double, 3, 3> &inertia);
+
+	/**
 	 * Initialize transformation matrix which converts
 	 * total force and moments to forces produced by each rotor.
 	 */
