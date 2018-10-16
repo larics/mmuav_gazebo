@@ -112,6 +112,11 @@ class UavGeometryControl
 		void setInitialValues();
 
 		/**
+		 * Initialize controller parameters from YAML files.
+		 */
+		void initializeControllerParameters();
+
+		/**
 		 * Calculate b3_d and f_u as position tracking control inputs.
 		 *
 		 * @param pos_desired - desired position reference

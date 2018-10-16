@@ -6,6 +6,7 @@ find_package(catkin REQUIRED COMPONENTS
     rospy
     std_msgs
     dynamic_reconfigure
+    roslib
 )
 
 find_package(cmake_modules REQUIRED)
@@ -47,7 +48,7 @@ target_link_libraries(GeometricHelper ${catkin_LIBRARIES})
 
 add_executable(UavGeometryControl src/UavGeometryControl.cpp)
 target_link_libraries(UavGeometryControl ${catkin_LIBRARIES} 
-    NonlinearFilters GeometricHelper MmuavParameters)
+    NonlinearFilters GeometricHelper MmuavParameters libyaml-cpp)
 
 #install(DIRECTORY config
 #  DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION})

@@ -15,6 +15,8 @@
 #include <std_msgs/Header.h>
 #include <geometry_msgs/Point.h>
 #include <time.h>
+#include <yaml-cpp/yaml.h>
+#include <ros/package.h>
 
 // Define control modes
 const int POSITION_CONTROL = 1;
@@ -24,6 +26,9 @@ const int VELOCITY_CONTROL = 3;
 // Controller rate
 const int CONTROLLER_RATE = 100;
 const int DISCRETIZATION_RATE = 10;
+
+// YAML filename
+const string YAML_NAME = "GeometryControl.yaml";
 
 UavGeometryControl::UavGeometryControl(int rate, std::string uav_ns)
 {
@@ -52,27 +57,7 @@ UavGeometryControl::UavGeometryControl(int rate, std::string uav_ns)
 	cout << thrust_transform_yaw_ << "\n";
 	cout << endl;
 
-	// Initialize controller parameters
-	// TODO: Read controller parameters via YAML files
-	k_x_.setZero(3, 3);
-	k_x_(0, 0) = 7.2;
-	k_x_(1, 1) = 7.2;
-	k_x_(2, 2) = 50;
-
-	k_v_.setZero(3, 3);
-	k_v_(0, 0) = 2.6;
-	k_v_(1, 1) = 2.6;
-	k_v_(2, 2) = 20;
-
-	k_R_.setZero(3, 3);
-	k_R_(0, 0) = 1.52;
-	k_R_(1, 1) = 1.52;
-	k_R_(2, 2) = 12;
-
-	k_omega_.setZero(3, 3);
-	k_omega_(0, 0) = 0.65;
-	k_omega_(1, 1) = 0.65;
-	k_omega_(2, 2) = 1.54;
+	initializeControllerParameters();
 
 	// Initialize subscribers and publishers
 	initializeSubsPubs();
@@ -180,6 +165,58 @@ void UavGeometryControl::runControllerLoop()
 		// Publish controller status
 		publishStatusMessage(f_u, M_u);
 	}
+}
+
+void UavGeometryControl::initializeControllerParameters()
+{
+	string package_path = ros::package::getPath("mmuav_control");
+	cout << package_path << "/config/" << uav_ns_ << YAML_NAME << endl;
+	//YAML::Node parameters = YAML::LoadFile(
+	//		package_path + "/config/" + uav_ns_ + YAML_NAME);
+
+	/*
+	YAML::Node parameters = YAML::Load("{bla: 1, blabla: 2}");
+	cout << parameters << endl;
+	cout << parameters.size() << endl;
+	cout << parameters.IsDefined() << endl;
+	cout << parameters.IsMap() << endl;
+	cout << parameters.IsNull() << endl;
+	cout << parameters.IsScalar() << endl;
+	cout << parameters.IsSequence() << endl;
+*/
+	/*
+	// Initialize controller parameters
+	// TODO: Read controller parameters via YAML files
+	k_x_.setZero(3, 3);
+	k_x_(0, 0) = parameters["kPos"]["xx"].as<double>();
+	k_x_(1, 1) = parameters["kPos"]["yy"].as<double>();
+	k_x_(2, 2) = parameters["kPos"]["zz"].as<double>();
+	cout << k_x_ << endl;
+	cout << "check1" << endl;
+
+
+	k_v_.setZero(3, 3);
+	k_v_(0, 0) = parameters["k_v"]["x"];
+	k_v_(1, 1) = parameters["k_v"]["y"];
+	k_v_(2, 2) = parameters["k_v"]["z"];
+	cout << k_v_ << endl;
+	cout << "check2" << endl;
+
+
+	k_R_.setZero(3, 3);
+	k_R_(0, 0) = parameters["k_R"]["x"];
+	k_R_(1, 1) = parameters["k_R"]["y"];
+	k_R_(2, 2) = parameters["k_R"]["z"];
+	cout << k_R_ << endl;
+	cout << "check3" << endl;
+
+	k_omega_.setZero(3, 3);
+	k_omega_(0, 0) = parameters["k_omega"]["x"];
+	k_omega_(1, 1) = parameters["k_omega"]["y"];
+	k_omega_(2, 2) = parameters["k_omega"]["z"];
+	cout << k_omega_ << endl;
+	cout << "check4" << endl;
+	*/
 }
 
 void UavGeometryControl::setInitialValues()
