@@ -170,53 +170,59 @@ void UavGeometryControl::runControllerLoop()
 void UavGeometryControl::initializeControllerParameters()
 {
 	string package_path = ros::package::getPath("mmuav_control");
-	cout << package_path << "/config/" << uav_ns_ << YAML_NAME << endl;
-	//YAML::Node parameters = YAML::LoadFile(
-	//		package_path + "/config/" + uav_ns_ + YAML_NAME);
+	string parameterPath = package_path + "/config/" + uav_ns_ + YAML_NAME;
+	ROS_INFO("Path to parameter file:");
+	ROS_INFO(parameterPath.c_str());
+	YAML::Node parameters = YAML::LoadFile(parameterPath);
 
-	/*
-	YAML::Node parameters = YAML::Load("{bla: 1, blabla: 2}");
-	cout << parameters << endl;
-	cout << parameters.size() << endl;
-	cout << parameters.IsDefined() << endl;
-	cout << parameters.IsMap() << endl;
-	cout << parameters.IsNull() << endl;
-	cout << parameters.IsScalar() << endl;
-	cout << parameters.IsSequence() << endl;
-*/
-	/*
+	// Check if parameters are loaded correctly
+	if (parameters.IsNull())
+	{
+		ROS_ERROR("Failed to get parameters.");
+		throw std::runtime_error("Bad parameter file loaded.");
+	}
+
+	//TODO: Direct initialization into Matrix<double, 3, 3> throws bad conversion
+	double k_x_x = parameters["k_x"]["x"].as<float>();
+	double k_x_y = parameters["k_x"]["y"].as<float>();
+	double k_x_z = parameters["k_x"]["z"].as<float>();
+
 	// Initialize controller parameters
-	// TODO: Read controller parameters via YAML files
 	k_x_.setZero(3, 3);
-	k_x_(0, 0) = parameters["kPos"]["xx"].as<double>();
-	k_x_(1, 1) = parameters["kPos"]["yy"].as<double>();
-	k_x_(2, 2) = parameters["kPos"]["zz"].as<double>();
-	cout << k_x_ << endl;
-	cout << "check1" << endl;
+	k_x_(0, 0) = k_x_x;
+	k_x_(1, 1) = k_x_y;
+	k_x_(2, 2) = k_x_z;
+	cout << "k_x:\n" << k_x_ << endl;
 
+	double k_v_x = parameters["k_v"]["x"].as<float>();
+	double k_v_y = parameters["k_v"]["y"].as<float>();
+	double k_v_z = parameters["k_v"]["z"].as<float>();
 
 	k_v_.setZero(3, 3);
-	k_v_(0, 0) = parameters["k_v"]["x"];
-	k_v_(1, 1) = parameters["k_v"]["y"];
-	k_v_(2, 2) = parameters["k_v"]["z"];
-	cout << k_v_ << endl;
-	cout << "check2" << endl;
+	k_v_(0, 0) = k_v_x;
+	k_v_(1, 1) = k_v_y;
+	k_v_(2, 2) = k_v_z;
+	cout << "k_v:\n" << k_v_ << endl;
 
+	double k_R_x = parameters["k_R"]["x"].as<float>();
+	double k_R_y = parameters["k_R"]["y"].as<float>();
+	double k_R_z = parameters["k_R"]["z"].as<float>();
 
 	k_R_.setZero(3, 3);
-	k_R_(0, 0) = parameters["k_R"]["x"];
-	k_R_(1, 1) = parameters["k_R"]["y"];
-	k_R_(2, 2) = parameters["k_R"]["z"];
-	cout << k_R_ << endl;
-	cout << "check3" << endl;
+	k_R_(0, 0) = k_R_x;
+	k_R_(1, 1) = k_R_y;
+	k_R_(2, 2) = k_R_z;
+	cout << "k_R:\n" << k_R_ << endl;
+
+	double k_omega_x = parameters["k_omega"]["x"].as<float>();
+	double k_omega_y = parameters["k_omega"]["y"].as<float>();
+	double k_omega_z = parameters["k_omega"]["z"].as<float>();
 
 	k_omega_.setZero(3, 3);
-	k_omega_(0, 0) = parameters["k_omega"]["x"];
-	k_omega_(1, 1) = parameters["k_omega"]["y"];
-	k_omega_(2, 2) = parameters["k_omega"]["z"];
-	cout << k_omega_ << endl;
-	cout << "check4" << endl;
-	*/
+	k_omega_(0, 0) = k_omega_x;
+	k_omega_(1, 1) = k_omega_y;
+	k_omega_(2, 2) = k_omega_z;
+	cout << "k_omega:\n" << k_omega_ << endl;
 }
 
 void UavGeometryControl::setInitialValues()
