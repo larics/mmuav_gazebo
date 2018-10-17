@@ -16,7 +16,7 @@
 
 
     <!-- Start control -->
-    <include file="$(find mmuav_control)/launch/mmuav_control.launch"/>
+    <include file="$(find mmuav_control)/launch/mmuav_control_new.launch"/>
     
     <group ns="$(arg type)">
         <!-- Merge height and attitude control node -->
