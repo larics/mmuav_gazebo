@@ -3,6 +3,9 @@
 #include <mmuav_msgs/PIDController.h>
 #include <ros/package.h>
 
+#include <string>
+#include <iostream>
+
 JointControl::JointControl()
 {
 	ref_ = 0;
@@ -242,6 +245,7 @@ int main(int argc, char **argv)
 	private_node_handle_.param("param_file", controller_params_file, std::string("/config/dual_arm_manipulator_position_control.yaml"));
 
 	JointPositionControl joint_control;
+	std::cout << path << controller_params_file << "\n";
 	joint_control.LoadParameters(path+controller_params_file, controllers);
 	joint_control.run();
 

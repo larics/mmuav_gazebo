@@ -14,15 +14,25 @@
     <arg name="mass_ctl" default="false" />
     <arg name="manipulator_ctl" default="false" />
 
-
     <!-- Start control -->
     <include file="$(find mmuav_control)/launch/mmuav_control_new.launch"/>
     
     <group ns="$(arg type)">
         <!-- Merge height and attitude control node -->
-        <node name="gripper_control" pkg="mmuav_control" type="mmuav_gripper_control.py" output="screen">
+        <node name="gripper_control" pkg="mmuav_control" 
+            type="mmuav_gripper_control.py" output="screen">
           <param name="rate" value="$(arg rate)"/>
         </node>
+    
+        <node name="mmuav_joint_position_control" 
+            pkg="mmuav_control" 
+            type="mmuav_joint_position_control" output="screen"  
+            args="joint1_left_position_controller 
+                joint2_left_position_controller 
+                joint3_left_position_controller 
+                joint1_right_position_controller 
+                joint2_right_position_controller 
+                joint3_right_position_controller"/>
     </group>
     
     <node name="geometric_control" pkg="mmuav_control" type="UavGeometryControl"
