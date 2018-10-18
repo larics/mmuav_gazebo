@@ -16,6 +16,7 @@ import time
 import DualManipulatorPassiveJointKinematics as ArmsKinematics
 import copy
 from control_msgs.msg import JointControllerState
+from mmuav_msgs.msg import PIDController
 
 class MergeControllerOutputs:
 
@@ -41,23 +42,23 @@ class MergeControllerOutputs:
         self.q3_right = -1.08
 
         # Topics adapted for double joint controllers
-        self.q1_left_pub = rospy.Publisher('joint1_left_controller/command', Float64, queue_size=1)
-        self.q2_left_pub = rospy.Publisher('joint2_left_controller/command', Float64, queue_size=1)
-        self.q3_left_pub = rospy.Publisher('joint3_left_controller/command', Float64, queue_size=1)
-        self.q1_right_pub = rospy.Publisher('joint1_right_controller/command', Float64, queue_size=1)
-        self.q2_right_pub = rospy.Publisher('joint2_right_controller/command', Float64, queue_size=1)
-        self.q3_right_pub = rospy.Publisher('joint3_right_controller/command', Float64, queue_size=1)
+        self.q1_left_pub = rospy.Publisher('joint1_left_position_controller/command', Float64, queue_size=1)
+        self.q2_left_pub = rospy.Publisher('joint2_left_position_controller/command', Float64, queue_size=1)
+        self.q3_left_pub = rospy.Publisher('joint3_left_position_controller/command', Float64, queue_size=1)
+        self.q1_right_pub = rospy.Publisher('joint1_right_position_controller/command', Float64, queue_size=1)
+        self.q2_right_pub = rospy.Publisher('joint2_right_position_controller/command', Float64, queue_size=1)
+        self.q3_right_pub = rospy.Publisher('joint3_right_position_controller/command', Float64, queue_size=1)
 
         self.left_gripper_pub = rospy.Publisher('left_gripper_pos', Point, queue_size=1)
         self.right_gripper_pub = rospy.Publisher('right_gripper_pos', Point, queue_size=1)
 
         rospy.Subscriber('payload_position', Point, self.payload_pos_cb, queue_size=1)
-        rospy.Subscriber('joint1_left_controller/state', JointControllerState, self.joint1_left_cb)
-        rospy.Subscriber('joint2_left_controller/state', JointControllerState, self.joint2_left_cb)
-        rospy.Subscriber('joint3_left_controller/state', JointControllerState, self.joint3_left_cb)
-        rospy.Subscriber('joint1_right_controller/state', JointControllerState, self.joint1_right_cb)
-        rospy.Subscriber('joint2_right_controller/state', JointControllerState, self.joint2_right_cb)
-        rospy.Subscriber('joint3_right_controller/state', JointControllerState, self.joint3_right_cb)
+        rospy.Subscriber('joint1_left_position_controller/state', PIDController, self.joint1_left_cb)
+        rospy.Subscriber('joint2_left_position_controller/state', PIDController, self.joint2_left_cb)
+        rospy.Subscriber('joint3_left_position_controller/state', PIDController, self.joint3_left_cb)
+        rospy.Subscriber('joint1_right_position_controller/state', PIDController, self.joint1_right_cb)
+        rospy.Subscriber('joint2_right_position_controller/state', PIDController, self.joint2_right_cb)
+        rospy.Subscriber('joint3_right_position_controller/state', PIDController, self.joint3_right_cb)
 
         self.dx = 0
         self.dy = 0
@@ -253,18 +254,18 @@ class MergeControllerOutputs:
         return (dq1, dq2, dq3)
 
     def joint1_left_cb(self, msg):
-        self.q1_left = msg.process_value - 1.57
+        self.q1_left = msg.meas - 1.57
     def joint2_left_cb(self, msg):
-        self.q2_left = msg.process_value + 1.57
+        self.q2_left = msg.meas + 1.57
     def joint3_left_cb(self, msg):
-        self.q3_left = msg.process_value
+        self.q3_left = msg.meas
     
     def joint1_right_cb(self, msg):
-        self.q1_right = msg.process_value + 1.57
+        self.q1_right = msg.meas + 1.57
     def joint2_right_cb(self, msg):
-        self.q2_right = msg.process_value + 1.57
+        self.q2_right = msg.meas + 1.57
     def joint3_right_cb(self, msg):
-        self.q3_right = msg.process_value
+        self.q3_right = msg.meas
 
     def saturation(self, x, limit):
         if x > limit:
