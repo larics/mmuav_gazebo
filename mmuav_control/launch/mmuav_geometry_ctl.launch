@@ -20,7 +20,7 @@
             type="mmuav_gripper_control.py" output="screen">
           <param name="rate" value="$(arg rate)"/>
         </node>
-    
+        
         <node name="mmuav_joint_position_control" 
             pkg="mmuav_control" 
             type="mmuav_joint_position_control" output="screen"  
@@ -34,7 +34,7 @@
     
     <!-- Start control -->
     <include file="$(find mmuav_control)/launch/mmuav_control_new.launch"/>
- 
+        
     <node name="geometric_control" pkg="mmuav_control" type="UavGeometryControl"
         output="screen">
       <param name="rate" type="double" value="$(arg rate)"/>

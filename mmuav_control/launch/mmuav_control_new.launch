@@ -10,7 +10,8 @@
   <node name="controller_spawner" 
         pkg="controller_manager" 
         type="spawner" respawn="false"
-    output="screen" ns="$(arg namespace)"  args="joint_state_controller
+        output="screen" ns="$(arg namespace)"  
+        args="joint_state_controller
     joint1_left_velocity_controller
     joint1_right_velocity_controller
     joint2_left_velocity_controller
