@@ -8,11 +8,9 @@
 
 <launch>
     
-    <arg name="namespace" default="mmcuav"/>
+    <arg name="namespace" default="mmuav"/>
     <arg name="rate" default="100"/>
-    <arg name="type" default="mmcuav"/>
-    <arg name="mass_ctl" default="false" />
-    <arg name="manipulator_ctl" default="false" />
+    <arg name="type" default="mmuav"/>
    
     <group ns="$(arg type)">
         <!-- Merge height and attitude control node -->
@@ -20,8 +18,12 @@
             type="mmuav_gripper_control.py" output="screen">
           <param name="rate" value="$(arg rate)"/>
         </node>
-        
-        <node name="mmuav_joint_position_control" 
+    </group>
+    
+    <!-- Double joint controllers -->
+    <!--include file="$(find mmuav_control)/launch/mmuav_control_velocity.launch"/>
+    <group ns="$(arg type)">
+    <node name="mmuav_joint_position_control" 
             pkg="mmuav_control" 
             type="mmuav_joint_position_control" output="screen"  
             args="joint1_left_position_controller 
@@ -30,11 +32,12 @@
                 joint1_right_position_controller 
                 joint2_right_position_controller 
                 joint3_right_position_controller"/>
-    </group>
+    </group -->
     
-    <!-- Start control -->
-    <include file="$(find mmuav_control)/launch/mmuav_control_new.launch"/>
-        
+    <!-- Single joint controller -->
+    <include file="$(find mmuav_control)/launch/mmuav_control.launch"/>
+     
+    <!-- Start geometric control -->
     <node name="geometric_control" pkg="mmuav_control" type="UavGeometryControl"
         output="screen">
       <param name="rate" type="double" value="$(arg rate)"/>

@@ -39,8 +39,6 @@
     <include file="$(find mmuav_control)/launch/$(arg type)_geometry_ctl.launch">
         <arg name="type" value="$(arg type)"/>
         <arg name="rate" value="100"/>
-        <arg name="mass_ctl" value="false" />
-    	<arg name="manipulator_ctl" value="false" />
     </include>
 
 </launch>

@@ -10,9 +10,7 @@
     
     <arg name="namespace" default="mmcuav"/>
     <arg name="rate" default="100"/>
-    <arg name="type" default="mmcuav"/>    
-    <arg name="mass_ctl" default="false" />
-    <arg name="manipulator_ctl" default="false" />
+    <arg name="type" default="mmcuav"/>
 
     <node name="geometric_control" pkg="mmuav_control" type="UavGeometryControl"
         output="screen">
