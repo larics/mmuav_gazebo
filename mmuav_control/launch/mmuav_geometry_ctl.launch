@@ -13,10 +13,7 @@
     <arg name="type" default="mmcuav"/>
     <arg name="mass_ctl" default="false" />
     <arg name="manipulator_ctl" default="false" />
-
-    <!-- Start control -->
-    <include file="$(find mmuav_control)/launch/mmuav_control_new.launch"/>
-    
+   
     <group ns="$(arg type)">
         <!-- Merge height and attitude control node -->
         <node name="gripper_control" pkg="mmuav_control" 
@@ -35,6 +32,9 @@
                 joint3_right_position_controller"/>
     </group>
     
+    <!-- Start control -->
+    <include file="$(find mmuav_control)/launch/mmuav_control_new.launch"/>
+ 
     <node name="geometric_control" pkg="mmuav_control" type="UavGeometryControl"
         output="screen">
       <param name="rate" type="double" value="$(arg rate)"/>
