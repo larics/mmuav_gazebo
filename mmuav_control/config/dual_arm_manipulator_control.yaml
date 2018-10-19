@@ -8,24 +8,24 @@ mmuav:
   joint1_left_controller:
     type: effort_controllers/JointPositionController
     joint: joint_q1_left
-    pid: {p: 1.8, i: 0.35, d: 0.0, i_clamp_max: 100, i_clamp_min: -100}
+    pid: {p: 5.5, i: 0.35, d: 0.0, i_clamp_max: 100, i_clamp_min: -100}
   joint2_left_controller:
     type: effort_controllers/JointPositionController
     joint: joint_q2_left
-    pid: {p: 1.2, i: 0.0, d: 0.0, i_clamp_max: 100, i_clamp_min: -100}
+    pid: {p: 4, i: 0.0, d: 0.0, i_clamp_max: 100, i_clamp_min: -100}
   joint3_left_controller:
     type: effort_controllers/JointPositionController
     joint: joint_q3_passive_left
-    pid: {p: 1.5, i: 0.0, d: 0.0, i_clamp_max: 100, i_clamp_min: -100}
+    pid: {p: 4.75, i: 0.0, d: 0.0, i_clamp_max: 100, i_clamp_min: -100}
   joint1_right_controller:
     type: effort_controllers/JointPositionController
     joint: joint_q1_right
-    pid: {p: 1.8, i: 0.35, d: 0.0, i_clamp_max: 100, i_clamp_min: -100}
+    pid: {p: 5.5, i: 0.35, d: 0.0, i_clamp_max: 100, i_clamp_min: -100}
   joint2_right_controller:
     type: effort_controllers/JointPositionController
     joint: joint_q2_right
-    pid: {p: 1.2, i: 0.0, d: 0.0, i_clamp_max: 100, i_clamp_min: -100}
+    pid: {p: 4, i: 0.0, d: 0.0, i_clamp_max: 100, i_clamp_min: -100}
   joint3_right_controller:
     type: effort_controllers/JointPositionController
     joint: joint_q3_passive_right
-    pid: {p: 1.5, i: 0.0, d: 0.0, i_clamp_max: 100, i_clamp_min: -100}
+    pid: {p: 4.75, i: 0.0, d: 0.0, i_clamp_max: 100, i_clamp_min: -100}
