@@ -70,7 +70,6 @@ UavGeometryControl::UavGeometryControl(int rate, std::string uav_ns)
 
 UavGeometryControl::~UavGeometryControl()
 {
-	// TODO(lmark): Destructor..
 }
 
 void UavGeometryControl::runControllerLoop()
@@ -433,7 +432,6 @@ void UavGeometryControl::publishControlInputs(
 	}
 	else if (enable_manipulator_control_)
 	{
-		// TODO: Manipulator control - publish dx and dy somewhere...
 		// Calculate height and yaw control
 		calculateRotorVelocities(
 				thrust_moment_vec,
@@ -443,8 +441,8 @@ void UavGeometryControl::publishControlInputs(
 		// Roll and pitch control with masses
 		double dx = (double)M_u(1, 0) / (2 * PAYLOAD_FORCE * E3.dot(R_mv_ * E3));
 		double dy = (double)M_u(0, 0) / (2 * PAYLOAD_FORCE * E3.dot(R_mv_ * E3));
-		dx = nonlinear_filters::saturation(dx, -0.15, 0.15);
-		dy = nonlinear_filters::saturation(dy, -0.15, 0.15);
+		dx = nonlinear_filters::saturation(dx, -0.2, 0.2);
+		dy = nonlinear_filters::saturation(dy, -0.2, 0.2);
 
 		geometry_msgs::Point msg;
 		msg.x = dx;
@@ -590,20 +588,8 @@ void UavGeometryControl::trajectoryTracking(
 
 	if (enable_mass_control_ || enable_manipulator_control_)
 	{
-		Matrix<double, 3, 3> skew_omega, skew_ro;
-		geom_helper::hatOperator(
-			(double)omega_mv_(0, 0),
-			(double)omega_mv_(1, 0),
-			(double)omega_mv_(2, 0),
-			skew_omega);
-		geom_helper::hatOperator(
-			(double)ro_cm_(0, 0),
-			(double)ro_cm_(1, 0),
-			(double)ro_cm_(2, 0),
-			skew_ro);
 		Matrix<double, 3, 1> additionalDynamics =
-				- uav_mass_ * (R_mv_ * ro_cm_).cross(alpha_d_)
-				- uav_mass_ * R_mv_ * skew_omega * skew_ro * omega_mv_;
+				- uav_mass_ * R_mv_ * (ro_cm_.cross(alpha_d_));
 		// cout << "Add to A: \n" << add << "\n";
 		A = A + additionalDynamics;
 	}
@@ -750,7 +736,9 @@ void UavGeometryControl::attitudeTracking(
 	if (enable_manipulator_control_ || enable_mass_control_)
 	{
 		additionalDynamics =
-				uav_mass_ * ro_cm_.cross(R_mv_.adjoint()*a_d_);
+				uav_mass_ * ro_cm_.cross(R_mv_.adjoint()*a_d_)
+				- uav_mass_ * (omega_mv_.cross(ro_cm_)).cross(
+						R_mv_.adjoint() * v_mv_);
 	}
 
 	M_u = 	- k_R_ * e_R
@@ -1130,7 +1118,7 @@ void UavGeometryControl::enableManipulatorControl()
 	enable_manipulator_control_ = true;
 	enable_mass_control_ = false;
 
-	uav_mass_ += 2 * PAYLOAD_MASS + TOTAL_LINK_MASS;
+	uav_mass_ += 2 * PAYLOAD_MASS + TOTAL_LINK_MASS + 0.5;
 	// Add gripper publishers if available
 	gripperLeft_sub_ = node_handle_.subscribe(
 			"/" + uav_ns_ + "/left_gripper_pos", 1,
