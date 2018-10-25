@@ -588,8 +588,20 @@ void UavGeometryControl::trajectoryTracking(
 
 	if (enable_mass_control_ || enable_manipulator_control_)
 	{
+		Matrix<double, 3, 3> skew_omega, skew_ro;
+		geom_helper::hatOperator(
+			(double)omega_mv_(0, 0),
+			(double)omega_mv_(1, 0),
+			(double)omega_mv_(2, 0),
+			skew_omega);
+		geom_helper::hatOperator(
+			(double)ro_cm_(0, 0),
+			(double)ro_cm_(1, 0),
+			(double)ro_cm_(2, 0),
+			skew_ro);
 		Matrix<double, 3, 1> additionalDynamics =
-				- uav_mass_ * R_mv_ * (ro_cm_.cross(alpha_d_));
+				- uav_mass_ * (R_mv_ * ro_cm_).cross(alpha_d_)
+				- uav_mass_ * R_mv_ * skew_omega * skew_ro * omega_mv_;
 		// cout << "Add to A: \n" << add << "\n";
 		A = A + additionalDynamics;
 	}
@@ -736,9 +748,7 @@ void UavGeometryControl::attitudeTracking(
 	if (enable_manipulator_control_ || enable_mass_control_)
 	{
 		additionalDynamics =
-				uav_mass_ * ro_cm_.cross(R_mv_.adjoint()*a_d_)
-				- uav_mass_ * (omega_mv_.cross(ro_cm_)).cross(
-						R_mv_.adjoint() * v_mv_);
+				uav_mass_ * ro_cm_.cross(R_mv_.adjoint()*a_d_);
 	}
 
 	M_u = 	- k_R_ * e_R
