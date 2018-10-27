@@ -31,7 +31,8 @@
   </include>
 
 
-  <!-- Start attitude height control -->
+  <!-- Start attitude height control
   <include file="$(find mmuav_control)/launch/rotors_variation_attitude_height_control.launch"/>
+   -->
 
 </launch>

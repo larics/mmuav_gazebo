@@ -185,15 +185,16 @@
 -->
 
 
-  <xacro:camera_manipulator
+  <xacro:c_manip
     parent="base_link"
     link_mass="0.005"
-    link_ixx="0.00000083"
+    link_ixx="0.0000083"
     link_iyy="0.00017083"
     link_izz="0.00017133" >
     <origin xyz="0 0 0" rpy="0 0 0"/>
-  </xacro:camera_manipulator>
+  </xacro:c_manip>
 
+<!--
   <xacro:transmisija
     trans_number="0"
     joint_name="connector1_to_link1">
@@ -221,5 +222,7 @@
     <origin xyz="-0.2121320344 0.2121320344 0.02" rpy="0 0 0"/>
     <xacro:insert_block name="camera_inertia"/>
   </xacro:cam>
-  
+
+-->
+
 </robot>
