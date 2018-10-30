@@ -25,6 +25,9 @@ generate_dynamic_reconfigure_options(
     config/VpcMmcuavPositionCtlParams.cfg
     config/VpcMmcuavAttitudeCtlParams.cfg
     config/PositionCtlParams.cfg
+    # VPC TTCUAV parameters
+    config/VpcTtcuavAttitudeCtlParams.cfg
+    config/VpcTtcuavZCtlParams.cfg
     # Rotors variation params
     config/RotorsVariationAttitudeCtlParams.cfg
     )

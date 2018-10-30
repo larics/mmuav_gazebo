@@ -27,14 +27,14 @@
         </geometry>
       </visual>
 
-      <!--collision>
+      <collision>
         <origin xyz="0 0 0" rpy="0 0 0" />
         <geometry>
           <mesh filename="package://mmuav_description/meshes/${mesh_file}"
             scale="1 1 1" />
-          <box size="${body_width} ${body_width} ${body_height}" />
+          <!--box size="${body_width} ${body_width} ${body_height}" /-->
         </geometry>
-      </collision-->
+      </collision>
     </link>
 
     <!-- IMU -->
@@ -117,6 +117,44 @@
       </plugin>
     </gazebo>
     <gazebo reference="rotor_${motor_number}">
+      <material>Gazebo/${color}</material>
+    </gazebo>
+  </xacro:macro>
+
+  <!-- Macro file for tilted props. It defines joint between prop and body, and link which defines actual joint. Stick
+  is defined in other macro file-->
+  <xacro:macro name="tilt" params="parent motor_number x_axis y_axis color mass length radius *origin">
+    <joint name="tilt_${motor_number}_joint" type="revolute">
+      <xacro:insert_block name="origin"/>
+      <axis xyz="${x_axis} ${y_axis} 0"/>
+      <parent link="${parent}"/>
+      <child link="tilt_${motor_number}"/>
+      <limit lower="-0.785398163" upper="0.785398163" effort="100000" velocity="3"/>
+    </joint>
+    <link name="tilt_${motor_number}">
+      <visual>
+        <origin rpy="0 0 0" xyz="0 0 ${length/2}"/>
+        <geometry>
+          <cylinder length="${length}" radius="${radius}" />
+        </geometry>
+      </visual>
+      <collision>
+        <origin rpy="0 0 0" xyz="0 0 ${length/2}"/>
+        <geometry>
+            <cylinder length="${length}" radius="${radius}" />
+        </geometry>
+      </collision> 
+      <inertial>
+          <origin rpy="0 0 0" xyz="0 0 ${length/2}"/>
+          <mass value="${mass}" />
+          <inertia
+            ixx="${5/12 * mass * (3.0 * radius * radius + length * length)}"  ixy="0.0" ixz="0.0"
+            iyx="0.0" iyy="${5/12 * mass * (3.0 * radius * radius + length * length)}" iyz="0.0"
+            izx="0.0" izy="0.0" izz="${5/2 * mass * radius * radius}" />
+      </inertial>
+    </link>
+
+    <gazebo reference="tilt_${motor_number}">
       <material>Gazebo/${color}</material>
     </gazebo>
   </xacro:macro>

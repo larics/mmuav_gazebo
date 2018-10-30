@@ -1,0 +1,24 @@
+
+ttcuav:
+  # Publish all joint states -----------------------------------
+  joint_state_controller:
+    type: joint_state_controller/JointStateController
+    publish_rate: 1000
+
+  # Position Controllers ---------------------------------------
+  tilt_0_position_controller:
+    type: effort_controllers/JointPositionController
+    joint: tilt_0_joint
+    pid: {p: 3.0, i: 0.1, d: 0.2, i_clamp_max: 0.5, i_clamp_min: -0.5}
+  tilt_1_position_controller:
+    type: effort_controllers/JointPositionController
+    joint: tilt_1_joint
+    pid: {p: 3.0, i: 0.1, d: 0.2, i_clamp_max: 0.5, i_clamp_min: -0.5}
+  tilt_2_position_controller:
+    type: effort_controllers/JointPositionController
+    joint: tilt_2_joint
+    pid: {p: 3.0, i: 0.1, d: 0.2, i_clamp_max: 0.5, i_clamp_min: -0.5}
+  tilt_3_position_controller:
+    type: effort_controllers/JointPositionController
+    joint: tilt_3_joint
+    pid: {p: 3.0, i: 0.1, d: 0.2, i_clamp_max: 0.5, i_clamp_min: -0.5}
