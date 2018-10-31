@@ -1,0 +1,348 @@
+<?xml version="1.0"?>
+
+<robot name="dfcuav" xmlns:xacro="http://ros.org/wiki/xacro">
+  <!-- Properties -->
+  <xacro:property name="rotor_velocity_slowdown_sim" value="15" />
+  <xacro:property name="mesh_file" value="3DR_Arducopter.dae" />
+  <xacro:property name="mass" value="2.083" />  <!-- [kg] -->
+  <xacro:property name="body_width" value="0.1" /> <!-- [m] -->
+  <xacro:property name="body_height" value="0.20842" /> <!-- [m] -->
+  <xacro:property name="mass_rotor" value="0.01" /> <!-- [kg] -->
+  <xacro:property name="arm_length" value="0.314" /> <!-- [m] -->
+  <xacro:property name="rotor_offset_top" value="0.04579" /> <!-- [m] -->
+  <xacro:property name="radius_rotor" value="0.1524" /> <!-- [m] -->
+  <xacro:property name="motor_constant" value="8.54858e-06" /> <!-- [kg*m/s^2] -->
+  <xacro:property name="moment_constant" value="0.016" /> <!-- [m] -->
+  <xacro:property name="time_constant_up" value="0.0125" /> <!-- [s] -->
+  <xacro:property name="time_constant_down" value="0.025" /> <!-- [s] -->
+  <xacro:property name="max_rot_velocity" value="1475" /> <!-- [rad/s] -->
+  <xacro:property name="sin45" value="0.7071068" />
+  <xacro:property name="cos45" value="0.7071068" />
+  <xacro:property name="rotor_drag_coefficient" value="8.06428e-05" />
+  <xacro:property name="rolling_moment_coefficient" value="0.000001" />
+
+  <!-- aditional arm properties -->
+  <xacro:property name="arm_offset" value="0.1" /> <!-- [m] 0.0457-->
+
+  <!--wing properties -->
+  <xacro:property name="wing_mass" value="0.001"/> <!-- [kg] -->
+  <xacro:property name="wing_x" value="0.01"/> <!-- [m] -->
+  <xacro:property name="wing_y" value="0.22"/> <!-- [m] -->
+  <xacro:property name="wing_z" value="0.06"/> <!-- [m] -->
+  <xacro:property name="wing_offset" value="0.05" /> <!-- [m] added arm_height for no wing-rotor interaction -->
+  <xacro:property name="area_control_flap" value="0.066"/> <!-- [m^2] -->
+  <xacro:property name="area_antitorque_flap" value="0.066"/> <!-- [m^2] -->
+
+<!--realistic rotor properties -->
+  <xacro:property name="fluid_density" value="1.2041" />  <!-- air -->
+  <xacro:property name="distance_antitorque_flap" value="0.08" /> <!-- [m] distance from centre of gravity of rotor, force*distance=moment-->
+  <xacro:property name="distance_control_flap" value="0.1" /> <!-- [m] -->
+  <xacro:property name="thrust_coefficient" value="8.54858e-06" />  <!-- motor_constant Kf-->
+  <xacro:property name="torque_coefficient" value="0.016" /> <!-- moment_constant Kt-->
+  <xacro:property name="slip_velocity_coefficient" value="2.7e-02" /> <!-- Kv -->
+  
+  <xacro:property name="lift_coefficient_control_flap" value="8.5e-02" />  <!-- Clc -->
+  <xacro:property name="drag_coefficient_control_flap" value="1.3e-01" />  <!-- Cdc -->
+  <xacro:property name="lift_coefficient_antitorque_flap" value="3.4e-02" />  <!-- Cla -->
+  <xacro:property name="drag_coefficient_antitorque_flap" value="1.3e-01" />  <!-- Cda -->
+
+  <xacro:property name="lift_coefficient_control_flap_at0" value="0" />  <!-- Clc0 not used in the formulas -->
+  <xacro:property name="drag_coefficient_control_flap_at0" value="7.47e-03" />  <!-- Cdc0 -->
+  <xacro:property name="lift_coefficient_antitorque_flap_at0" value="1.358e-01" />  <!-- Cla0 -->
+  <xacro:property name="drag_coefficient_antitorque_flap_at0" value="3.23e-03" />  <!-- Cda0 -->
+
+  <xacro:property name="imu_mass" value="0.02"/>
+  <xacro:property name="imu_size" value="0.01"/>
+
+  <xacro:property name="sin45" value="0.7071" />
+  <xacro:property name="cos45" value="0.7071" />
+  <xacro:property name="PI" value="3.1415926535897931" />
+  <xacro:property name="tilt_angle" value="0.0"/>
+
+
+  <!-- Property Blocks -->
+  <xacro:property name="body_inertia">
+  <!--<inertia ixx="0.00528525" ixy="0.0" ixz="0.0" iyy="0.00528250" iyz="0.0" izz="0.0104" />  [kg*m^2] [kg*m^2] [kg*m^2] [kg*m^2] [kg*m^2] [kg*m^2] -->
+    <inertia ixx="0.0826944" ixy="0.0" ixz="0.0" iyy="0.0826944" iyz="0.0" izz="0.0104" /> <!-- [kg*m^2] [kg*m^2] [kg*m^2] [kg*m^2] [kg*m^2] [kg*m^2] identificirani Ixx Iyy-->
+  </xacro:property>
+  
+  <!-- inertia of a single rotor, assuming it is a cuboid. Height=5mm, width=31mm -->
+  <xacro:property name="rotor_inertia">
+    <inertia 
+    ixx="${1/12 * mass_rotor * (0.031 * 0.031 + 0.005 * 0.005) * rotor_velocity_slowdown_sim}" 
+    iyy="${1/12 * mass_rotor * (4 * radius_rotor * radius_rotor + 0.005 * 0.005) * rotor_velocity_slowdown_sim}" 
+    izz="${1/12 * mass_rotor * (4 * radius_rotor * radius_rotor + 0.031 * 0.031) * rotor_velocity_slowdown_sim}" 
+    ixy="0.0" ixz="0.0"  iyz="0.0" /> <!-- [kg*m^2] [kg*m^2] [kg*m^2] [kg*m^2] [kg*m^2] [kg*m^2] -->
+  </xacro:property>
+
+  <!-- Included URDF Files -->
+  <xacro:include filename="$(find mmuav_description)/urdf/multirotor_base.urdf.xacro" />
+
+  <!-- IMU inertia (Pixhawk) -->
+  <xacro:property name="imu_inertia">
+    <inertia 
+    ixx="${(imu_mass * imu_size * imu_size)/6}" 
+    iyy="${(imu_mass * imu_size * imu_size)/6}" 
+    izz="${(imu_mass * imu_size * imu_size)/6}" 
+    ixy="0.0" ixz="0.0"  iyz="0.0" /> <!-- [kg*m^2] [kg*m^2] [kg*m^2] [kg*m^2] [kg*m^2] [kg*m^2] -->
+  </xacro:property>
+
+  <!-- wing inertia -->
+  <xacro:property name="wing_inertia">
+    <inertia 
+    ixx="${(wing_mass * wing_x * wing_x)/6}" 
+    iyy="${(wing_mass * wing_y * wing_y)/6}" 
+    izz="${(wing_mass * wing_z * wing_z)/6}" 
+    ixy="0.0" ixz="0.0"  iyz="0.0" /> <!-- [kg*m^2] [kg*m^2] [kg*m^2] [kg*m^2] [kg*m^2] [kg*m^2] -->
+  </xacro:property>
+
+  <!-- Instantiate multirotor_base_macro once -->
+  <xacro:multirotor_base_macro
+    robot_namespace="$(arg name)"
+    mass="${mass}"
+    body_width="${body_width}"
+    body_height="${body_height}"
+    mesh_file="${mesh_file}">
+    <origin xyz="0 0 0" rpy="0 0 ${-PI/4}"/>
+    <xacro:insert_block name="body_inertia" />
+  </xacro:multirotor_base_macro>
+
+   <!-- Instantiate wing 0 -->
+  <xacro:wing
+    robot_namespace="$(arg name)" 
+    parent="base_link"
+    wing_number="0"
+    mass="${wing_mass}"
+    wing_x="${wing_x}"
+    wing_y="${wing_y}"
+    wing_z="${wing_z}"
+    x_axis="0"
+    y_axis="1"
+    color="Red">
+    <origin xyz="${1*arm_length} ${0*arm_length} ${-wing_offset}" rpy="0 0 0" />
+    <xacro:insert_block name="wing_inertia"/>
+  </xacro:wing>
+
+  <!-- Instantiate wing 1-->
+  <xacro:wing
+    robot_namespace="$(arg name)" 
+    parent="base_link"
+    wing_number="1"
+    mass="${wing_mass}"
+    wing_x="${wing_x}"
+    wing_y="${wing_y}"
+    wing_z="${wing_z}"
+    x_axis="0"
+    y_axis="1"
+    color="Blue">
+    <origin xyz="${0*arm_length} ${1*arm_length} ${-wing_offset}" rpy="0 0 ${PI/2}" />
+    <xacro:insert_block name="wing_inertia"/>
+  </xacro:wing>
+  <!-- same x_axis and y_axis values as wing 0 because rpy flips the coordinate system by PIhalf-->
+
+  <!-- Instantiate wing 2-->
+  <xacro:wing
+    robot_namespace="$(arg name)" 
+    parent="base_link"
+    wing_number="2"
+    mass="${wing_mass}"
+    wing_x="${wing_x}"
+    wing_y="${wing_y}"
+    wing_z="${wing_z}"
+    x_axis="0"
+    y_axis="1"
+    color="Red">
+    <origin xyz="${-1*arm_length} ${0*arm_length} ${-wing_offset}" rpy="0 0 0" />
+    <xacro:insert_block name="wing_inertia"/>
+  </xacro:wing>
+
+  <!-- Instantiate wing 3-->
+  <xacro:wing
+    robot_namespace="$(arg name)" 
+    parent="base_link"
+    wing_number="3"
+    mass="${wing_mass}"
+    wing_x="${wing_x}"
+    wing_y="${wing_y}"
+    wing_z="${wing_z}"
+    x_axis="0"
+    y_axis="1"
+    color="Blue">
+    <origin xyz="${0*arm_length} ${-1*arm_length} ${-wing_offset}" rpy="0 0 ${PI/2}" />
+    <xacro:insert_block name="wing_inertia"/>
+  </xacro:wing>
+
+  <xacro:transmisija
+    trans_number="0"
+    joint_name="wing_0_joint">
+  </xacro:transmisija>
+
+  <xacro:transmisija
+    trans_number="1"
+    joint_name="wing_1_joint">
+  </xacro:transmisija>
+
+  <xacro:transmisija
+    trans_number="2"
+    joint_name="wing_2_joint">
+  </xacro:transmisija>
+
+  <xacro:transmisija
+    trans_number="3"
+    joint_name="wing_3_joint">
+  </xacro:transmisija>
+
+  <!-- Instantiate rotors --> 
+  <xacro:ducted_fan
+    robot_namespace="$(arg name)"
+    suffix="front"
+    direction="cw"
+    motor_constant="${motor_constant}"
+    moment_constant="${moment_constant}"
+
+    area_control_flap="${area_control_flap}"
+    area_antitorque_flap="${area_antitorque_flap}"
+    fluid_density ="${fluid_density}"
+    distance_control_flap="${distance_control_flap}"
+    distance_antitorque_flap="${distance_antitorque_flap}"
+    thrust_coefficient="${thrust_coefficient}"
+    torque_coefficient="${torque_coefficient}"
+    slip_velocity_coefficient="${slip_velocity_coefficient}"
+    lift_coefficient_control_flap="${lift_coefficient_control_flap}"
+    drag_coefficient_control_flap="${drag_coefficient_control_flap}"
+    lift_coefficient_antitorque_flap="${lift_coefficient_antitorque_flap}"
+    drag_coefficient_antitorque_flap="${drag_coefficient_antitorque_flap}"
+    lift_coefficient_control_flap_at0="${lift_coefficient_control_flap_at0}"
+    drag_coefficient_control_flap_at0="${drag_coefficient_control_flap_at0}"
+    lift_coefficient_antitorque_flap_at0="${lift_coefficient_antitorque_flap_at0}"
+    drag_coefficient_antitorque_flap_at0="${drag_coefficient_antitorque_flap_at0}"
+
+    parent="base_link"   
+    mass_rotor="${mass_rotor}"
+    radius_rotor="${radius_rotor}"
+    time_constant_up="${time_constant_up}"
+    time_constant_down="${time_constant_down}"
+    max_rot_velocity="${max_rot_velocity}"
+    motor_number="0"
+    rotor_drag_coefficient="${rotor_drag_coefficient}"                
+    rolling_moment_coefficient="${rolling_moment_coefficient}"
+    color="Red">
+    <origin xyz="${1*arm_length} ${0*arm_length} ${rotor_offset_top}" rpy="0 0 0" />
+    <xacro:insert_block name="rotor_inertia" />
+  </xacro:ducted_fan>
+
+  <xacro:ducted_fan
+    robot_namespace="$(arg name)"
+    suffix="right"
+    direction="ccw"
+    motor_constant="${motor_constant}"
+    moment_constant="${moment_constant}"
+
+    area_control_flap="${area_control_flap}"
+    area_antitorque_flap="${area_antitorque_flap}"
+    fluid_density ="${fluid_density}"
+    distance_control_flap="${distance_control_flap}"
+    distance_antitorque_flap="${distance_antitorque_flap}"
+    thrust_coefficient="${thrust_coefficient}"
+    torque_coefficient="${torque_coefficient}"
+    slip_velocity_coefficient="${slip_velocity_coefficient}"
+    lift_coefficient_control_flap="${lift_coefficient_control_flap}"
+    drag_coefficient_control_flap="${drag_coefficient_control_flap}"
+    lift_coefficient_antitorque_flap="${lift_coefficient_antitorque_flap}"
+    drag_coefficient_antitorque_flap="${drag_coefficient_antitorque_flap}"
+    lift_coefficient_control_flap_at0="${lift_coefficient_control_flap_at0}"
+    drag_coefficient_control_flap_at0="${drag_coefficient_control_flap_at0}"
+    lift_coefficient_antitorque_flap_at0="${lift_coefficient_antitorque_flap_at0}"
+    drag_coefficient_antitorque_flap_at0="${drag_coefficient_antitorque_flap_at0}"
+
+    parent="base_link"   
+    mass_rotor="${mass_rotor}"
+    radius_rotor="${radius_rotor}"
+    time_constant_up="${time_constant_up}"
+    time_constant_down="${time_constant_down}"
+    max_rot_velocity="${max_rot_velocity}"
+    motor_number="3"
+    rotor_drag_coefficient="${rotor_drag_coefficient}"                
+    rolling_moment_coefficient="${rolling_moment_coefficient}"
+    color="Blue">
+    <origin xyz="${0*arm_length} ${-1*arm_length} ${rotor_offset_top}" rpy="0 0 0" />
+    <xacro:insert_block name="rotor_inertia" />
+  </xacro:ducted_fan>
+
+  <xacro:ducted_fan
+    robot_namespace="$(arg name)"
+    suffix="back"
+    direction="ccw"
+    motor_constant="${motor_constant}"
+    moment_constant="${moment_constant}"
+
+    area_control_flap="${area_control_flap}"
+    area_antitorque_flap="${area_antitorque_flap}"
+    fluid_density ="${fluid_density}"
+    distance_control_flap="${distance_control_flap}"
+    distance_antitorque_flap="${distance_antitorque_flap}"
+    thrust_coefficient="${thrust_coefficient}"
+    torque_coefficient="${torque_coefficient}"
+    slip_velocity_coefficient="${slip_velocity_coefficient}"
+    lift_coefficient_control_flap="${lift_coefficient_control_flap}"
+    drag_coefficient_control_flap="${drag_coefficient_control_flap}"
+    lift_coefficient_antitorque_flap="${lift_coefficient_antitorque_flap}"
+    drag_coefficient_antitorque_flap="${drag_coefficient_antitorque_flap}"
+    lift_coefficient_control_flap_at0="${lift_coefficient_control_flap_at0}"
+    drag_coefficient_control_flap_at0="${drag_coefficient_control_flap_at0}"
+    lift_coefficient_antitorque_flap_at0="${lift_coefficient_antitorque_flap_at0}"
+    drag_coefficient_antitorque_flap_at0="${drag_coefficient_antitorque_flap_at0}"
+
+    parent="base_link"   
+    mass_rotor="${mass_rotor}"
+    radius_rotor="${radius_rotor}"
+    time_constant_up="${time_constant_up}"
+    time_constant_down="${time_constant_down}"
+    max_rot_velocity="${max_rot_velocity}"
+    motor_number="1"
+    rotor_drag_coefficient="${rotor_drag_coefficient}"                
+    rolling_moment_coefficient="${rolling_moment_coefficient}"
+    color="Blue">
+    <origin xyz="${0*arm_length} ${1*arm_length} ${rotor_offset_top}" rpy="0 0 0" />
+    <xacro:insert_block name="rotor_inertia" />
+  </xacro:ducted_fan>
+
+  <xacro:ducted_fan
+    robot_namespace="$(arg name)"
+    suffix="right"
+    direction="cw"
+    motor_constant="${motor_constant}"
+    moment_constant="${moment_constant}"
+
+    area_control_flap="${area_control_flap}"
+    area_antitorque_flap="${area_antitorque_flap}"
+    fluid_density ="${fluid_density}"
+    distance_control_flap="${distance_control_flap}"
+    distance_antitorque_flap="${distance_antitorque_flap}"
+    thrust_coefficient="${thrust_coefficient}"
+    torque_coefficient="${torque_coefficient}"
+    slip_velocity_coefficient="${slip_velocity_coefficient}"
+    lift_coefficient_control_flap="${lift_coefficient_control_flap}"
+    drag_coefficient_control_flap="${drag_coefficient_control_flap}"
+    lift_coefficient_antitorque_flap="${lift_coefficient_antitorque_flap}"
+    drag_coefficient_antitorque_flap="${drag_coefficient_antitorque_flap}"
+    lift_coefficient_control_flap_at0="${lift_coefficient_control_flap_at0}"
+    drag_coefficient_control_flap_at0="${drag_coefficient_control_flap_at0}"
+    lift_coefficient_antitorque_flap_at0="${lift_coefficient_antitorque_flap_at0}"
+    drag_coefficient_antitorque_flap_at0="${drag_coefficient_antitorque_flap_at0}"
+
+    parent="base_link"   
+    mass_rotor="${mass_rotor}"
+    radius_rotor="${radius_rotor}"
+    time_constant_up="${time_constant_up}"
+    time_constant_down="${time_constant_down}"
+    max_rot_velocity="${max_rot_velocity}"
+    motor_number="2"
+    rotor_drag_coefficient="${rotor_drag_coefficient}"                
+    rolling_moment_coefficient="${rolling_moment_coefficient}"
+    color="Blue">
+    <origin xyz="${-1*arm_length} ${0*arm_length} ${rotor_offset_top}" rpy="0 0 0" />
+    <xacro:insert_block name="rotor_inertia" />
+  </xacro:ducted_fan>
+  
+</robot>

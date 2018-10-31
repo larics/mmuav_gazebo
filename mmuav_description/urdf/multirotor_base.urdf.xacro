@@ -121,6 +121,87 @@
     </gazebo>
   </xacro:macro>
 
+
+<!-- ducted fan joint and link -->
+  <xacro:macro name="ducted_fan"
+    params="robot_namespace suffix direction motor_constant moment_constant area_control_flap area_antitorque_flap fluid_density distance_control_flap distance_antitorque_flap thrust_coefficient torque_coefficient slip_velocity_coefficient lift_coefficient_control_flap drag_coefficient_control_flap lift_coefficient_antitorque_flap drag_coefficient_antitorque_flap lift_coefficient_control_flap_at0 drag_coefficient_control_flap_at0 lift_coefficient_antitorque_flap_at0 drag_coefficient_antitorque_flap_at0 parent mass_rotor radius_rotor time_constant_up time_constant_down max_rot_velocity motor_number rotor_drag_coefficient rolling_moment_coefficient color *origin *inertia">
+    <joint name="rotor_${motor_number}_joint" type="continuous">
+      <xacro:insert_block name="origin" />
+      <axis xyz="0 0 1" />
+      <!-- TODO(ff): not currently set because it's not yet supported -->
+      <!-- <limit effort="2000" velocity="${max_rot_velocity}" /> -->
+      <parent link="${parent}" />
+      <child link="rotor_${motor_number}" />
+
+    </joint>
+    <!-- TODO(ff): not currently set because it's not yet supported -->
+    <!-- <gazebo reference="rotor_${motor_number}_joint"> <axis> <xyz>0 0 1</xyz> 
+      <limit> <velocity> ${max_rot_velocity} </velocity> </limit> </axis> </gazebo> -->
+    <link name="rotor_${motor_number}">
+      <inertial>
+        <mass value="${mass_rotor}" /> <!-- [kg] -->
+        <xacro:insert_block name="inertia" />
+      </inertial>
+      <visual>
+        <geometry>
+          <!-- <cylinder length="0.005" radius="${radius_rotor}"/> --> <!-- [m] -->
+          <mesh filename="package://mmuav_description/meshes/propeller_${direction}.dae"
+            scale="0.001 0.001 0.001" />
+          <!-- <box size="${2*radius_rotor} 0.01 0.005"/> -->
+        </geometry>
+      </visual>
+      <collision>
+        <geometry>
+          <cylinder length="0.005" radius="${radius_rotor}" /> <!-- [m] -->
+        </geometry>
+      </collision>
+    </link>
+    <gazebo>
+      <plugin name="${suffix}_motor_model" filename="libmmuav_gazebo_ductedfan_motor_model.so">
+        <jointName>rotor_${motor_number}_joint</jointName>
+        <linkName>rotor_${motor_number}</linkName>
+        <turningDirection>${direction}</turningDirection>
+        <timeConstantUp>${time_constant_up}</timeConstantUp>
+        <timeConstantDown>${time_constant_down}</timeConstantDown>
+        <maxRotVelocity>${max_rot_velocity}</maxRotVelocity>
+        <motorConstant>${motor_constant}</motorConstant>
+        <momentConstant>${moment_constant}</momentConstant>
+        <commandSubTopic>${robot_namespace}/command/motors</commandSubTopic>
+        <motorNumber>${motor_number}</motorNumber>
+        <rotorDragCoefficient>${rotor_drag_coefficient}</rotorDragCoefficient>
+        <rollingMomentCoefficient>${rolling_moment_coefficient}</rollingMomentCoefficient>
+        <motorVelocityTopic>${robot_namespace}/motor_vel/${motor_number}</motorVelocityTopic>
+        <rotorVelocitySlowdownSim>${rotor_velocity_slowdown_sim}</rotorVelocitySlowdownSim>
+
+        <angleControlFlapRefSubTopic>${robot_namespace}/angle_wing_${motor_number}_ref_value</angleControlFlapRefSubTopic>
+        <angleControlFlapCommandPubTopic>${robot_namespace}/angle_wing_${motor_number}_controller/command</angleControlFlapCommandPubTopic>
+        <angleControlFlapValueSubTopic>${robot_namespace}/angle_wing_${motor_number}_controller/state</angleControlFlapValueSubTopic>
+
+
+        <fluidDensity>${fluid_density}</fluidDensity>
+        <areaControlFlap>${area_control_flap}</areaControlFlap>
+        <areaAntitorqueFlap>${area_antitorque_flap}</areaAntitorqueFlap>
+        <distanceControlFlap>${distance_control_flap}</distanceControlFlap>
+        <distanceAntitorqueFlap>${distance_antitorque_flap}</distanceAntitorqueFlap>
+
+        <thrustCoefficient>${thrust_coefficient}</thrustCoefficient>
+        <torqueCoefficient>${torque_coefficient}</torqueCoefficient>
+        <slipVelocityCoefficient>${slip_velocity_coefficient}</slipVelocityCoefficient>
+        <liftCoefficientControlFlap>${lift_coefficient_control_flap}</liftCoefficientControlFlap>
+        <dragCoefficientControlFlap>${drag_coefficient_control_flap}</dragCoefficientControlFlap>
+        <liftCoefficientAntitorqueFlap>${lift_coefficient_antitorque_flap}</liftCoefficientAntitorqueFlap> 
+        <dragCoefficientAntitorqueFlap>${drag_coefficient_antitorque_flap}</dragCoefficientAntitorqueFlap>  
+        <liftCoefficientControlFlapAt0>${lift_coefficient_control_flap_at0}</liftCoefficientControlFlapAt0> 
+        <dragCoefficientControlFlapAt0>${drag_coefficient_control_flap_at0}</dragCoefficientControlFlapAt0>
+        <liftCoefficientAntitorqueFlapAt0>${lift_coefficient_antitorque_flap_at0}</liftCoefficientAntitorqueFlapAt0>
+        <dragCoefficientAntitorqueFlapAt0>${drag_coefficient_antitorque_flap_at0}</dragCoefficientAntitorqueFlapAt0>
+      </plugin>
+    </gazebo>
+    <gazebo reference="rotor_${motor_number}">
+      <material>Gazebo/${color}</material>
+    </gazebo>
+  </xacro:macro>
+
   <!-- Macro file for tilted props. It defines joint between prop and body, and link which defines actual joint. Stick
   is defined in other macro file-->
   <xacro:macro name="tilt" params="parent motor_number x_axis y_axis color mass length radius *origin">
@@ -155,6 +236,42 @@
     </link>
 
     <gazebo reference="tilt_${motor_number}">
+      <material>Gazebo/${color}</material>
+    </gazebo>
+  </xacro:macro>
+
+  <!-- Macro file for the wing. It defines joint between base and wing.-->
+  <xacro:macro name="wing" 
+     params="robot_namespace parent wing_number mass wing_x wing_y wing_z x_axis y_axis color *origin *inertia">
+    <joint name="wing_${wing_number}_joint" type="revolute">
+    <xacro:insert_block name="origin" />
+      <axis xyz="${x_axis} ${y_axis} 0"/>
+      <parent link="${parent}"/>
+      <child link="wing_${wing_number}"/>
+      <limit lower="-0.785398163" upper="0.785398163" effort="10000" velocity="10"/>
+    </joint>
+
+    <link name="wing_${wing_number}">
+      <visual>
+        <origin rpy="0 0 0" xyz="0 0 0"/>
+        <geometry>
+          <box size="${1*wing_x} ${1*wing_y} ${1*wing_z}"/>
+        </geometry>
+      </visual>
+
+      <!--collision>
+        <origin rpy="0 0 0" xyz="0 0 0"/>
+        <geometry>
+          <box size="${wing_x} ${wing_y} ${wing_z}"/>
+        </geometry>
+      </collision-->
+      <inertial>
+        <origin rpy="0 0 0" xyz="0 0 0"/>
+        <mass value="${wing_mass}"/>
+        <xacro:insert_block name="inertia"/>
+      </inertial>
+    </link>
+    <gazebo reference="wing_${wing_number}">
       <material>Gazebo/${color}</material>
     </gazebo>
   </xacro:macro>

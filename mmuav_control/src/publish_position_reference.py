@@ -11,20 +11,32 @@ from geometry_msgs.msg import Vector3
 class PublishReference():
 
     def __init__(self):
-        self.position_ref_pub = rospy.Publisher('pos_ref', Vector3, queue_size=1)
+        self.position_ref_pub = rospy.Publisher('/uav/euler_ref', Vector3, queue_size=1)
 
     def run(self):
         time.sleep(1)
         msg = Vector3()
-        msg.x = 4.5
+        msg.x = 0.1
         msg.y = 0.0
-        msg.z = 6.0
+        msg.z = 0.0
         self.position_ref_pub.publish(msg)
 
-        time.sleep(1.5)
-        msg.x = 3.25
+        time.sleep(10)
+        msg.x = 0.0
         msg.y = 0.0
-        msg.z = 4.2
+        msg.z = 0.0
+        self.position_ref_pub.publish(msg)
+
+        time.sleep(10)
+        msg.x = -0.1
+        msg.y = 0.0
+        msg.z = 0.0
+        self.position_ref_pub.publish(msg)
+
+        time.sleep(10)
+        msg.x = 0.0
+        msg.y = 0.0
+        msg.z = 0.0
         self.position_ref_pub.publish(msg)
 
     def trajectory_callback(self, msg):

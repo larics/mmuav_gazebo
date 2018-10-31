@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-__author__ = 'thaus'
+__author__ = 'mcar'
 
 import rospy
 from pid import PID
@@ -10,7 +10,7 @@ from nav_msgs.msg import Odometry
 from std_msgs.msg import Float64, Float64MultiArray, Empty
 from mmuav_msgs.msg import PIDController
 from dynamic_reconfigure.server import Server
-from mmuav_control.cfg import VpcMmcuavAttitudeCtlParamsConfig
+from mmuav_control.cfg import VpcTtcuavAttitudeCtlParamsConfig
 import math
 from datetime import datetime
 from rosgraph_msgs.msg import Clock
@@ -73,25 +73,25 @@ class AttitudeControl:
         ##################################################################
         # Add your PID params here
 
-        self.pid_roll.set_kp(3.0)
-        self.pid_roll.set_ki(1.0)
-        self.pid_roll.set_kd(0.2)
+        self.pid_roll.set_kp(1.1)
+        self.pid_roll.set_ki(0.2)
+        self.pid_roll.set_kd(0.0)
 
-        self.pid_roll_rate.set_kp(0.2)
-        self.pid_roll_rate.set_ki(0)
+        self.pid_roll_rate.set_kp(0.6)
+        self.pid_roll_rate.set_ki(0.4)
         self.pid_roll_rate.set_kd(0)
-        self.pid_roll_rate.set_lim_high(0.08)
-        self.pid_roll_rate.set_lim_low(-0.08)
+        self.pid_roll_rate.set_lim_high(0.25)
+        self.pid_roll_rate.set_lim_low(-0.25)
 
-        self.pid_pitch.set_kp(3.0)
-        self.pid_pitch.set_ki(1.0)
-        self.pid_pitch.set_kd(0.2)
+        self.pid_pitch.set_kp(1.1)
+        self.pid_pitch.set_ki(0.2)
+        self.pid_pitch.set_kd(0.0)
 
-        self.pid_pitch_rate.set_kp(0.2)
-        self.pid_pitch_rate.set_ki(0.0)
+        self.pid_pitch_rate.set_kp(0.6)
+        self.pid_pitch_rate.set_ki(0.4)
         self.pid_pitch_rate.set_kd(0.0)
-        self.pid_pitch_rate.set_lim_high(0.08)
-        self.pid_pitch_rate.set_lim_low(-0.08)
+        self.pid_pitch_rate.set_lim_high(0.25)
+        self.pid_pitch_rate.set_lim_low(-0.25)
 
         self.pid_yaw.set_kp(1.0)
         self.pid_yaw.set_ki(0)
@@ -103,20 +103,20 @@ class AttitudeControl:
 
         # VPC pids
         self.pid_vpc_roll.set_kp(0)
-        self.pid_vpc_roll.set_ki(50.0)
+        self.pid_vpc_roll.set_ki(0.0)
         self.pid_vpc_roll.set_kd(0)
         self.pid_vpc_roll.set_lim_high(400)
         self.pid_vpc_roll.set_lim_low(-400)
 
         self.pid_vpc_pitch.set_kp(0)
-        self.pid_vpc_pitch.set_ki(50.0)
+        self.pid_vpc_pitch.set_ki(0.0)
         self.pid_vpc_pitch.set_kd(0)
         self.pid_vpc_pitch.set_lim_high(400)
         self.pid_vpc_pitch.set_lim_low(-400)
 
         # Filter parameters
         self.rate_mv_filt_K = 1.0
-        self.rate_mv_filt_T = 0.02
+        self.rate_mv_filt_T = 0.05
         # Reference prefilters
         self.roll_reference_prefilter_K = 1.0
         self.roll_reference_prefilter_T = 0.0
@@ -143,10 +143,6 @@ class AttitudeControl:
         rospy.Subscriber('/clock', Clock, self.clock_cb)
         rospy.Subscriber('reset_controllers', Empty, self.reset_controllers_cb)
 
-        #self.pub_mass0 = rospy.Publisher('movable_mass_0_position_controller/command', Float64, queue_size=1)
-        #self.pub_mass1 = rospy.Publisher('movable_mass_1_position_controller/command', Float64, queue_size=1)
-        #self.pub_mass2 = rospy.Publisher('movable_mass_2_position_controller/command', Float64, queue_size=1)
-        #self.pub_mass3 = rospy.Publisher('movable_mass_3_position_controller/command', Float64, queue_size=1)
         self.attitude_pub = rospy.Publisher('attitude_command', Float64MultiArray, queue_size=1)
         self.pub_pid_roll = rospy.Publisher('pid_roll', PIDController, queue_size=1)
         self.pub_pid_roll_rate = rospy.Publisher('pid_roll_rate', PIDController, queue_size=1)
@@ -156,7 +152,7 @@ class AttitudeControl:
         self.pub_pid_yaw_rate = rospy.Publisher('pid_yaw_rate', PIDController, queue_size=1)
         self.pub_pid_vpc_roll = rospy.Publisher('pid_vpc_roll', PIDController, queue_size=1)
         self.pub_pid_vpc_pitch = rospy.Publisher('pid_vpc_pitch', PIDController, queue_size=1)
-        self.cfg_server = Server(VpcMmcuavAttitudeCtlParamsConfig, self.cfg_callback)
+        self.cfg_server = Server(VpcTtcuavAttitudeCtlParamsConfig, self.cfg_callback)
 
     def run(self):
         '''
@@ -231,21 +227,6 @@ class AttitudeControl:
             vpc_roll_output = -self.pid_vpc_roll.compute(0.0, roll_rate_output, dt_clk)
             # Due to some wiring errors we set output to +, should be -
             vpc_pitch_output = -self.pid_vpc_pitch.compute(0.0, pitch_rate_output, dt_clk)
-
-
-            # Publish mass position
-            #mass0_command_msg = Float64()
-            #mass0_command_msg.data = dx_pitch
-            #mass2_command_msg = Float64()
-            #mass2_command_msg.data = -dx_pitch
-            #mass1_command_msg = Float64()
-            #mass1_command_msg.data = -dy_roll
-            #mass3_command_msg = Float64()
-            #mass3_command_msg.data = dy_roll
-            #self.pub_mass0.publish(mass0_command_msg)
-            #self.pub_mass1.publish(mass1_command_msg)
-            #self.pub_mass2.publish(mass2_command_msg)
-            #self.pub_mass3.publish(mass3_command_msg)
 
             # Publish attitude
             attitude_output = Float64MultiArray()
@@ -448,6 +429,6 @@ class AttitudeControl:
 
 if __name__ == '__main__':
 
-    rospy.init_node('vpc_mmcuav_attitude_ctl')
+    rospy.init_node('vpc_ttcuav_attitude_ctl')
     attitude_ctl = AttitudeControl()
     attitude_ctl.run()
