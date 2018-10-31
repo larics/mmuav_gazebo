@@ -10,7 +10,7 @@ from nav_msgs.msg import Odometry
 from std_msgs.msg import Float64, Float64MultiArray, Empty
 from mmuav_msgs.msg import PIDController
 from dynamic_reconfigure.server import Server
-from mmuav_control.cfg import VpcMmcuavAttitudeCtlParamsConfig
+from mmuav_control.cfg import VpcMmuavAttitudeCtlParamsConfig
 import math
 from datetime import datetime
 from rosgraph_msgs.msg import Clock
@@ -143,10 +143,6 @@ class AttitudeControl:
         rospy.Subscriber('/clock', Clock, self.clock_cb)
         rospy.Subscriber('reset_controllers', Empty, self.reset_controllers_cb)
 
-        #self.pub_mass0 = rospy.Publisher('movable_mass_0_position_controller/command', Float64, queue_size=1)
-        #self.pub_mass1 = rospy.Publisher('movable_mass_1_position_controller/command', Float64, queue_size=1)
-        #self.pub_mass2 = rospy.Publisher('movable_mass_2_position_controller/command', Float64, queue_size=1)
-        #self.pub_mass3 = rospy.Publisher('movable_mass_3_position_controller/command', Float64, queue_size=1)
         self.attitude_pub = rospy.Publisher('attitude_command', Float64MultiArray, queue_size=1)
         self.pub_pid_roll = rospy.Publisher('pid_roll', PIDController, queue_size=1)
         self.pub_pid_roll_rate = rospy.Publisher('pid_roll_rate', PIDController, queue_size=1)
@@ -156,7 +152,7 @@ class AttitudeControl:
         self.pub_pid_yaw_rate = rospy.Publisher('pid_yaw_rate', PIDController, queue_size=1)
         self.pub_pid_vpc_roll = rospy.Publisher('pid_vpc_roll', PIDController, queue_size=1)
         self.pub_pid_vpc_pitch = rospy.Publisher('pid_vpc_pitch', PIDController, queue_size=1)
-        self.cfg_server = Server(VpcMmcuavAttitudeCtlParamsConfig, self.cfg_callback)
+        self.cfg_server = Server(VpcMmuavAttitudeCtlParamsConfig, self.cfg_callback)
 
     def run(self):
         '''
@@ -448,6 +444,6 @@ class AttitudeControl:
 
 if __name__ == '__main__':
 
-    rospy.init_node('vpc_mmcuav_attitude_ctl')
+    rospy.init_node('vpc_mmuav_attitude_ctl')
     attitude_ctl = AttitudeControl()
     attitude_ctl.run()
