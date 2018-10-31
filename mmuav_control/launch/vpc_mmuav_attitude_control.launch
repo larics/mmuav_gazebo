@@ -1,0 +1,35 @@
+<?xml version="1.0" ?>
+
+<launch>
+
+    <arg name="namespace" default="mmuav"/>
+    <arg name="rate" default="100"/>
+
+	<!-- Single controller manipulator -->
+    <include file="$(find mmuav_control)/launch/mmuav_control.launch"/>
+
+    <group ns="$(arg namespace)">
+        <!-- Start gripper control -->
+        <node name="gripper_control" pkg="mmuav_control" type="mmuav_gripper_control.py" output="screen">
+          <param name="rate" value="$(arg rate)"/>
+        </node>
+
+        <!-- Start vpc attitude control -->
+        <node name="vpc_mmuav_attitude_control" pkg="mmuav_control" type="vpc_mmuav_attitude_control.py" output="screen">
+            <param name="rate" value="$(arg rate)"/>
+        </node>
+
+        <!-- Start vpc height control -->
+        <node name="vpc_mmuav_height_control" pkg="mmuav_control" type="vpc_mmuav_height_ctl.py" output="screen">
+          <param name="rate" value="$(arg rate)"/>
+        </node>
+
+        <!-- Merge height and attitude control node -->
+        <node name="vpc_mmuav_controller_outputs_to_motor_velocities" 
+            pkg="mmuav_control" 
+            type="vpc_mmuav_controller_outputs_to_motor_velocities.py" output="screen">
+          <param name="rate" value="$(arg rate)"/>
+        </node>
+    </group>
+
+</launch>

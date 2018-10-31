@@ -30,6 +30,9 @@ generate_dynamic_reconfigure_options(
     config/VpcTtcuavZCtlParams.cfg
     # Rotors variation params
     config/RotorsVariationAttitudeCtlParams.cfg
+    # VPC MMUAV parameters
+    config/VpcMmuavZCtlParams.cfg
+    config/VpcMmuavAttitudeCtlParams.cfg
     )
     
 catkin_package(
