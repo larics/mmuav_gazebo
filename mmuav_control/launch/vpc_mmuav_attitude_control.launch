@@ -1,0 +1,22 @@
+<?xml version="1.0" ?>
+
+<launch>
+
+
+    <arg name="namespace" default="mmuav"/>
+    <arg name="rate" default="100"/>
+    
+    <group ns="$(arg namespace)">
+        <!-- Start gripper control -->
+        <node name="gripper_control" pkg="mmuav_control" 
+            type="mmuav_gripper_control.py" output="screen">
+          <param name="rate" value="$(arg rate)"/>
+        </node>
+	</group>
+
+	<!-- Single controller controller -->
+    <include file="$(find mmuav_control)/launch/mmuav_control.launch"/>
+
+    <!-- Start vpc control -->
+    
+</launch>
