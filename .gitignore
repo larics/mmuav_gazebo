@@ -1,3 +1,6 @@
 *.pyc
 *~*
 mmuav_description/src/rope_macro.xacro
+.cproject
+.project
+.settings/
