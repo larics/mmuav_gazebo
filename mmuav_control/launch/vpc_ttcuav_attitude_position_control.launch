@@ -10,10 +10,9 @@
       <param name="rate" value="$(arg rate)"/>
     </node>
 
-    <!-- Position control -->
-    <node name="position_control" pkg="mmuav_control" type="position_ctl.py" output="screen">
+    <!-- Start vpc height control -->
+    <node name="vpc_mmuav_height_control" pkg="mmuav_control" type="vpc_ttc_position_ctl.py" output="screen">
       <param name="rate" value="$(arg rate)"/>
-      <!--param name="filename" value="$(arg filename)"/-->
     </node>
 
     <!-- Merge height and attitude control node -->

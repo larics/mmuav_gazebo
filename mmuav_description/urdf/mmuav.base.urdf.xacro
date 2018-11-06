@@ -239,7 +239,6 @@
     joint_name="joint_q3_passive_left">
   </xacro:transmisija >
 
-
   <xacro:transmisija 
     trans_number="6"
     joint_name="joint_q3_passive_right">

@@ -8,13 +8,10 @@
   <arg name="gui" default="true"/>
   <arg name="headless" default="false"/>
   <arg name="debug" default="false"/>
-
+  
   <arg name="enable_logging" default="true"/>
   <arg name="enable_ground_truth" default="true"/>
-  <arg name="log_file" default="vpc_ttcuav"/>
-  <arg name="name" default="ttcuav"/>
-  <arg name="model_type" default="mmcuav" />
-
+  <arg name="log_file" default="uav"/>
 
   <!-- Launch gazebo -->
   <include file="$(find gazebo_ros)/launch/empty_world.launch">
@@ -24,19 +21,15 @@
     <arg name="paused" value="$(arg paused)"/>
     <arg name="use_sim_time" value="$(arg use_sim_time)"/>
     <arg name="headless" value="$(arg headless)"/>
+  </include> 
+
+  <include file="$(find mmuav_description)/launch/spawn_mmuav.launch">
+        <!-- arg name="roll" value="0"/>
+        <arg name="z" value="1" / -->
   </include>
 
-  <include file="$(find mmuav_description)/launch/spawn_ttcuav.launch">
-  </include>
-  
-   <!-- Start control -->
-  <include file="$(find mmuav_control)/launch/ttcuav_control.launch">
-    <arg name="namespace" value="$(arg name)"/>
-  </include>
-
-  <!-- Start attitude height control -->
-  <include file="$(find mmuav_control)/launch/vpc_ttcuav_attitude_position_control.launch">
-    <arg name="namespace" value="$(arg name)"/>
-  </include>
+  <include file="$(find mmuav_control)/launch/vpc_mmuav_attitude_position_control.launch">
+        <arg name="rate" value="100"/>
+    </include>
 
 </launch>

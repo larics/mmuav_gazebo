@@ -33,6 +33,7 @@ generate_dynamic_reconfigure_options(
     # VPC MMUAV parameters
     config/VpcMmuavZCtlParams.cfg
     config/VpcMmuavAttitudeCtlParams.cfg
+    config/VpcMmuavPositionCtlParams.cfg
     )
     
 catkin_package(
