@@ -547,7 +547,7 @@
     <link name='link_gripper2_${suffix}'>
       
       <inertial>
-        <mass value="0.25" />
+        <mass value="0.5" />
         <!-- origin xyz="0.02116183 0 0" rpy="1.57079632679 0 0"/ -->
         <origin xyz="0.04 0 0" rpy="0 0 0"/>
         <!--inertia
