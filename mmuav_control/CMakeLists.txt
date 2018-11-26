@@ -8,7 +8,9 @@ find_package(catkin REQUIRED COMPONENTS
     dynamic_reconfigure
     roslib
 	mmuav_msgs
-	mav_msgs
+    mav_msgs  
+    uav_ros_control
+    uav_ros_control_msgs
 )
 
 find_package(cmake_modules REQUIRED)
@@ -42,10 +44,6 @@ include_directories(
   ${catkin_INCLUDE_DIRS}
 )
 
-# PID controller library
-add_library(pid src/PID.cpp)
-target_link_libraries(pid ${catkin_LIBRARIES})
-
 # General MmuavParameters library
 add_library(MmuavParameters src/MmuavParameters.cpp)
 target_link_libraries(MmuavParameters ${catkin_LIBRARIES})
@@ -63,7 +61,7 @@ target_link_libraries(UavGeometryControl ${catkin_LIBRARIES}
     NonlinearFilters GeometricHelper MmuavParameters yaml-cpp)
 
 add_executable(mmuav_joint_position_control src/mmuav_joint_position_control.cpp)
-target_link_libraries(mmuav_joint_position_control pid ${catkin_LIBRARIES} yaml-cpp)
+target_link_libraries(mmuav_joint_position_control ${catkin_LIBRARIES} yaml-cpp)
 
 #install(DIRECTORY config
 #  DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION})

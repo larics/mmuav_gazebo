@@ -3,13 +3,14 @@
 
 #include "ros/ros.h"
 #include <string>
-#include <mmuav_control/PID.h>
+#include <uav_ros_control/PID.h>
 #include <std_msgs/Float64.h>
 #include <geometry_msgs/Vector3.h>
 #include <sensor_msgs/JointState.h>
 #include <rosgraph_msgs/Clock.h>
 #include <dynamic_reconfigure/server.h>
 #include <mmuav_control/JointCtlParamsConfig.h>
+#include <uav_ros_control_msgs/PIDController.h>
 
 class JointControl
 {
@@ -33,7 +34,7 @@ class JointControl
 		void set_lim_high(float lim_high);
 		float get_ref(void);
 		float compute(float ref, float meas, float dt);
-		void create_msg(mmuav_msgs::PIDController &msg);
+		void create_msg(uav_ros_control_msgs::PIDController &msg);
 };
 
 class JointPositionControl{

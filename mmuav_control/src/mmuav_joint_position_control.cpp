@@ -1,6 +1,6 @@
 #include <mmuav_control/mmuav_joint_position_control.h>
 #include "yaml-cpp/yaml.h"
-#include <mmuav_msgs/PIDController.h>
+#include <uav_ros_control_msgs/PIDController.h>
 #include <ros/package.h>
 
 #include <string>
@@ -65,7 +65,7 @@ float JointControl::compute(float ref, float meas, float dt)
 	return joint_pid_.compute(ref, meas, dt);
 }
 
-void JointControl::create_msg(mmuav_msgs::PIDController &msg)
+void JointControl::create_msg(uav_ros_control_msgs::PIDController &msg)
 {
 	joint_pid_.create_msg(msg);
 }
@@ -149,7 +149,7 @@ void JointPositionControl::LoadParameters(std::string file, std::vector<std::str
 		pub_topic = config[controllers[i]]["command_topic"].as<std::string>();
 		joint_name_.push_back(config[controllers[i]]["joint"].as<std::string>());
 		joint_command_pub_ros_.push_back(n_.advertise<std_msgs::Float64>(pub_topic, 1));
-		pid_state_pub_ros_.push_back(n_.advertise<mmuav_msgs::PIDController>(controllers[i]+"/state", 1));
+		pid_state_pub_ros_.push_back(n_.advertise<uav_ros_control_msgs::PIDController>(controllers[i]+"/state", 1));
 		joint_control_[i].set_kp(config[controllers[i]]["pid"]["p"].as<double>());
 		joint_control_[i].set_ki(config[controllers[i]]["pid"]["i"].as<double>());
 		joint_control_[i].set_kd(config[controllers[i]]["pid"]["d"].as<double>());
@@ -170,7 +170,7 @@ void JointPositionControl::run(void)
 	int counter = 1;
 	float dt = 0, position_error;
 	rosgraph_msgs::Clock clock_old;
-	mmuav_msgs::PIDController pid_msg;
+	uav_ros_control_msgs::PIDController pid_msg;
 	std_msgs::Float64 velocity_ref;
 
 	clock_old = clock_;

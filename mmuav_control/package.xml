@@ -19,13 +19,14 @@
 
   <build_depend>mmuav_msgs</build_depend>
   <build_depend>cmake_modules</build_depend>
-  <build_depend>controller_spawner</build_depend>
-  
+  <build_depend>controller_spawner</build_depend>  
+  <build_depend>yaml-cpp</build_depend>
+  <build_depend>mav_msgs</build_depend>
+  <build_depend>uav_ros_control</build_depend>
+
   <run_depend>mmuav_msgs</run_depend>
   <run_depend>controller_spawner</run_depend>
   <run_depend>cmake_modules</run_depend>
-  
-  <build_depend>yaml-cpp</build_depend>
   <run_depend>yaml-cpp</run_depend>
   
   <!-- The export tag contains other, unspecified, tags -->

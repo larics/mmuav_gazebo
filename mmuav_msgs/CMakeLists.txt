@@ -6,7 +6,6 @@ find_package(catkin REQUIRED message_generation std_msgs)
 add_message_files(
   FILES
   MotorSpeed.msg
-  PIDController.msg
   GeomCtlStatus.msg
 )
 
