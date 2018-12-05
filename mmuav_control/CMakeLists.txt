@@ -48,17 +48,13 @@ include_directories(
 add_library(MmuavParameters src/MmuavParameters.cpp)
 target_link_libraries(MmuavParameters ${catkin_LIBRARIES})
 
-# Library for nonlinear filters
-add_library(NonlinearFilters src/NonlinearFilters.cpp)
-target_link_libraries(NonlinearFilters ${catkin_LIBRARIES})
-
 # Helper library for geometric control
 add_library(GeometricHelper src/GeometricHelper.cpp)
 target_link_libraries(GeometricHelper ${catkin_LIBRARIES})
 
 add_executable(UavGeometryControl src/UavGeometryControl.cpp)
 target_link_libraries(UavGeometryControl ${catkin_LIBRARIES} 
-    NonlinearFilters GeometricHelper MmuavParameters yaml-cpp)
+    GeometricHelper MmuavParameters yaml-cpp)
 
 add_executable(mmuav_joint_position_control src/mmuav_joint_position_control.cpp)
 target_link_libraries(mmuav_joint_position_control ${catkin_LIBRARIES} yaml-cpp)

@@ -7,7 +7,7 @@
 
 #include <mmuav_control/UavGeometryControl.hpp>
 #include <mmuav_control/MmuavParameters.hpp>
-#include <mmuav_control/NonlinearFilters.hpp>
+#include <uav_ros_control/NonlinearFilters.h>
 #include <mmuav_control/GeometricHelper.hpp>
 
 #include <mav_msgs/Actuators.h>
