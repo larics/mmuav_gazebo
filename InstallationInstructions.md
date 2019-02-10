@@ -51,13 +51,12 @@ cd ~/catkin_ws/src
 git clone https://github.com/larics/rotors_simulator
 cd rotors_simulator
 git checkout larics_master
-![#f03c15](https://placehold.it/15/f03c15/000000?text=+) For ros melodic use branch larics_melodic_master
 cd ~/catkin_ws/src
 git clone https://github.com/larics/mav_comm
 cd mav_comm
 git checkout larics_master
 ```
-
+![#f03c15](https://placehold.it/15/f03c15/000000?text=+) For ros melodic use branch larics_melodic_master for rotors_simulator
 
 
 
