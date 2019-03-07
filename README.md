@@ -31,6 +31,7 @@ Package ```mmuav_arducopter_bridge``` is used for controlling the UAV in real wo
   * [Running the simulation](#Running)
     * [Mmuav](#Mmuav)
     * [VpcMmc UAV](#VPCMMCUAV)
+    * [Geometric UAV control](#geom_ctl)
 
 ## <a name="Installation"></a> Installation
 Detailed installation instructions can be found in [InstallationInstructions.md](https://github.com/larics/mmuav_gazebo/blob/master/InstallationInstructions.md)
@@ -76,18 +77,6 @@ Alternatively, one can run simulation with a **rope** attached to the UAV:
 
 After running the command above, the UAV will hover at 1m height. You can control the UAV through several topics:
 
-#### <a name="geom_ctl"></a> Geometric Control
-
-To run a simulation for UAV with geometric control enabled launch:
-
-```roslaunch mmuav_gazebo uav_geometry_control.launch```
-
-This command will launch geometric control for the default UAV model.
-One can define an additional parameter *type* which will launch geometric control for various UAV models e.g.:
-* type:=uav - defualt UAV model
-* type:=mmcuav - UAV model controlled by moving masses
-* type:=mmuav - UAV model controlled by manipulator carrying a payload
-
 **Subscriptions:**
 
 - ``` /vpc_mmcuav/euler_ref``` -> Desired euler angle reference here to move the UAV.
@@ -100,3 +89,15 @@ One can define an additional parameter *type* which will launch geometric contro
 - ``` /vpc_mmcuav/imu``` -> Imu data from the UAV
 - ``` /vpc_mmcuav/odometry ``` -> Provides position, orientation, linear velocities and angular velocities of the UAV
 - ``` /vpc_mmcuav/pid_*``` -> All topics starting with ```pid_``` are publishing controller status
+
+#### <a name="geom_ctl"></a> Geometric Control
+
+To run a simulation for UAV with geometric control enabled launch:
+
+```roslaunch mmuav_gazebo uav_geometry_control.launch```
+
+This command will launch geometric control for the default UAV model.
+One can define an additional parameter *type* which will launch geometric control for various UAV models e.g.:
+* type:=uav - defualt UAV model
+* type:=mmcuav - UAV model controlled by moving masses
+* type:=mmuav - UAV model controlled by manipulator carrying a payload
