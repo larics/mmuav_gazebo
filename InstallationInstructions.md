@@ -19,7 +19,6 @@ cd ~/catkin_ws/src
 catkin build
 ```
 
-
 ## Configure workspace
 
 This instructions consider you have [ROS](http://wiki.ros.org/kinetic/Installation/Ubuntu) installed. Following dependencies have to be installed before configuring the workspace:
@@ -57,6 +56,8 @@ git clone https://github.com/larics/mav_comm
 cd mav_comm
 git checkout larics_master
 ```
+![#f03c15](https://placehold.it/15/f03c15/000000?text=+) For ros melodic use branch larics_melodic_master for rotors_simulator
+
 
 
 Before you build, install following dependencies:
