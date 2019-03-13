@@ -3,6 +3,8 @@
 <launch>
   <arg name="namespace" default="uav"/>
   <arg name="rate" default="100"/>
+  <arg name="x" default="0.0"/>
+  <arg name="y" default="0.0"/>
 
   <group ns="$(arg namespace)">
     <!-- Attitude control -->
@@ -14,6 +16,8 @@
     <node name="position_control" pkg="mmuav_control" type="position_ctl.py" output="screen">
       <param name="rate" value="$(arg rate)"/>
       <param name="filename" value="UavPositionControl.yaml"/>
+      <param name="x" value="$(arg x)"/>
+      <param name="y" value="$(arg y)"/>
     </node>
 
     <!-- Merge position and attitude control node -->
