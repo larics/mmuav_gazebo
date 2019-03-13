@@ -15,22 +15,32 @@
 
   <arg name="model_type" default="uav" />
 
+  <arg name="name" default="uav" />
+  <arg name="x" default="0.0" />
+  <arg name="y" default="0.0" />
+
 
   <!-- Launch gazebo -->
-  <include file="$(find gazebo_ros)/launch/empty_world.launch">
-    <!--arg name="world_name" value="$(find morus_gazebo)/worlds/morus.world"/-->
+  <!--include file="$(find gazebo_ros)/launch/empty_world.launch">
     <arg name="debug" value="$(arg debug)" />
     <arg name="gui" value="$(arg gui)" />
     <arg name="paused" value="$(arg paused)"/>
     <arg name="use_sim_time" value="$(arg use_sim_time)"/>
     <arg name="headless" value="$(arg headless)"/>
-  </include>
+  </include-->
 
   <include file="$(find mmuav_description)/launch/spawn_uav.launch">
     <arg name="model_type" value="$(arg model_type)" />
+    <arg name="name" value="$(arg name)" />
+    <arg name="x" value="$(arg x)" />
+    <arg name="y" value="$(arg y)" />
   </include>
 
   <!-- Start attitude height control -->
-  <include file="$(find mmuav_control)/launch/rotors_variation_attitude_position_control.launch"/>
+  <include file="$(find mmuav_control)/launch/rotors_variation_attitude_position_control.launch">
+    <arg name="namespace" value="$(arg name)" />
+    <arg name="x" value="$(arg x)" />
+    <arg name="y" value="$(arg y)" />
+  </include>
 
 </launch>
