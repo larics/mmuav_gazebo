@@ -1,0 +1,35 @@
+<?xml version="1.0" ?>
+
+<launch>
+  <arg name="namespace" default="uav"/>
+  <arg name="rate" default="100"/>
+  <arg name="x" default="0.0"/>
+  <arg name="y" default="0.0"/>
+
+  <group ns="$(arg namespace)">
+    <!-- Attitude control -->
+    <node name="rotors_variation_attitude_control" pkg="mmuav_control" type="rotors_variation_attitude_control.py">
+      <param name="rate" value="$(arg rate)"/>
+    </node>
+
+    <!-- Position control -->
+    <node name="wind_turbine_inspection_control" pkg="mmuav_control" type="wind_turbine_inspection_control.py" output="screen">
+      <param name="rate" value="$(arg rate)"/>
+      <param name="filename" value="WindTurbineControl.yaml"/>
+      <param name="x" value="$(arg x)"/>
+      <param name="y" value="$(arg y)"/>
+    </node>
+
+    <!-- Merge position and attitude control node -->
+    <node name="rotors_variation_controller_outputs_to_motor_velocities" pkg="mmuav_control" type="rotors_variation_controller_outputs_to_motor_velocities.py">
+      <param name="rate" value="$(arg rate)"/>
+    </node>
+
+    <!-- Run the trajectory reference node -->
+    <node name="trajectory_to_trajectory_point" pkg="mmuav_control" type="trajectory_to_trajectory_point.py">
+      <param name="rate" value="$(arg rate)"/>
+    </node>
+
+  </group>
+
+</launch>
