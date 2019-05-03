@@ -19,6 +19,8 @@
   <arg name="x" default="0.0" />
   <arg name="y" default="0.0" />
 
+  <arg name="manipulator_type" default="none" />
+
 
   <!-- Launch gazebo -->
   <include file="$(find gazebo_ros)/launch/empty_world.launch">
@@ -34,6 +36,7 @@
     <arg name="name" value="$(arg name)" />
     <arg name="x" value="$(arg x)" />
     <arg name="y" value="$(arg y)" />
+    <arg name="manipulator_type" value="$(arg manipulator_type)" />
   </include>
 
   <!-- Start attitude height control -->
@@ -42,5 +45,11 @@
     <arg name="x" value="$(arg x)" />
     <arg name="y" value="$(arg y)" />
   </include>
+
+  <group if="$(eval 'cmanip' == manipulator_type)">
+    <include file="$(find aerial_manipulators)/launch/cmanip_control.launch">
+      <arg name="namespace" value="$(arg name)" />
+    </include>
+  </group>
 
 </launch>
