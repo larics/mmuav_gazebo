@@ -1,6 +1,9 @@
 <?xml version="1.0"?>
 
 <robot name="uav" xmlns:xacro="http://ros.org/wiki/xacro">
+  <!-- Arguments -->
+  <xacro:arg name="manipulator_type" default="none" />
+  <xacro:property name="manipulator_type" value="$(arg manipulator_type)" />
   <!-- Properties -->
   <xacro:property name="rotor_velocity_slowdown_sim" value="15" />
   <xacro:property name="mesh_file" value="3DR_Arducopter.dae" />
@@ -171,6 +174,41 @@
     <origin xyz="${-1*arm_length} ${0*arm_length} ${rotor_offset_top}" rpy="0 ${tilt_angle} 0" />
     <xacro:insert_block name="rotor_inertia" />
   </xacro:vertical_rotor>
+
+  <xacro:if value="${'cmanip' == manipulator_type}">
+
+    <!-- Try to include manipulator -->
+    <xacro:include filename="$(find aerial_manipulators)/urdf/manipulator_base.urdf.xacro" />
+    <xacro:cmanip parent="base_link">
+      <origin xyz="0 0 0.075" rpy="${pi/2} 0 ${pi}"/>
+    </xacro:cmanip>
+
+    <xacro:transmisija
+      trans_number="1"
+      joint_name="link0_to_link1">
+    </xacro:transmisija>
+
+    <xacro:transmisija
+      trans_number="2"
+      joint_name="link1_to_link2">
+    </xacro:transmisija>
+
+    <xacro:transmisija
+      trans_number="3"
+      joint_name="link2_to_link3">
+    </xacro:transmisija>
+
+    <xacro:transmisija
+      trans_number="4"
+      joint_name="link3_to_link4">
+    </xacro:transmisija>
+
+    <xacro:transmisija
+      trans_number="5"
+      joint_name="link4_to_link5">
+    </xacro:transmisija>
+
+  </xacro:if>
 
   <!-- <xacro:camera_macro robot_namespace="${namespace}">
   </xacro:camera_macro> -->
