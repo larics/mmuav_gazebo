@@ -20,16 +20,19 @@
   <arg name="y" default="0.0" />
 
   <arg name="manipulator_type" default="none" />
+  <arg name="start_gazebo" default="true" />
 
 
   <!-- Launch gazebo -->
-  <include file="$(find gazebo_ros)/launch/empty_world.launch">
-    <arg name="debug" value="$(arg debug)" />
-    <arg name="gui" value="$(arg gui)" />
-    <arg name="paused" value="$(arg paused)"/>
-    <arg name="use_sim_time" value="$(arg use_sim_time)"/>
-    <arg name="headless" value="$(arg headless)"/>
-  </include>
+  <group if="$(arg start_gazebo)">
+    <include file="$(find gazebo_ros)/launch/empty_world.launch">
+      <arg name="debug" value="$(arg debug)" />
+      <arg name="gui" value="$(arg gui)" />
+      <arg name="paused" value="$(arg paused)"/>
+      <arg name="use_sim_time" value="$(arg use_sim_time)"/>
+      <arg name="headless" value="$(arg headless)"/>
+    </include>
+  </group>
 
   <include file="$(find mmuav_description)/launch/spawn_uav.launch">
     <arg name="model_type" value="$(arg model_type)" />
@@ -49,6 +52,7 @@
   <group if="$(eval 'cmanip' == manipulator_type)">
     <include file="$(find aerial_manipulators)/launch/cmanip_control.launch">
       <arg name="namespace" value="$(arg name)" />
+      <arg name="velocity_control_file" default="$(find mmuav_control)/config/cmanip_velocity_control.yaml"/>
     </include>
   </group>
 

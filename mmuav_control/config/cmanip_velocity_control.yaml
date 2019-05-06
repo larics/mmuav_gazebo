@@ -1,0 +1,30 @@
+uav:
+  # Publish all joint states -----------------------------------
+  joint_state_controller:
+    type: joint_state_controller/JointStateController
+    publish_rate: 100
+
+  # Velocity Controllers ---------------------------------------
+
+
+  joint1_velocity_controller:
+    type: effort_controllers/JointVelocityController
+    joint: link0_to_link1
+    pid: {p: 0.5, i: 0.0, d: 0.0, i_clamp_max: 100, i_clamp_min: -100}
+  joint2_velocity_controller:
+    type: effort_controllers/JointVelocityController
+    joint: link1_to_link2
+    pid: {p: 0.1, i: 0.0, d: 0.0, i_clamp_max: 100, i_clamp_min: -100}
+  joint3_velocity_controller:
+    type: effort_controllers/JointVelocityController
+    joint: link2_to_link3
+    pid: {p: 0.015, i: 0.0, d: 0.0, i_clamp_max: 100, i_clamp_min: -100}
+  joint4_velocity_controller:
+    type: effort_controllers/JointVelocityController
+    joint: link3_to_link4
+    pid: {p: 0.008, i: 0.0, d: 0.0, i_clamp_max: 100, i_clamp_min: -100}
+  joint5_velocity_controller:
+    type: effort_controllers/JointVelocityController
+    joint: link4_to_link5
+    pid: {p: 0.005, i: 0.0, d: 0.0, i_clamp_max: 100, i_clamp_min: -100}
+    #pid: {p: 0.014, i: 0.0, d: 0.0, i_clamp_max: 100, i_clamp_min: -100}
