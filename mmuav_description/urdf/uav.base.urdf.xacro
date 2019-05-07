@@ -175,37 +175,37 @@
     <xacro:insert_block name="rotor_inertia" />
   </xacro:vertical_rotor>
 
-  <xacro:if value="${'cmanip' == manipulator_type}">
+  <xacro:if value="${'wp_manipulator' == manipulator_type}">
 
     <!-- Try to include manipulator -->
-    <xacro:include filename="$(find aerial_manipulators)/urdf/manipulator_base.urdf.xacro" />
-    <xacro:cmanip parent="base_link">
+    <xacro:include filename="$(find aerial_manipulators_description)/urdf/manipulator_base.urdf.xacro" />
+    <xacro:wp_manipulator parent="base_link">
       <origin xyz="0 0 0.075" rpy="${pi/2} 0 ${pi}"/>
-    </xacro:cmanip>
+    </xacro:wp_manipulator>
 
     <xacro:transmisija
       trans_number="1"
-      joint_name="link0_to_link1">
+      joint_name="joint1">
     </xacro:transmisija>
 
     <xacro:transmisija
       trans_number="2"
-      joint_name="link1_to_link2">
+      joint_name="joint2">
     </xacro:transmisija>
 
     <xacro:transmisija
       trans_number="3"
-      joint_name="link2_to_link3">
+      joint_name="joint3">
     </xacro:transmisija>
 
     <xacro:transmisija
       trans_number="4"
-      joint_name="link3_to_link4">
+      joint_name="joint4">
     </xacro:transmisija>
 
     <xacro:transmisija
       trans_number="5"
-      joint_name="link4_to_link5">
+      joint_name="joint5">
     </xacro:transmisija>
 
   </xacro:if>
