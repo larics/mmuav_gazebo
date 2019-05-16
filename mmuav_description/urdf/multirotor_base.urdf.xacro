@@ -328,7 +328,7 @@
   reference to the parent link.
   @param *inertia Block argument defining camera inertia.
   -->
-  <xacro:macro name="cam" params="camera_link camera_mass parent *origin *inertia">
+  <xacro:macro name="cam" params="namespace camera_link camera_mass parent *origin *inertia">
 
     <!-- Camera link -->
     <link name="camera_box">
@@ -389,7 +389,7 @@
         <plugin name="camera_controller" filename="libgazebo_ros_camera.so">
           <alwaysOn>true</alwaysOn>
           <updateRate>0.0</updateRate>
-          <cameraName>mmuav/camera1</cameraName>
+          <cameraName>${namespace}/camera1</cameraName>
           <imageTopicName>image_raw</imageTopicName>
           <cameraInfoTopicName>camera_info</cameraInfoTopicName>
           <frameName>camera_box</frameName>
