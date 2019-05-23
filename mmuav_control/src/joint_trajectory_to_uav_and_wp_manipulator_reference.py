@@ -78,11 +78,11 @@ class JointTrajectoryToUavAndWpManipulatorReference:
             print "Currently executing a trajectory."
 
     def publishAll(self):
-        self.manipulator_joint1_pub.publish(self.current_trajectory_point.positions[3])
-        self.manipulator_joint2_pub.publish(self.current_trajectory_point.positions[4])
-        self.manipulator_joint3_pub.publish(self.current_trajectory_point.positions[5])
-        self.manipulator_joint4_pub.publish(self.current_trajectory_point.positions[6])
-        self.manipulator_joint5_pub.publish(self.current_trajectory_point.positions[7])
+        self.manipulator_joint1_pub.publish(self.current_trajectory_point.positions[4])
+        self.manipulator_joint2_pub.publish(self.current_trajectory_point.positions[5])
+        self.manipulator_joint3_pub.publish(self.current_trajectory_point.positions[6])
+        self.manipulator_joint4_pub.publish(self.current_trajectory_point.positions[7])
+        self.manipulator_joint5_pub.publish(self.current_trajectory_point.positions[8])
         self.uav_trajectory_point_pub.publish(self.uav_current_trajectory_point)
 
 def jointTrajectoryPointToMultiDofJointTrajectoryPoint(joint):
@@ -92,7 +92,8 @@ def jointTrajectoryPointToMultiDofJointTrajectoryPoint(joint):
     transform.translation.x = joint.positions[0]
     transform.translation.y = joint.positions[1]
     transform.translation.z = joint.positions[2]
-    transform.rotation.w = 1.0
+    transform.rotation.z = math.sin(joint.positions[3]/2.0)
+    transform.rotation.w = math.cos(joint.positions[3]/2.0)
 
     vel = Twist()
     vel.linear.x = joint.velocities[0]
