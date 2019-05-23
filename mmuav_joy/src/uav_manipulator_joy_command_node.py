@@ -36,6 +36,7 @@ class Commander():
             self.manipulator_pub_list.append(
                 rospy.Publisher(topic, Float64, queue_size=1))
 
+        self.joint_state_pub = rospy.Publisher("manipulator_joint_states", JointState, queue_size=1)
         # Create a subscriber for color msg
         time.sleep(1)
         rospy.Subscriber("pose", PoseStamped, self.uav_pose_callback)
@@ -80,6 +81,11 @@ class Commander():
         if self.first_manipulator_reference_received == True and self.mode != 0:
             for i in range(0,5):
                 self.manipulator_pub_list[i].publish(self.manipulator_position_ref[i])
+
+        joint_state = JointState()
+        joint_state.name = self.manipulator_joint_names
+        joint_state.position = self.manipulator_position_ref
+        self.joint_state_pub.publish(joint_state)
 
     def compute_references(self):
         if self.uav_first_ref_received == True:
