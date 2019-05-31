@@ -2,7 +2,7 @@ uav:
   # Publish all joint states -----------------------------------
   joint_state_controller:
     type: joint_state_controller/JointStateController
-    publish_rate: 100
+    publish_rate: 1000
 
   # Velocity Controllers ---------------------------------------
 
