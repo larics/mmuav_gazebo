@@ -5,6 +5,7 @@
   <arg name="rate" default="100"/>
   <arg name="x" default="0.0"/>
   <arg name="y" default="0.0"/>
+  <arg name="run_trajectory_node" default="true" />
 
   <group ns="$(arg namespace)">
     <!-- Attitude control -->
@@ -26,9 +27,11 @@
     </node>
 
     <!-- Run the trajectory reference node -->
-    <node name="trajectory_to_trajectory_point" pkg="mmuav_control" type="trajectory_to_trajectory_point.py">
-      <param name="rate" value="$(arg rate)"/>
-    </node>
+    <group if="$(arg run_trajectory_node)">
+      <node name="trajectory_to_trajectory_point" pkg="mmuav_control" type="trajectory_to_trajectory_point.py">
+        <param name="rate" value="$(arg rate)"/>
+      </node>
+    </group>
 
   </group>
 

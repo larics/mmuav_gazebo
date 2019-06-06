@@ -19,21 +19,27 @@
   <arg name="x" default="0.0" />
   <arg name="y" default="0.0" />
 
+  <arg name="manipulator_type" default="none" />
+  <arg name="start_gazebo" default="true" />
+
 
   <!-- Launch gazebo -->
-  <include file="$(find gazebo_ros)/launch/empty_world.launch">
-    <arg name="debug" value="$(arg debug)" />
-    <arg name="gui" value="$(arg gui)" />
-    <arg name="paused" value="$(arg paused)"/>
-    <arg name="use_sim_time" value="$(arg use_sim_time)"/>
-    <arg name="headless" value="$(arg headless)"/>
-  </include>
+  <group if="$(arg start_gazebo)">
+    <include file="$(find gazebo_ros)/launch/empty_world.launch">
+      <arg name="debug" value="$(arg debug)" />
+      <arg name="gui" value="$(arg gui)" />
+      <arg name="paused" value="$(arg paused)"/>
+      <arg name="use_sim_time" value="$(arg use_sim_time)"/>
+      <arg name="headless" value="$(arg headless)"/>
+    </include>
+  </group>
 
   <include file="$(find mmuav_description)/launch/spawn_uav.launch">
     <arg name="model_type" value="$(arg model_type)" />
     <arg name="name" value="$(arg name)" />
     <arg name="x" value="$(arg x)" />
     <arg name="y" value="$(arg y)" />
+    <arg name="manipulator_type" value="$(arg manipulator_type)" />
   </include>
 
   <!-- Start attitude height control -->
@@ -41,6 +47,16 @@
     <arg name="namespace" value="$(arg name)" />
     <arg name="x" value="$(arg x)" />
     <arg name="y" value="$(arg y)" />
+    <arg name="run_trajectory_node" value="$(eval 'none' == manipulator_type)" />
   </include>
+
+  <group if="$(eval 'wp_manipulator' == manipulator_type)">
+    <include file="$(find aerial_manipulators_control)/launch/wp_manipulator_gazebo_control.launch">
+      <arg name="namespace" value="$(arg name)" />
+      <arg name="velocity_control_file" default="$(find mmuav_control)/config/wp_manipulator_velocity_control.yaml"/>
+    </include>
+
+    <node name="joint_trajectory_to_uav_and_manipulator" pkg="mmuav_control" type="joint_trajectory_to_uav_and_wp_manipulator_reference.py" ns="uav"/>
+  </group>
 
 </launch>
