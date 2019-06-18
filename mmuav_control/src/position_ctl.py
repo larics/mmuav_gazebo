@@ -218,7 +218,7 @@ class PositionControl:
             #dt = (t - self.t_old).total_seconds()
             if dt > 1.05/float(self.rate) or dt < 0.95/float(self.rate):
                 #print dt
-                pass
+                dt = 1.0/float(self.rate)
             self.t_old = t
 
             temp_euler_ref = Vector3()

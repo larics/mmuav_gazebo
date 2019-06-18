@@ -1,0 +1,10 @@
+<?xml version="1.0"?>
+<launch>
+  <arg name="name" default="uav"/>
+  <group ns="$(arg name)">
+  <node pkg="mmuav_joy" type="mmuav_joy_command_node.py" name="mmuav_joy_node">
+  </node>
+
+  <node pkg="teleop_twist_keyboard" name="teleop_twist_keyboard" type="teleop_twist_keyboard.py" output="screen"/>
+</group>
+</launch>
