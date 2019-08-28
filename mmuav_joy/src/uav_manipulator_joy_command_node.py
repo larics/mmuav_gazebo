@@ -72,6 +72,7 @@ class Commander():
             self.mode = self.mode + 1
             if self.mode > 5:
                 self.mode = 0
+            print "Mode switch. New mode is: ", self.mode
         self.mode_sw_prev = self.mode_sw
 
     def publish_all(self):
@@ -88,6 +89,7 @@ class Commander():
         self.joint_state_pub.publish(joint_state)
 
     def compute_references(self):
+        factor_uav = 0.02
         if self.uav_first_ref_received == True:
             if self.mode == 0:
                 q0 = self.uav_pose_ref.orientation.w
@@ -95,17 +97,17 @@ class Commander():
                 q2 = self.uav_pose_ref.orientation.y
                 q3 = self.uav_pose_ref.orientation.z
                 yaw = math.atan2(2.0*(q0*q3 + q1*q2), 1 - 2*(q2*q2 + q3*q3))
-                yaw = yaw + self.joy.axes[0]*0.02
+                yaw = yaw + self.joy.axes[0]*factor_uav
                 self.uav_pose_ref.orientation.x = 0.0
                 self.uav_pose_ref.orientation.y = 0.0
                 self.uav_pose_ref.orientation.z = math.sin(yaw/2.0)
                 self.uav_pose_ref.orientation.w = math.cos(yaw/2.0)
                 
-                dx = self.joy.axes[3]*0.02
-                dy = self.joy.axes[2]*0.02
+                dx = self.joy.axes[3]*factor_uav
+                dy = self.joy.axes[2]*factor_uav
                 self.uav_pose_ref.position.x = self.uav_pose_ref.position.x + math.cos(-yaw)*dx + math.sin(-yaw)*dy
                 self.uav_pose_ref.position.y = self.uav_pose_ref.position.y - math.sin(-yaw)*dx + math.cos(-yaw)*dy
-                self.uav_pose_ref.position.z = self.uav_pose_ref.position.z + self.joy.axes[1]*0.02
+                self.uav_pose_ref.position.z = self.uav_pose_ref.position.z + self.joy.axes[1]*factor_uav
 
         if ((self.first_manipulator_reference_received == True) and (self.mode != 0)):
             self.manipulator_position_ref[self.mode-1] = self.manipulator_position_ref[self.mode-1] + self.joy.axes[1]*0.01
