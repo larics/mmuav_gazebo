@@ -20,7 +20,7 @@
   <arg name="y" default="0.0" />
 
   <arg name="manipulator_type" default="none" />
-  <arg name="manipulator_tool" default="camera" />
+  <arg name="manipulator_tool" default="rod" />
   <arg name="start_gazebo" default="true" />
 
 
