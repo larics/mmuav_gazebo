@@ -4,6 +4,8 @@
   <!-- Arguments -->
   <xacro:arg name="manipulator_type" default="none" />
   <xacro:property name="manipulator_type" value="$(arg manipulator_type)" />
+  <xacro:arg name="manipulator_tool" default="none" />
+  <xacro:property name="manipulator_tool" value="$(arg manipulator_tool)" />
   <!-- Properties -->
   <xacro:property name="rotor_velocity_slowdown_sim" value="15" />
   <xacro:property name="mesh_file" value="3DR_Arducopter.dae" />
@@ -208,23 +210,25 @@
       joint_name="joint5">
     </xacro:transmisija>
 
-    <xacro:property name="camera_link" value="0.02" />
-    <xacro:property name="camera_inertia">
-      <inertia
-      ixx="1e-8"
-      iyy="1e-8"
-      izz="1e-8"
-      ixy="0.0" ixz="0.0" iyz="0.0" />
-    </xacro:property>
-    <xacro:property name="camera_mass" value="1e-5"/>
+    <xacro:if value="${'camera' == manipulator_tool}">
+      <xacro:property name="camera_link" value="0.02" />
+      <xacro:property name="camera_inertia">
+        <inertia
+        ixx="1e-8"
+        iyy="1e-8"
+        izz="1e-8"
+        ixy="0.0" ixz="0.0" iyz="0.0" />
+      </xacro:property>
+      <xacro:property name="camera_mass" value="1e-5"/>
 
-    <xacro:cam
-      camera_link="${camera_link}"
-      camera_mass="${camera_mass}"
-      parent="end_effector_base">
-      <origin xyz="0 0 0" rpy="${PI} 0 0"/>
-      <xacro:insert_block name="camera_inertia"/>
-    </xacro:cam>
+      <xacro:cam
+        camera_link="${camera_link}"
+        camera_mass="${camera_mass}"
+        parent="end_effector_base">
+        <origin xyz="0 0 0" rpy="${PI} 0 0"/>
+        <xacro:insert_block name="camera_inertia"/>
+      </xacro:cam>
+    </xacro:if>>
 
   </xacro:if>
 

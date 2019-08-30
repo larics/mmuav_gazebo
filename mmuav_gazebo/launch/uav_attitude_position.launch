@@ -20,6 +20,7 @@
   <arg name="y" default="0.0" />
 
   <arg name="manipulator_type" default="none" />
+  <arg name="manipulator_tool" default="camera" />
   <arg name="start_gazebo" default="true" />
 
 
@@ -40,6 +41,7 @@
     <arg name="x" value="$(arg x)" />
     <arg name="y" value="$(arg y)" />
     <arg name="manipulator_type" value="$(arg manipulator_type)" />
+    <arg name="manipulator_tool" value="$(arg manipulator_tool)" />
   </include>
 
   <!-- Start attitude height control -->
