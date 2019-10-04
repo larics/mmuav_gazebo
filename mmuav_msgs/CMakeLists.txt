@@ -7,7 +7,6 @@ add_message_files(
   FILES
   MotorSpeed.msg
   PIDController.msg
-  MRAIController.msg
 )
 
 generate_messages(DEPENDENCIES std_msgs)

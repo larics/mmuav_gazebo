@@ -67,8 +67,8 @@ target_link_libraries(Tf1 ${catkin_LIBRARIES})
 add_library(diff2 src/diff2.cpp)
 target_link_libraries(diff2 ${catkin_LIBRARIES})
 
-add_library(mraic src/mraic.cpp)
-target_link_libraries(mraic ${catkin_LIBRARIES} diff2 Tf2 Tf1 median_filter)
+#add_library(mraic src/mraic.cpp)
+#target_link_libraries(mraic ${catkin_LIBRARIES} diff2 Tf2 Tf1 median_filter)
 
 add_library(DualArmManipulatorInverseKinematics src/DualArmManipulatorInverseKinematics.cpp)
 target_link_libraries(DualArmManipulatorInverseKinematics DualArmManipulatorDirectKinematics ${catkin_LIBRARIES} yaml-cpp)
@@ -82,8 +82,8 @@ target_link_libraries(uav_attitude_control pid ${catkin_LIBRARIES})
 add_executable(uav_position_control src/uav_position_control.cpp)
 target_link_libraries(uav_position_control pid ${catkin_LIBRARIES})
 
-add_executable(uav_impedance_control src/uav_impedance_control.cpp)
-target_link_libraries(uav_impedance_control pid ${catkin_LIBRARIES} yaml-cpp mraic median_filter)
+#add_executable(uav_impedance_control src/uav_impedance_control.cpp)
+#target_link_libraries(uav_impedance_control pid ${catkin_LIBRARIES} yaml-cpp mraic median_filter)
 
 add_executable(mmuav_joint_position_control src/mmuav_joint_position_control.cpp)
 target_link_libraries(mmuav_joint_position_control pid ${catkin_LIBRARIES} yaml-cpp)
