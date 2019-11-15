@@ -17,6 +17,9 @@
   <xacro:property name="enable_bag_plugin" value="false" />
   <xacro:property name="bag_file" value="uav.bag" />
 
+  <xacro:arg name="mount_magnet" default="false" />
+  <xacro:property name="mount_magnet" value="$(arg mount_magnet)" />
+
   <!-- Instantiate mmuav "mechanics" -->
   <xacro:include filename="$(find mmuav_description)/urdf/uav.base.urdf.xacro" />
   <xacro:include filename="$(find rotors_description)/urdf/component_snippets.xacro" />
@@ -60,6 +63,21 @@
       <rpyOffsets>0.0 0.0 0.0</rpyOffsets> <!-- (Vector3): if non-zero, used to calculate accelOffset and headingOffset so that resulting roll, pitch and yaw errors correspond to this values when the platform is leveled (for compatibility with gazebo_plugins) -->
     </plugin>
   </gazebo>
+
+  <xacro:if value="${mount_magnet}">
+    <gazebo>
+      <plugin name="dipole_magnet" filename="libstorm_gazebo_dipole_magnet.so">
+        <robotNamespace>uav</robotNamespace>
+        <bodyName>base_link</bodyName>
+        <dipole_moment>0 0 970</dipole_moment>
+        <!-- Set to false if not using ROS -->
+        <shouldPublish>true</shouldPublish>
+        <topicNs>magnet</topicNs>
+        <updateRate>100</updateRate>
+        <gain>1.0</gain>
+      </plugin>
+    </gazebo>
+  </xacro:if>
 
 
   <!-- Mount first generic pose sensor-->
