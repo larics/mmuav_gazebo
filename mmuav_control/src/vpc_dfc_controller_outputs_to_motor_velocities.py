@@ -34,11 +34,14 @@ class MergeControllerOutputs:
             Actuators, queue_size=1)
 
         # Publishers for moving masses
-        self.wing_front_pub = rospy.Publisher('angle_wing_0_ref_value', Float32, queue_size=1)
-        self.wing_left_pub = rospy.Publisher('angle_wing_1_ref_value', Float32, queue_size=1)
-        self.wing_back_pub = rospy.Publisher('angle_wing_2_ref_value', Float32, queue_size=1)
-        self.wing_right_pub = rospy.Publisher('angle_wing_3_ref_value', Float32, queue_size=1)
-        self.wing_all_pub = rospy.Publisher('wing_all/command', Float64MultiArray, queue_size=1)
+        ####################################################################
+        # This is commented because this node doesn't have horizontal control
+        # and there is no need for publishing wing commands from this node
+        #self.wing_front_pub = rospy.Publisher('angle_wing_0_ref_value', Float32, queue_size=1)
+        #self.wing_left_pub = rospy.Publisher('angle_wing_1_ref_value', Float32, queue_size=1)
+        #self.wing_back_pub = rospy.Publisher('angle_wing_2_ref_value', Float32, queue_size=1)
+        #self.wing_right_pub = rospy.Publisher('angle_wing_3_ref_value', Float32, queue_size=1)
+        #self.wing_all_pub = rospy.Publisher('wing_all/command', Float64MultiArray, queue_size=1)
 
         # Subscribers to height and attitude controllers
         rospy.Subscriber('attitude_command', Float64MultiArray, 
@@ -66,10 +69,6 @@ class MergeControllerOutputs:
             mot3 = self.mot_vel_ref + self.yaw_command + self.vpc_pitch_command
             mot4 = self.mot_vel_ref - self.yaw_command - self.vpc_roll_command
 
-            wing_front = -0.25# - self.pitch_command #-0.25 - self.pitch_command # mm1
-            wing_back = 0.25# - self.pitch_command #-0.25 + self.pitch_command # mm3
-            wing_left = -0.25# + self.roll_command #0.25 - self.roll_command # mm2
-            wing_right = 0.25# + self.roll_command #0.25 + self.roll_command # mm4
 
             # Publish everything
             mot_speed_msg = Actuators()
@@ -77,6 +76,11 @@ class MergeControllerOutputs:
             mot_speed_msg.angular_velocities = [mot1, mot2, mot3, mot4]
             self.mot_vel_pub.publish(mot_speed_msg)
 
+            """
+            ####################################################################
+            # This is commented because this node doesn't have horizontal control 
+            # and there is no need for publishing wing commands from this node
+            
             self.wing_front_pub.publish(Float32(wing_front))
             self.wing_back_pub.publish(Float32(wing_back))
             self.wing_left_pub.publish(Float32(wing_left))
@@ -84,7 +88,7 @@ class MergeControllerOutputs:
             all_wing_msg = Float64MultiArray()
             all_wing_msg.data = [wing_front, wing_left, wing_back, wing_right]
             self.wing_all_pub.publish(all_wing_msg)
-
+            """
 
     def attitude_command_cb(self, msg):
         try:

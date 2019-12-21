@@ -37,11 +37,16 @@
   <xacro:property name="fluid_density" value="1.2041" />  <!-- air -->
   <xacro:property name="distance_antitorque_flap" value="0.08" /> <!-- [m] distance from centre of gravity of rotor, force*distance=moment-->
   <xacro:property name="distance_control_flap" value="0.1" /> <!-- [m] -->
-  <xacro:property name="thrust_coefficient" value="8.54858e-06" />  <!-- motor_constant Kf-->
+
+  <xacro:property name="thrust_coefficient" value="4.5e-05" />  <!-- motor_constant Kf-->
+  <!--xacro:property name="thrust_coefficient" value="8.54858e-06" /-->  <!-- motor_constant Kf-->
   <xacro:property name="torque_coefficient" value="0.016" /> <!-- moment_constant Kt-->
+  <!--xacro:property name="torque_coefficient" value="0.016" /--> <!-- moment_constant Kt-->
+  <!--xacro:property name="slip_velocity_coefficient" value="2.7e-02" /--> <!-- Kv -->
   <xacro:property name="slip_velocity_coefficient" value="2.7e-02" /> <!-- Kv -->
   
   <xacro:property name="lift_coefficient_control_flap" value="8.5e-02" />  <!-- Clc -->
+  <!--xacro:property name="lift_coefficient_control_flap" value="8.5e-02" /-->  <!-- Clc -->
   <xacro:property name="drag_coefficient_control_flap" value="1.3e-01" />  <!-- Cdc -->
   <xacro:property name="lift_coefficient_antitorque_flap" value="3.4e-02" />  <!-- Cla -->
   <xacro:property name="drag_coefficient_antitorque_flap" value="1.3e-01" />  <!-- Cda -->

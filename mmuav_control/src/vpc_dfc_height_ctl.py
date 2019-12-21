@@ -18,15 +18,15 @@ class HeightControl:
     '''
     Class implements ROS node for cascade (z, vz) PID control for MAV height.
     Subscribes to:
-        /morus/pose       - used to extract z-position of the vehicle
-        /morus/velocity   - used to extract vz of the vehicle
-        /morus/pos_ref    - used to set the reference for z-position
-        /morus/vel_ref    - used to set the reference for vz-position (useful for testing velocity controller)
+        /dfcuav/pose       - used to extract z-position of the vehicle
+        /dfcuav/velocity   - used to extract vz of the vehicle
+        /dfcuav/pos_ref    - used to set the reference for z-position
+        /dfcuav/vel_ref    - used to set the reference for vz-position (useful for testing velocity controller)
 
     Publishes:
-        /morus/mot_vel_ref  - referent value for thrust in terms of motor velocity (rad/s)
-        /morus/pid_z        - publishes PID-z data - referent value, measured value, P, I, D and total component (useful for tuning params)
-        /morus/pid_vz        - publishes PID-vz data - referent value, measured value, P, I, D and total component (useful for tuning params)
+        /dfcuav/mot_vel_ref  - referent value for thrust in terms of motor velocity (rad/s)
+        /dfcuav/pid_z        - publishes PID-z data - referent value, measured value, P, I, D and total component (useful for tuning params)
+        /dfcuav/pid_vz        - publishes PID-vz data - referent value, measured value, P, I, D and total component (useful for tuning params)
 
     Dynamic reconfigure is used to set controller params online.
     '''
@@ -39,7 +39,7 @@ class HeightControl:
         self.start_flag = False         # indicates if we received the first measurement
         self.config_start = False       # flag indicates if the config callback is called for the first time
 
-        self.z_sp = 1.0                 # z-position set point
+        self.z_sp = 0.0                 # z-position set point
         self.z_ref_filt = 0             # z ref filtered
         self.z_mv = 0                   # z-position measured value
         self.pid_z = PID()              # pid instance for z control
@@ -51,23 +51,20 @@ class HeightControl:
         #########################################################
         #########################################################
         # Add parameters for z controller
-        self.pid_z.set_kp(100)
-        self.pid_z.set_ki(1)
-        self.pid_z.set_kd(100)
-
-        # Add parameters for vz controller
-        self.pid_vz.set_kp(1)#87.2)
-        self.pid_vz.set_ki(0.0)
-        self.pid_vz.set_kd(0)#10.89)
-        #########################################################
-        #########################################################
-
+        self.pid_z.set_kp(40)
+        self.pid_z.set_ki(30)
+        self.pid_z.set_kd(30)
 
         self.pid_z.set_lim_high(500)      # max vertical ascent speed
         self.pid_z.set_lim_low(-500)      # max vertical descent speed
 
-        self.pid_vz.set_lim_high(500)   # max velocity of a motor
-        self.pid_vz.set_lim_low(-500)   # min velocity of a motor
+        # Add parameters for vz controller
+        self.pid_vz.set_kp(10)
+        self.pid_vz.set_ki(0.0)
+        self.pid_vz.set_kd(0)
+
+        self.pid_vz.set_lim_high(700)   # max velocity of a motor
+        self.pid_vz.set_lim_low(-700)   # min velocity of a motor
 
         self.mot_speed = 0              # referent motors velocity, computed by PID cascade
 
@@ -124,7 +121,9 @@ class HeightControl:
 
             self.t_old = t
             #                              (m_uav + m_arms)/(C*4)
-            self.mot_speed_hover = math.sqrt(9.81*(8.083+0.208*4)/(8.54858e-06*4.0))
+            #self.mot_speed_hover = math.sqrt(9.81*(8.083+0.208*4)/(8.54858e-06*4.0))
+            self.mot_speed_hover = math.sqrt(9.81 * (2.889) / (4.5e-05 * 4.0))
+
             # prefilter for reference
             #a = 0.1
             #self.z_ref_filt = (1-a) * self.z_ref_filt  + a * self.z_sp

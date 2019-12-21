@@ -20,6 +20,11 @@
       <param name="rate" value="$(arg rate)"/>
     </node>
 
+	<!-- Horizontal control -->
+    <node name="vpc_dfc_horizontal_controller" pkg="mmuav_control" type="vpc_dfc_horizontal_ctl.py">
+      <param name="rate" value="$(arg rate)"/>
+    </node>
+
   </group>
 
 </launch>

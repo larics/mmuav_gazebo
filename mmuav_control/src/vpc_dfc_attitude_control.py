@@ -22,17 +22,17 @@ class AttitudeControl:
     Class implements MAV attitude control (roll, pitch, yaw). Two PIDs in cascade are
     used for each degree of freedom.
     Subscribes to:
-        /morus/imu                - used to extract attitude and attitude rate of the vehicle
-        /morus/mot_vel_ref        - used to receive referent motor velocity from the height controller
-        /morus/euler_ref          - used to set the attitude referent (useful for testing controllers)
+        /dfcuav/imu                - used to extract attitude and attitude rate of the vehicle
+        /dfcuav/mot_vel_ref        - used to receive referent motor velocity from the height controller
+        /dfcuav/euler_ref          - used to set the attitude referent (useful for testing controllers)
     Publishes:
-        /morus/command/motors     - referent motor velocities sent to each motor controller
-        /morus/pid_roll           - publishes PID-roll data - referent value, measured value, P, I, D and total component (useful for tuning params)
-        /morus/pid_roll_rate      - publishes PID-roll_rate data - referent value, measured value, P, I, D and total component (useful for tuning params)
-        /morus/pid_pitch          - publishes PID-pitch data - referent value, measured value, P, I, D and total component (useful for tuning params)
-        /morus/pid_pitch_rate     - publishes PID-pitch_rate data - referent value, measured value, P, I, D and total component (useful for tuning params)
-        /morus/pid_yaw            - publishes PID-yaw data - referent value, measured value, P, I, D and total component (useful for tuning params)
-        /morus/pid_yaw_rate       - publishes PID-yaw_rate data - referent value, measured value, P, I, D and total component (useful for tuning params)
+        /dfcuav/command/motors     - referent motor velocities sent to each motor controller
+        /dfcuav/pid_roll           - publishes PID-roll data - referent value, measured value, P, I, D and total component (useful for tuning params)
+        /dfcuav/pid_roll_rate      - publishes PID-roll_rate data - referent value, measured value, P, I, D and total component (useful for tuning params)
+        /dfcuav/pid_pitch          - publishes PID-pitch data - referent value, measured value, P, I, D and total component (useful for tuning params)
+        /dfcuav/pid_pitch_rate     - publishes PID-pitch_rate data - referent value, measured value, P, I, D and total component (useful for tuning params)
+        /dfcuav/pid_yaw            - publishes PID-yaw data - referent value, measured value, P, I, D and total component (useful for tuning params)
+        /dfcuav/pid_yaw_rate       - publishes PID-yaw_rate data - referent value, measured value, P, I, D and total component (useful for tuning params)
 
     Dynamic reconfigure is used to set controllers param online.
     '''
@@ -71,33 +71,49 @@ class AttitudeControl:
 
         ##################################################################
         ##################################################################
-        # Add your PID params here
+        # PID parameters for roll and pitch are equal, as well as roll rate and pitch rate
+        # because of UAV symmetry
+        roll_pitch_p = 10
+        roll_pitch_i = 0.5
+        roll_pitch_d = 2.0
 
-        self.pid_roll.set_kp(1.1)
-        self.pid_roll.set_ki(0.2)
-        self.pid_roll.set_kd(0.0)
+        roll_pitch_rate_p = 200
+        roll_pitch_rate_i = 100
+        roll_pitch_rate_d = 5
 
-        self.pid_roll_rate.set_kp(0.6)
-        self.pid_roll_rate.set_ki(0.4)
-        self.pid_roll_rate.set_kd(0)
-        self.pid_roll_rate.set_lim_high(0.25)
-        self.pid_roll_rate.set_lim_low(-0.25)
+        # PID parameters for roll control
+        self.pid_roll.set_kp(roll_pitch_p)
+        self.pid_roll.set_ki(roll_pitch_i)
+        self.pid_roll.set_kd(roll_pitch_d)
 
-        self.pid_pitch.set_kp(1.1)
-        self.pid_pitch.set_ki(0.2)
-        self.pid_pitch.set_kd(0.0)
+        # PID parameters for roll rate control
+        self.pid_roll_rate.set_kp(roll_pitch_rate_p)
+        self.pid_roll_rate.set_ki(roll_pitch_rate_i)
+        self.pid_roll_rate.set_kd(roll_pitch_rate_d)
 
-        self.pid_pitch_rate.set_kp(0.6)
-        self.pid_pitch_rate.set_ki(0.4)
-        self.pid_pitch_rate.set_kd(0.0)
-        self.pid_pitch_rate.set_lim_high(0.25)
-        self.pid_pitch_rate.set_lim_low(-0.25)
+        self.pid_roll_rate.set_lim_high(1450.0)
+        self.pid_roll_rate.set_lim_low(-1450.0)
 
-        self.pid_yaw.set_kp(1.0)
+        # PID parameters for pitch control
+        self.pid_pitch.set_kp(roll_pitch_p)
+        self.pid_pitch.set_ki(roll_pitch_i)
+        self.pid_pitch.set_kd(roll_pitch_d)
+
+        # PID parameters for pitch rate control
+        self.pid_pitch_rate.set_kp(roll_pitch_rate_p)
+        self.pid_pitch_rate.set_ki(roll_pitch_rate_i)
+        self.pid_pitch_rate.set_kd(roll_pitch_rate_d)
+
+        self.pid_pitch_rate.set_lim_high(1450.0)
+        self.pid_pitch_rate.set_lim_low(-1450.0)
+
+        # PID parameters for yaw control
+        self.pid_yaw.set_kp(0.0)
         self.pid_yaw.set_ki(0)
-        self.pid_yaw.set_kd(0.1)
+        self.pid_yaw.set_kd(0.0)
 
-        self.pid_yaw_rate.set_kp(200.0)
+        # PID parameters for yaw rate control
+        self.pid_yaw_rate.set_kp(0.0)
         self.pid_yaw_rate.set_ki(0)
         self.pid_yaw_rate.set_kd(0)
 
@@ -182,11 +198,11 @@ class AttitudeControl:
                 rospy.sleep(0.5)
             rospy.sleep(1.0/float(self.rate))
 
-            self.euler_sp_filt.x = simple_filters.filterPT1(self.euler_sp_old.x, 
-                self.euler_sp.x, self.roll_reference_prefilter_T, self.Ts, 
+            self.euler_sp_filt.x = simple_filters.filterPT1(self.euler_sp_old.x,
+                self.euler_sp.x, self.roll_reference_prefilter_T, self.Ts,
                 self.roll_reference_prefilter_K)
-            self.euler_sp_filt.y = simple_filters.filterPT1(self.euler_sp_old.y, 
-                self.euler_sp.y, self.pitch_reference_prefilter_T, self.Ts, 
+            self.euler_sp_filt.y = simple_filters.filterPT1(self.euler_sp_old.y,
+                self.euler_sp.y, self.pitch_reference_prefilter_T, self.Ts,
                 self.pitch_reference_prefilter_K)
             self.euler_sp_filt.z = self.euler_sp.z
             #self.euler_sp.z = simple_filters.filterPT1(self.euler_sp_old.z, self.euler_sp.z, 0.2, self.Ts, 1.0)
