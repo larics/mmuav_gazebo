@@ -15,6 +15,8 @@
   <arg name="manipulator_type" default="none" />
   <arg name="manipulator_tool" default="none" />
   <arg name="mount_magnet" default="false" />
+  <arg name="mount_magnet_with_disk" default="false" />
+  <arg name="magnet_dipole_moment_z" default="970" />
 
   <!-- send the robot XML to param server -->
   <param name="/$(arg name)/robot_description" command="
@@ -26,7 +28,9 @@
     name:=$(arg name)
     manipulator_type:=$(arg manipulator_type)
     manipulator_tool:=$(arg manipulator_tool)
-    mount_magnet:=$(arg mount_magnet)"
+    mount_magnet:=$(arg mount_magnet)
+    mount_magnet_with_disk:=$(arg mount_magnet_with_disk)
+    magnet_dipole_moment_z:=$(arg magnet_dipole_moment_z)"
   />
 
   <param name="tf_prefix" type="string" value="$(arg tf_prefix)" />
