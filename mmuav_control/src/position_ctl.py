@@ -70,7 +70,7 @@ class PositionControl:
         self.pos_sp = Point()
         self.pos_sp.x = rospy.get_param('~x', 0.0)
         self.pos_sp.y = rospy.get_param('~y', 0.0)
-        self.pos_sp.z = 1.0
+        self.pos_sp.z = rospy.get_param('~z', 0.0)
         self.pos_mv = Point()
         self.vel_mv = Vector3()
         self.orientation_mv = Quaternion()
