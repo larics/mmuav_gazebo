@@ -236,7 +236,7 @@ class PositionControl:
                         (self.pid_vz.compute(vz_ref + self.Kff_v*self.velocity_ff.z,
                         self.vel_mv.z, dt) + \
                         self.Kff_a*self.z_ff_scaler*self.acceleration_ff.z)) / \
-                        (cos(self.euler_mv.x)*cos(self.euler_mv.y))
+                        (cos(self.euler_mv.x*0)*cos(self.euler_mv.y*0))
             """(cos(0.0*self.euler_mv.x)*cos(0.0*self.euler_mv.y))"""
             #print 1/(cos(self.euler_mv.x)*cos(self.euler_mv.y))
 
