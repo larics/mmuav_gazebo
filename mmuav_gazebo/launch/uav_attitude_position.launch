@@ -20,12 +20,12 @@
   <arg name="y" default="0.0" />
   <arg name="z" default="0.0" />
 
-  <arg name="manipulator_type" default="none" />
+  <arg name="manipulator_type" default="magnet" />
   <arg name="manipulator_tool" default="rod" />
   <arg name="start_gazebo" default="true" />
   <arg name="mount_magnet" default="false" />
   <arg name="mount_magnet_with_disk" default="false" />
-  <arg name="magnet_dipole_moment_z" default="970" />
+  <arg name="magnet_dipole_moment_z" default="1" />
 
 
   <!-- Launch gazebo -->
