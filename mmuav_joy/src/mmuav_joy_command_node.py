@@ -21,6 +21,7 @@ class Commander():
         self.UAV_pose = PointStamped()
         self.pub = rospy.Publisher('euler_ref', Vector3, queue_size=1)
         self.pub2 = rospy.Publisher('pos_ref', Vector3, queue_size=1)
+        self.current_yaw = 0.0
         # Initialize message variables.
 
         # Create a subscriber for color msg
@@ -37,8 +38,10 @@ class Commander():
         cmd_roll_pitch_yaw = Vector3()
         cmd_roll_pitch_yaw.x=data.linear.x
         cmd_roll_pitch_yaw.y=data.linear.y
-        cmd_roll_pitch_yaw.z=data.angular.z
+        cmd_roll_pitch_yaw.z= self.current_yaw + data.angular.z
         self.pub.publish(cmd_roll_pitch_yaw)
+
+        self.current_yaw = cmd_roll_pitch_yaw.z
 
         cmd_position = Vector3()
         cmd_position.z = self.UAV_pose.point.z+10*data.linear.z #5ms for 20Hz

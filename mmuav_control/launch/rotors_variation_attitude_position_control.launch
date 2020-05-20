@@ -5,6 +5,7 @@
   <arg name="rate" default="100"/>
   <arg name="x" default="0.0"/>
   <arg name="y" default="0.0"/>
+  <arg name="z" default="0.0"/>
   <arg name="run_trajectory_node" default="true" />
 
   <group ns="$(arg namespace)">
@@ -19,6 +20,7 @@
       <param name="filename" value="UavPositionControl.yaml"/>
       <param name="x" value="$(arg x)"/>
       <param name="y" value="$(arg y)"/>
+      <param name="z" value="$(arg z)"/>
     </node>
 
     <!-- Merge position and attitude control node -->
