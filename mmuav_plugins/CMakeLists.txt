@@ -41,10 +41,14 @@ add_library(mmuav_gazebo_ductedfan_motor_model src/gazebo_ductedfan_motor_model.
 target_link_libraries(mmuav_gazebo_ductedfan_motor_model ${catkin_LIBRARIES} ${GAZEBO_LIBRARIES})
 add_dependencies(mmuav_gazebo_ductedfan_motor_model ${catkin_EXPORTED_TARGETS})
 
+add_library(mmuav_gazebo_gimbal src/gazebo_gimbal.cpp)
+target_link_libraries(mmuav_gazebo_gimbal ${catkin_LIBRARIES} ${GAZEBO_LIBRARIES})
+add_dependencies(mmuav_gazebo_gimbal ${catkin_EXPORTED_TARGETS})
+
 
 install(
   TARGETS
-    mmuav_gazebo_ductedfan_motor_model
+    mmuav_gazebo_ductedfan_motor_model mmuav_gazebo_gimbal
   DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
   LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
 )
