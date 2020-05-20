@@ -328,7 +328,7 @@
   reference to the parent link.
   @param *inertia Block argument defining camera inertia.
   -->
-  <xacro:macro name="cam" params="camera_link camera_mass parent *origin *inertia">
+  <xacro:macro name="cam" params="namespace camera_link camera_mass parent *origin *inertia">
 
     <!-- Camera link -->
     <link name="camera_box">
@@ -389,7 +389,7 @@
         <plugin name="camera_controller" filename="libgazebo_ros_camera.so">
           <alwaysOn>true</alwaysOn>
           <updateRate>0.0</updateRate>
-          <cameraName>mmuav/camera1</cameraName>
+          <cameraName>${namespace}/camera1</cameraName>
           <imageTopicName>image_raw</imageTopicName>
           <cameraInfoTopicName>camera_info</cameraInfoTopicName>
           <frameName>camera_box</frameName>
@@ -664,6 +664,159 @@
       <material>Gazebo/${color}</material>
     </gazebo>
   </xacro:macro>
+
+  <xacro:macro name="gimbal_macro" params="parent *origin">
+        <joint name="gimbal_position" type="fixed">
+            <xacro:insert_block name="origin"/>
+            <parent link="base_link"/>
+            <child link="gimbal_link_1"/>
+        </joint>
+        <gazebo reference="gimbal_position">
+            <preserveFixedJoint>true</preserveFixedJoint>
+        </gazebo>
+
+
+        <link name="gimbal_link_1">
+            <inertial>
+                <mass value="0.0001" />
+                <origin xyz="0 0 0" rpy="0 0 0" />
+                <inertia ixx="0.0001" ixy="0" ixz="0" iyy="0.0001" iyz="0" izz="0.0001" />
+            </inertial>
+<!--             <visual>
+                <geometry>
+                <box size="0.01 0.01 0.01" />
+                </geometry>
+            </visual> -->
+        </link>
+        <joint name="gimbal_roll_joint" type="continuous">
+            <parent link="gimbal_link_1" />
+            <child link="gimbal_link_2" />
+            <axis xyz="1 0 0" />
+            <dynamics damping="0.0" friction="0.0" />
+        </joint>
+
+
+        <link name="gimbal_link_2">
+            <inertial>
+                <mass value="0.0001" />
+                <origin xyz="0 0 0" rpy="0 0 0" />
+                <inertia ixx="0.0001" ixy="0" ixz="0" iyy="0.0001" iyz="0" izz="0.0001" />
+            </inertial>
+<!--             <visual>
+                <geometry>
+                <box size="0.01 0.01 0.01" />
+                </geometry>
+            </visual> -->
+        </link>
+        
+        <joint name="gimbal_pitch_joint" type="continuous">
+            <parent link="gimbal_link_2" />
+            <child link="gimbal_link_3" />
+            <axis xyz="0 1 0" />
+            <dynamics damping="0.0" friction="0.0" />
+        </joint>
+
+        <link name="gimbal_link_3">
+            <inertial>
+                <mass value="0.0001" />
+                <origin xyz="0 0 0" rpy="0 0 0" />
+                <inertia ixx="0.0001" ixy="0" ixz="0" iyy="0.0001" iyz="0" izz="0.0001" />
+            </inertial>
+ <!--            <visual>
+                <geometry>
+                <box size="0.01 0.01 0.01" />
+                </geometry>
+            </visual> -->
+        </link>
+        <joint name="gimbal_yaw_joint" type="continuous">
+            <parent link="gimbal_link_3" />
+            <child link="gimbal_link_4" />
+            <axis xyz="0 0 1" />
+            <dynamics damping="0.0" friction="0.0" />
+        </joint>
+        <link name="gimbal_link_4">
+            <inertial>
+                <mass value="0.0001" />
+                <origin xyz="0 0 0" rpy="0 0 ${-PI}" />
+                <inertia ixx="0.0001" ixy="0" ixz="0" iyy="0.0001" iyz="0" izz="0.0001" />
+            </inertial>
+<!--             <visual>
+                <geometry>
+                <box size="0.01 0.01 0.01" />
+                </geometry>
+            </visual> -->
+        </link>
+        <joint name="camera_joint" type="continuous">
+            <parent link="gimbal_link_4" />
+            <child link="camera_link" />
+            <axis xyz="0 0 1" />
+            <dynamics damping="0.0" friction="0.0" />
+        </joint>
+        <link name="camera_link">
+        </link>
+
+        <joint name="camera_optical_joint" type="fixed">
+            <origin xyz="0 0 0" rpy="${-PI/2} 0.0 ${-PI/2}" />
+            <parent link="camera_link" />
+            <child link="camera_optical_frame"/>
+        </joint>
+        <gazebo reference="camera_optical_joint">
+            <preserveFixedJoint>true</preserveFixedJoint>
+        </gazebo>
+        <link name="camera_optical_frame">
+        </link>
+        
+        <gazebo reference="gimbal_link_4">
+            <sensor type="camera" name="camera_camera_sensor">
+                <update_rate>30</update_rate>
+                <camera>
+                <!-- <pose>0.027 0 -0.027 0 1.57 0</pose> -->
+                <!-- <pose>0.027 0 -0.027 0 1.57 0</pose> -->
+                <pose>0.107 0 -0.127 0 0 0</pose>
+                <horizontal_fov>${94 * PI/180.0}</horizontal_fov>
+                <image>
+                    <format>R8G8B8</format>
+                    <width>640</width>
+                    <height>480</height>
+                </image>
+                <clip>
+                    <near>0.02</near>
+                    <far>300</far>
+                </clip>
+                </camera>
+
+                <plugin name="camera_controller" filename="libgazebo_ros_camera.so">
+                <cameraName>gimbal</cameraName>
+                <alwaysOn>true</alwaysOn>
+                <updateRate>10</updateRate>
+                
+                <imageTopicName>image_raw</imageTopicName>
+                <cameraInfoTopicName>camera_info</cameraInfoTopicName>
+                <frameName>camera_optical_frame</frameName>
+                </plugin>
+            </sensor>
+        </gazebo>
+
+        <gazebo>
+          <plugin name="gimbal_controller" filename="libmmuav_gazebo_gimbal.so"/>
+        </gazebo>
+
+        <xacro:transmisija
+          trans_number="g1"
+          joint_name="gimbal_roll_joint">
+        </xacro:transmisija>
+
+        <xacro:transmisija
+          trans_number="g2"
+          joint_name="gimbal_pitch_joint">
+        </xacro:transmisija>
+
+        <xacro:transmisija
+          trans_number="g3"
+          joint_name="gimbal_yaw_joint">
+        </xacro:transmisija>
+
+    </xacro:macro>
 
 
 </robot>
