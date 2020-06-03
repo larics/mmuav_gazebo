@@ -177,6 +177,17 @@
     <xacro:insert_block name="rotor_inertia" />
   </xacro:vertical_rotor>
 
+<!--
+  <xacro:cam 
+      namespace="$(arg name)"
+      parent="base_link" 
+      camera_link="0.01" 
+      camera_mass="0.01">
+      <origin xyz="0 0 -0.2" rpy="0 ${PI/2} ${-PI/4}"/>
+      <inertia ixx="0.001"  ixy="0.0"  ixz="0.0"
+               iyy="0.001"  iyz="0.0"  izz="0.001" />
+    </xacro:cam>
+-->
   <xacro:if value="${'wp_manipulator' == manipulator_type}">
 
     <!-- Try to include manipulator -->

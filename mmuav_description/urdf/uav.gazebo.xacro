@@ -146,4 +146,11 @@
     <origin xyz="0.0 0.0 0" rpy="0.0 0.0 0.0" />
   </xacro:odometry_plugin_macro>
 
+  <!-- mount gimbal -->
+  <!--<xacro:gimbal_macro parent="base_link">
+    <origin xyz="0.25 0 -0.05" rpy="0 0 0"/>
+  </xacro:gimbal_macro> -->
+
+  
+
 </robot>

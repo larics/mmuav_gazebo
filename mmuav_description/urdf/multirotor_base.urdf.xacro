@@ -328,7 +328,7 @@
   reference to the parent link.
   @param *inertia Block argument defining camera inertia.
   -->
-  <xacro:macro name="cam" params="camera_link camera_mass parent *origin *inertia">
+  <xacro:macro name="cam" params="namespace camera_link camera_mass parent *origin *inertia">
 
     <!-- Camera link -->
     <link name="camera_box">
@@ -389,7 +389,7 @@
         <plugin name="camera_controller" filename="libgazebo_ros_camera.so">
           <alwaysOn>true</alwaysOn>
           <updateRate>0.0</updateRate>
-          <cameraName>mmuav/camera1</cameraName>
+          <cameraName>${namespace}/camera1</cameraName>
           <imageTopicName>image_raw</imageTopicName>
           <cameraInfoTopicName>camera_info</cameraInfoTopicName>
           <frameName>camera_box</frameName>
@@ -688,10 +688,11 @@
                 </geometry>
             </visual> -->
         </link>
-        <joint name="gimbal_roll_joint" type="continuous">
+
+        <joint name="gimbal_yaw_joint" type="continuous">
             <parent link="gimbal_link_1" />
             <child link="gimbal_link_2" />
-            <axis xyz="1 0 0" />
+            <axis xyz="0 0 1" />
             <dynamics damping="0.0" friction="0.0" />
         </joint>
 
@@ -728,10 +729,11 @@
                 </geometry>
             </visual> -->
         </link>
-        <joint name="gimbal_yaw_joint" type="continuous">
+
+        <joint name="gimbal_roll_joint" type="continuous">
             <parent link="gimbal_link_3" />
             <child link="gimbal_link_4" />
-            <axis xyz="0 0 1" />
+            <axis xyz="1 0 0" />
             <dynamics damping="0.0" friction="0.0" />
         </joint>
         <link name="gimbal_link_4">
@@ -817,6 +819,5 @@
         </xacro:transmisija>
 
     </xacro:macro>
-
 
 </robot>
