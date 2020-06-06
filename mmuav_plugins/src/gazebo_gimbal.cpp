@@ -1,8 +1,5 @@
-<<<<<<< HEAD
-=======
 #define _USE_MATH_DEFINES
 #include <cmath>
->>>>>>> mbzirc-test
 #include "mmuav_plugins/gazebo_gimbal.h"
 
 namespace gazebo {
@@ -13,8 +10,6 @@ namespace gazebo {
     YAW,
 };
 
-<<<<<<< HEAD
-=======
 // double roll(double x, double y, double z, double w) {
 //   double sinr_cosp = 2 * (w * x + y * z);
 //   double cosr_cosp = 1 - 2 * (x * x + y * y);
@@ -34,9 +29,6 @@ namespace gazebo {
 //   double cosy_cosp = 1 - 2 * (y * y + z * z);
 //   return std::atan2(siny_cosp, cosy_cosp);
 // }
-
-
->>>>>>> mbzirc-test
 
   GazeboGimbal::GazeboGimbal() {}
 

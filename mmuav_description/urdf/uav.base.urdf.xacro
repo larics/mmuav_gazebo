@@ -241,6 +241,29 @@
       </xacro:cam>
     </xacro:if>
 
+    <!-- Enable the Joint Feedback -->
+    <gazebo reference="jointEndEffectorBase">
+      <stopCfm>0.08</stopCfm>
+      <stopErp>0.2</stopErp>
+      <implicitSpringDamper>true</implicitSpringDamper>
+      <provideFeedback>true</provideFeedback>
+    </gazebo>
+
+    <!-- The ft_sensor plugin  -->
+    <gazebo>
+      <plugin name="ft_sensor" filename="libgazebo_ros_ft_sensor.so">
+        <updateRate>1000.0</updateRate>
+        <robotNamespace>$(arg name)/wp_manipulator</robotNamespace>
+        <topicName>force_sensor/ft_sensor</topicName> 
+        <jointName>jointEndEffectorBase</jointName>
+        <noise>
+          <type>gaussian</type>
+          <mean>0.0</mean>
+          <stddev>0.0001</stddev> <!-- change this to simulate noise --> 
+        </noise>
+      </plugin>
+    </gazebo>
+
     <xacro:if value="${'rod' == manipulator_tool}">
       <!-- Rod link -->
       <link name="rod">
