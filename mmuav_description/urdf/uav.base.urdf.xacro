@@ -242,7 +242,7 @@
     </xacro:if>
 
     <!-- Enable the Joint Feedback -->
-    <gazebo reference="jointEndEffectorBase">
+    <gazebo reference="joint5">
       <stopCfm>0.08</stopCfm>
       <stopErp>0.2</stopErp>
       <implicitSpringDamper>true</implicitSpringDamper>
@@ -255,7 +255,7 @@
         <updateRate>1000.0</updateRate>
         <robotNamespace>$(arg name)/wp_manipulator</robotNamespace>
         <topicName>force_sensor/ft_sensor</topicName> 
-        <jointName>jointEndEffectorBase</jointName>
+        <jointName>joint5</jointName>
         <noise>
           <type>gaussian</type>
           <mean>0.0</mean>
