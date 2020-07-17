@@ -17,6 +17,9 @@
   <xacro:property name="enable_bag_plugin" value="false" />
   <xacro:property name="bag_file" value="uav.bag" />
 
+  <xacro:arg name="mount_velodyne" default="false" />
+  <xacro:property name="mount_velodyne" value="$(arg mount_velodyne)" />
+
   <xacro:arg name="mount_magnet" default="false" />
   <xacro:property name="mount_magnet" value="$(arg mount_magnet)" />
 
@@ -45,6 +48,10 @@
     <limit upper="0" lower="0" effort="0" velocity="0" />
   </joint>
 
+  <xacro:property name="horizontal_velodyne_origin">
+    <origin xyz="0 0 -0.025" rpy="3.141592653589793 0.1323284641020683 0." />
+  </xacro:property>
+
   <!-- Mount an IMU -->
   <gazebo>
     <!-- IMU -->
@@ -69,6 +76,14 @@
       <rpyOffsets>0.0 0.0 0.0</rpyOffsets> <!-- (Vector3): if non-zero, used to calculate accelOffset and headingOffset so that resulting roll, pitch and yaw errors correspond to this values when the platform is leveled (for compatibility with gazebo_plugins) -->
     </plugin>
   </gazebo>
+
+  <xacro:if value="${mount_velodyne}">
+    <xacro:include filename="$(find velodyne_description)/urdf/VU-8.urdf.xacro"/>
+    <VU-8 parent="base_link" name="velodyne" topic="$(arg name)/velodyne_points" hz="10" samples="440" gpu="false"
+            min_range="1" lasers="16">
+        <xacro:insert_block name="horizontal_velodyne_origin"/>
+    </VU-8>
+  </xacro:if>
 
   <xacro:if value="${mount_magnet}">
     <xacro:if value="${mount_magnet_with_disk}">

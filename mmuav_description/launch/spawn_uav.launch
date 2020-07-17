@@ -17,6 +17,7 @@
   <arg name="mount_magnet" default="false" />
   <arg name="mount_magnet_with_disk" default="false" />
   <arg name="magnet_dipole_moment_z" default="970" />
+  <arg name="mount_velodyne" default="false" />
 
 
   <!-- send the robot XML to param server -->
@@ -31,7 +32,8 @@
     manipulator_tool:=$(arg manipulator_tool)
     mount_magnet:=$(arg mount_magnet)
     mount_magnet_with_disk:=$(arg mount_magnet_with_disk)
-    magnet_dipole_moment_z:=$(arg magnet_dipole_moment_z)"
+    magnet_dipole_moment_z:=$(arg magnet_dipole_moment_z)
+    mount_velodyne:=$(arg mount_velodyne)"
   />
 
   <param name="tf_prefix" type="string" value="$(arg tf_prefix)" />
