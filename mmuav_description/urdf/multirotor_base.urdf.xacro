@@ -482,7 +482,7 @@
           <depthImageTopicName>/${namespace}/camera/depth/image_raw</depthImageTopicName>
           <depthImageCameraInfoTopicName>/${namespace}/camera/depth/camera_info</depthImageCameraInfoTopicName>
           <pointCloudTopicName>/${namespace}/camera/depth_registered/points</pointCloudTopicName>
-          <frameName>camera_box</frameName>
+          <frameName>${namespace}/camera</frameName>
           <pointCloudCutoff>0.3</pointCloudCutoff>
           <pointCloudCutoffMax>10.0</pointCloudCutoffMax>
           <distortionK1>0</distortionK1>
