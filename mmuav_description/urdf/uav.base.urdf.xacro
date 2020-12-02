@@ -264,7 +264,7 @@
       </plugin>
     </gazebo>
 
-    <xacro:if value="${'rod' == manipulator_tool}">
+    <xacro:if value="${'rod' == manipulator_tool or 'rod_with_camera' == manipulator_tool}">
       <!-- Rod link -->
       <link name="rod">
 
@@ -307,6 +307,29 @@
         <parent link="end_effector_base"/>
         <child link="rod"/>
       </joint>
+
+      <!-- Add camera only if requested -->
+      <xacro:if value="${'rod_with_camera' == manipulator_tool}">
+        <xacro:property name="rod_camera_link" value="0.02" />
+        <xacro:property name="rod_camera_inertia">
+          <inertia
+          ixx="1e-8"
+          iyy="1e-8"
+          izz="1e-8"
+          ixy="0.0" ixz="0.0" iyz="0.0" />
+        </xacro:property>
+        <xacro:property name="rod_camera_mass" value="1e-5"/>
+
+        <xacro:cam
+          namespace="$(arg name)"
+          camera_name="rod_camera"
+          camera_link="${rod_camera_link}"
+          camera_mass="${rod_camera_mass}"
+          parent="rod">
+          <origin xyz="0.3 0 0" rpy="${PI} 0 0"/>
+          <xacro:insert_block name="rod_camera_inertia"/>
+        </xacro:cam>
+      </xacro:if>
 
     </xacro:if>
 

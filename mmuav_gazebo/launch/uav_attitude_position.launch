@@ -21,7 +21,7 @@
   <arg name="z" default="0.0" />
 
   <arg name="manipulator_type" default="magnet" />
-  <arg name="manipulator_tool" default="rod" />
+  <arg name="manipulator_tool" default="rod_with_camera" />
   <arg name="start_gazebo" default="true" />
   <arg name="mount_magnet" default="false" />
   <arg name="mount_magnet_with_disk" default="false" />
