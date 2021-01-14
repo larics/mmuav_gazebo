@@ -301,6 +301,10 @@
 
       </link>
 
+      <gazebo reference="rod">
+        <material>Gazebo/Red</material>
+      </gazebo>
+
       <!-- Rod joint with reference to the parent link -->
       <joint name="rod_joint" type="fixed">
         <origin xyz="0 0 0" rpy="0 0 0" />
