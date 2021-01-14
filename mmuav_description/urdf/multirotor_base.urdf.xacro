@@ -406,6 +406,102 @@
 
   </xacro:macro>
 
+  <!-- Stereo tCamera macro. Adds a box representing a camera below the UAV
+  @param camera_link Length of the camera box
+  @param camera_mass Mass of the camera 
+  @param parent Parent link on which the camera will be fixed
+  @param *origin Block argument defining the origin of the camera with 
+  reference to the parent link.
+  @param *inertia Block argument defining camera inertia.
+  -->
+  <xacro:macro name="stereo_cam" params="namespace camera_link camera_mass parent *origin *inertia">
+
+    <!-- Camera link -->
+    <link name="camera_box">
+
+      <!--collision>
+        <origin xyz="0 0 0" rpy="0 0 0"/>
+        <geometry>
+          <box size="${camera_link} ${camera_link} ${camera_link}"/>
+        </geometry>
+      </collision-->
+
+      <visual>
+        <origin xyz="0 0 0" rpy="0 1.57 0"/>
+        <geometry>
+          <!--box size="${camera_link} ${camera_link} ${camera_link}"/-->
+          <mesh filename="package://mmuav_description/meshes/asus_xtion_pro_camera.dae" scale="1 1 1" />
+        </geometry>
+      </visual>
+
+      <inertial>
+        <mass value="${camera_mass}" />
+        <xacro:insert_block name="inertia"/>
+      </inertial>
+    </link>
+
+    <!-- Camera joint with reference to the parent link -->
+    <joint name="camera_joint" type="fixed">
+      <xacro:insert_block name="origin"/>
+      <parent link="${parent}"/>
+      <child link="camera_box"/>
+    </joint>
+
+    <!-- camera -->
+    <gazebo reference="camera_box">
+      <sensor type="depth" name="camera">
+        <update_rate>30.0</update_rate>
+        
+        <camera name="head">
+          <horizontal_fov>1.3962634</horizontal_fov>
+          <image>
+            <width>640</width>
+            <height>480</height>
+            <format>R8G8B8</format>
+          </image>
+          <clip>
+            <near>0.02</near>
+            <far>300</far>
+          </clip>
+          <noise>
+            <type>gaussian</type>
+            <mean>0.0</mean>
+            <stddev>0.007</stddev>
+          </noise>
+        </camera>
+
+        <plugin name="camera_plugin" filename="libgazebo_ros_openni_kinect.so">
+          <baseline>0.2</baseline>
+          <alwaysOn>true</alwaysOn>
+          <!-- Keep this zero, update_rate in the parent <sensor> tag
+            will control the frame rate. -->
+          <updateRate>0.0</updateRate>
+          <cameraName>${namespace}/camera_ir</cameraName>
+          <imageTopicName>/${namespace}/camera/color/image_raw</imageTopicName>
+          <cameraInfoTopicName>/${namespace}/camera/color/camera_info</cameraInfoTopicName>
+          <depthImageTopicName>/${namespace}/camera/depth/image_raw</depthImageTopicName>
+          <depthImageCameraInfoTopicName>/${namespace}/camera/depth/camera_info</depthImageCameraInfoTopicName>
+          <pointCloudTopicName>/${namespace}/camera/depth_registered/points</pointCloudTopicName>
+          <frameName>${namespace}/camera</frameName>
+          <pointCloudCutoff>0.3</pointCloudCutoff>
+          <pointCloudCutoffMax>10.0</pointCloudCutoffMax>
+          <distortionK1>0</distortionK1>
+          <distortionK2>0</distortionK2>
+          <distortionK3>0</distortionK3>
+          <distortionT1>0</distortionT1>
+          <distortionT2>0</distortionT2>
+          <CxPrime>0</CxPrime>
+          <Cx>0</Cx>
+          <Cy>0</Cy>
+          <focalLength>0</focalLength>
+          <hackBaseline>0</hackBaseline>
+        </plugin>
+
+      </sensor>
+    </gazebo>
+
+  </xacro:macro>
+
   <xacro:macro name="manipulator"
   params="link_length link_width link_mass link_mesh_file parent suffix *axis *origin">
     <!--_____________________________________________________________-->
