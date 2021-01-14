@@ -32,6 +32,9 @@
   <xacro:arg name="mount_stereo_cam" default="false" />
   <xacro:property name="mount_stereo_cam" value="$(arg mount_stereo_cam)" />
 
+  <xacro:arg name="turn_off_all_collisions" default="false" />
+  <xacro:property name="turn_off_all_collisions" value="$(arg turn_off_all_collisions)" />
+
 	<xacro:property name="front_facing_camera">
 		<origin xyz="0.025 0 0.1" rpy="0 0 0"/>
 	</xacro:property>

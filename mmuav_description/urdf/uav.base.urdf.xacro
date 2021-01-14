@@ -6,6 +6,8 @@
   <xacro:property name="manipulator_type" value="$(arg manipulator_type)" />
   <xacro:arg name="manipulator_tool" default="none" />
   <xacro:property name="manipulator_tool" value="$(arg manipulator_tool)" />
+  <xacro:arg name="turn_off_all_collisions" default="false" />
+  <xacro:property name="turn_off_all_collisions" value="$(arg turn_off_all_collisions)" />
   <!-- Properties -->
   <xacro:property name="rotor_velocity_slowdown_sim" value="15" />
   <xacro:property name="mesh_file" value="3DR_Arducopter.dae" />
@@ -283,12 +285,14 @@
           <material name="red"/>
         </visual>
 
-        <collision>
-          <origin xyz="0.15 0 0" rpy="0 0 0"/>
-          <geometry>
-              <box size="0.3 0.01 0.01"/>
-          </geometry>
-        </collision> 
+        <xacro:unless value="${turn_off_all_collisions}">
+          <collision>
+            <origin xyz="0.15 0 0" rpy="0 0 0"/>
+            <geometry>
+                <box size="0.3 0.01 0.01"/>
+            </geometry>
+          </collision> 
+        </xacro:unless>
 
         <inertial>
           <mass value="0.00001" />
@@ -424,12 +428,14 @@
           <material name="red"/>
         </visual>
 
-        <collision>
-          <origin xyz="0.15 0 0" rpy="0 0 0"/>
-          <geometry>
-              <box size="0.3 0.01 0.01"/>
-          </geometry>
-        </collision> 
+        <xacro:unless value="${turn_off_all_collisions}">
+          <collision>
+            <origin xyz="0.15 0 0" rpy="0 0 0"/>
+            <geometry>
+                <box size="0.3 0.01 0.01"/>
+            </geometry>
+          </collision>
+        </xacro:unless>
 
         <inertial>
           <mass value="0.00001" />

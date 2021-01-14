@@ -26,6 +26,7 @@
   <arg name="mount_magnet" default="false" />
   <arg name="mount_magnet_with_disk" default="false" />
   <arg name="magnet_dipole_moment_z" default="1" />
+  <arg name="turn_off_all_collisions" default="false" />
 
 
   <!-- Launch gazebo -->
@@ -50,6 +51,7 @@
     <arg name="mount_magnet" value="$(arg mount_magnet)" />
     <arg name="mount_magnet_with_disk" value="$(arg mount_magnet_with_disk)" />
     <arg name="magnet_dipole_moment_z" value="$(arg magnet_dipole_moment_z)" />
+    <arg name="turn_off_all_collisions" default="$(arg turn_off_all_collisions)" />
   </include>
 
   <!-- Start attitude height control -->
@@ -67,7 +69,7 @@
       <arg name="velocity_control_file" default="$(find mmuav_control)/config/wp_manipulator_velocity_control.yaml"/>
     </include>
 
-    <node name="joint_trajectory_to_uav_and_manipulator" pkg="mmuav_control" type="joint_trajectory_to_uav_and_wp_manipulator_reference.py" ns="uav"/>
+    <node name="joint_trajectory_to_uav_and_manipulator" pkg="mmuav_control" type="joint_trajectory_to_uav_and_wp_manipulator_reference.py" ns="$(arg name)"/>
   </group>
 
 </launch>

@@ -19,6 +19,7 @@
   <arg name="magnet_dipole_moment_z" default="970" />
   <arg name="mount_velodyne" default="false" />
   <arg name="mount_stereo_cam" default="false" />
+  <arg name="turn_off_all_collisions" default="false" />
 
 
   <!-- send the robot XML to param server -->
@@ -35,7 +36,8 @@
     mount_magnet_with_disk:=$(arg mount_magnet_with_disk)
     magnet_dipole_moment_z:=$(arg magnet_dipole_moment_z)
     mount_velodyne:=$(arg mount_velodyne)
-    mount_stereo_cam:=$(arg mount_stereo_cam)"
+    mount_stereo_cam:=$(arg mount_stereo_cam)
+    turn_off_all_collisions:=$(arg turn_off_all_collisions)"
   />
 
   <param name="tf_prefix" type="string" value="$(arg tf_prefix)" />

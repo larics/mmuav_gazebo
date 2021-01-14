@@ -2,6 +2,9 @@
 
 <robot xmlns:xacro="http://ros.org/wiki/xacro">
   <!-- Main multirotor link -->
+  <xacro:arg name="turn_off_all_collisions" default="false" />
+  <xacro:property name="turn_off_all_collisions" value="$(arg turn_off_all_collisions)" />
+
   <xacro:macro name="multirotor_base_macro"
     params="robot_namespace mass body_width body_height mesh_file *origin *inertia">
     
@@ -27,14 +30,16 @@
         </geometry>
       </visual>
 
-      <collision>
-        <origin xyz="0 0 0" rpy="0 0 0" />
-        <geometry>
-          <mesh filename="package://mmuav_description/meshes/${mesh_file}"
-            scale="1 1 1" />
-          <!--box size="${body_width} ${body_width} ${body_height}" /-->
-        </geometry>
-      </collision>
+      <xacro:unless value="${turn_off_all_collisions}">
+        <collision>
+          <origin xyz="0 0 0" rpy="0 0 0" />
+          <geometry>
+            <mesh filename="package://mmuav_description/meshes/${mesh_file}"
+              scale="1 1 1" />
+            <!--box size="${body_width} ${body_width} ${body_height}" /-->
+          </geometry>
+        </collision>
+      </xacro:unless>
     </link>
 
     <!-- IMU -->
@@ -92,11 +97,14 @@
           <!-- <box size="${2*radius_rotor} 0.01 0.005"/> -->
         </geometry>
       </visual>
-      <collision>
-        <geometry>
-          <cylinder length="0.005" radius="${radius_rotor}" /> <!-- [m] -->
-        </geometry>
-      </collision>
+
+      <xacro:unless value="${turn_off_all_collisions}">
+        <collision>
+          <geometry>
+            <cylinder length="0.005" radius="${radius_rotor}" /> <!-- [m] -->
+          </geometry>
+        </collision>
+      </xacro:unless>
     </link>
     <gazebo>
       <plugin name="${suffix}_motor_model" filename="librotors_gazebo_motor_model.so">
@@ -150,11 +158,13 @@
           <!-- <box size="${2*radius_rotor} 0.01 0.005"/> -->
         </geometry>
       </visual>
-      <collision>
-        <geometry>
-          <cylinder length="0.005" radius="${radius_rotor}" /> <!-- [m] -->
-        </geometry>
-      </collision>
+      <xacro:unless value="${turn_off_all_collisions}">
+        <collision>
+          <geometry>
+            <cylinder length="0.005" radius="${radius_rotor}" /> <!-- [m] -->
+          </geometry>
+        </collision>
+      </xacro:unless>
     </link>
     <gazebo>
       <plugin name="${suffix}_motor_model" filename="libmmuav_gazebo_ductedfan_motor_model.so">
@@ -219,12 +229,14 @@
           <cylinder length="${length}" radius="${radius}" />
         </geometry>
       </visual>
-      <collision>
-        <origin rpy="0 0 0" xyz="0 0 ${length/2}"/>
-        <geometry>
-            <cylinder length="${length}" radius="${radius}" />
-        </geometry>
-      </collision> 
+      <xacro:unless value="${turn_off_all_collisions}">
+        <collision>
+          <origin rpy="0 0 0" xyz="0 0 ${length/2}"/>
+          <geometry>
+              <cylinder length="${length}" radius="${radius}" />
+          </geometry>
+        </collision>
+      </xacro:unless>
       <inertial>
           <origin rpy="0 0 0" xyz="0 0 ${length/2}"/>
           <mass value="${mass}" />
@@ -304,12 +316,14 @@
           <box size="0.01 0.01 0.0001"/>
         </geometry>
       </visual>
-      <collision>
-        <origin rpy="0 0 0" xyz="0 0 0"/>
-        <geometry>
-          <box size="${dim_x} ${dim_y} ${dim_z}"/>
-        </geometry>
-      </collision>
+      <xacro:unless value="${turn_off_all_collisions}">
+        <collision>
+          <origin rpy="0 0 0" xyz="0 0 0"/>
+          <geometry>
+            <box size="${dim_x} ${dim_y} ${dim_z}"/>
+          </geometry>
+        </collision>
+      </xacro:unless>
       <inertial>
          <origin rpy="0 0 0" xyz="0 0 0"/>
         <mass value="${mass}"/>
@@ -743,12 +757,14 @@
           <box size="${1*dimension} ${1*dimension} ${1*dimension}"/>
         </geometry>
       </visual>
-      <collision>
-        <origin rpy="0 0 0" xyz="0 0 ${0*dimension/2}"/>
-        <geometry>
-          <box size="${1*dimension} ${1*dimension} ${1*dimension}"/>
-        </geometry>
-      </collision>
+      <xacro:unless value="${turn_off_all_collisions}">
+        <collision>
+          <origin rpy="0 0 0" xyz="0 0 ${0*dimension/2}"/>
+          <geometry>
+            <box size="${1*dimension} ${1*dimension} ${1*dimension}"/>
+          </geometry>
+        </collision>
+      </xacro:unless>
       <inertial>
         <origin rpy="0 0 0" xyz="0 0 ${0*dimension/2}"/>
         <mass value="${mass}"/>
