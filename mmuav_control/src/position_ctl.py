@@ -184,9 +184,12 @@ class PositionControl:
         Runs ROS node - computes PID algorithms for z and vz control.
         '''
 
+        i = 0
         while not self.start_flag and not rospy.is_shutdown():
-            print 'Waiting for pose measurements.'
-            rospy.sleep(0.5)
+            if (i % 50) == 0:
+                print 'Waiting for pose measurements.'
+            i = i+1
+            rospy.sleep(0.01)
         print "Starting position control."
 
         self.t_old = rospy.Time.now()
@@ -196,7 +199,7 @@ class PositionControl:
 
             while not self.start_flag and not rospy.is_shutdown():
                 print 'Waiting for pose measurements.'
-                rospy.sleep(0.5)
+                rospy.sleep(0.01)
 
             #rospy.sleep(1.0/float(self.rate))
             self.ros_rate.sleep()
