@@ -35,6 +35,10 @@
   <xacro:arg name="turn_off_all_collisions" default="false" />
   <xacro:property name="turn_off_all_collisions" value="$(arg turn_off_all_collisions)" />
 
+  <xacro:arg name="manipulator_tool" default="none" />
+  <xacro:property name="manipulator_tool" value="$(arg manipulator_tool)" />
+
+
 	<xacro:property name="front_facing_camera">
 		<origin xyz="0.025 0 0.1" rpy="0 0 0"/>
 	</xacro:property>
@@ -184,6 +188,40 @@
     <inertia ixx="0.00001" ixy="0.0" ixz="0.0" iyy="0.00001" iyz="0.0" izz="0.00001" /> <!-- [kg m^2] [kg m^2] [kg m^2] [kg m^2] [kg m^2] [kg m^2] -->
     <origin xyz="0.0 0.0 0" rpy="0.0 0.0 0.0" />
   </xacro:odometry_plugin_macro>
+
+  <xacro:if value="${'rod_with_camera' == manipulator_tool}">
+    <xacro:odometry_plugin_macro
+    namespace="$(arg name)"
+    odometry_sensor_suffix="2"
+    child_frame_id="base"
+    parent_link="camera_box"
+    pose_topic="camera/pose"
+    velocity_relative_topic="camera/velocity_relative"
+    pose_with_covariance_topic="camera/pose_with_covariance"
+    position_topic="camera/position"
+    transform_topic="camera/transform"
+    odometry_topic="camera/odometry"
+    parent_frame_id="world"
+    mass_odometry_sensor="1e-5"
+    measurement_divisor="5"
+    measurement_delay="0"
+    unknown_delay="0.0"
+    noise_normal_position="0.0 0.0 0.0"
+    noise_normal_quaternion="0.0 0.0 0.0"
+    noise_normal_linear_velocity="0.0 0.0 0.0"
+    noise_normal_angular_velocity="0.0 0.0 0.0"
+    noise_uniform_position="0.0 0.0 0.0"
+    noise_uniform_quaternion="0.0 0.0 0.0"
+    noise_uniform_linear_velocity="0.0 0.0 0.0"
+    noise_uniform_angular_velocity="0.0 0.0 0.0"
+    enable_odometry_map="false"
+    odometry_map=""
+    image_scale="">
+    <inertia ixx="1e-6" ixy="0.0" ixz="0.0" iyy="1e-6" iyz="0.0" izz="1e-6" /> <!-- [kg m^2] [kg m^2] [kg m^2] [kg m^2] [kg m^2] [kg m^2] -->
+    <!-- This rotation is correction for blender. -->
+    <origin xyz="0.0 0.0 0" rpy="1.57 0.0 -1.57" />
+  </xacro:odometry_plugin_macro>
+  </xacro:if>
 
   <!-- mount gimbal -->
   <!--<xacro:gimbal_macro parent="base_link">
