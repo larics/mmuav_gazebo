@@ -374,7 +374,8 @@
     <!-- Try to include manipulator -->
     <xacro:include filename="$(find aerial_manipulators_description)/urdf/manipulator_base.urdf.xacro" />
     <xacro:wp_manipulator_3rx parent="base_link">
-      <origin xyz="0 0 0.2" rpy="${pi/2} 0 0"/>
+      <!--origin xyz="0 0 0.2" rpy="${pi/2} 0 0"/-->
+      <origin xyz="0 0 0.2" rpy="0 0 0"/>
     </xacro:wp_manipulator_3rx>
 
     <xacro:transmisija
