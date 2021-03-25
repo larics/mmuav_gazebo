@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 __author__ = 'aivanovic'
 
@@ -45,14 +45,14 @@ class MergeControllerOutputs:
 
     def run(self):
         while (not self.attitude_command_received_flag) and (not rospy.is_shutdown()):
-            print "Waiting for attitude controller to start"
+            print("Waiting for attitude controller to start")
             rospy.sleep(0.5)
-        print "Attitude control started."
+        print("Attitude control started.")
 
         while (not self.mot_vel_ref_received_flag) and (not rospy.is_shutdown()):
-            print "Waiting for height controller to start"
+            print("Waiting for height controller to start")
             rospy.sleep(0.5)
-        print "Height control started."
+        print("Height control started.")
 
         while not rospy.is_shutdown():
             self.ros_rate.sleep()
@@ -84,7 +84,7 @@ class MergeControllerOutputs:
             self.vpc_pitch_command = msg.data[4]
             self.attitude_command_received_flag = True
         except:
-            print "Not enough data. Length of data array: ", len(msg.data)
+            print("Not enough data. Length of data array: ", len(msg.data))
 
     def motor_velocity_ref_cb(self, msg):
         self.mot_vel_ref = msg.data

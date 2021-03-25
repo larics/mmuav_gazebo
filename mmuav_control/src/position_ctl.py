@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 __author__ = 'aivanovic'
 
@@ -48,12 +48,12 @@ class PositionControl:
         self.rate = rospy.get_param('~rate', 100)
         # 0 for simulation, 1 for optitrack
         self.feedback_source = rospy.get_param('~feedback', 0)
-        print self.feedback_source
+        print(self.feedback_source)
 
         # Load parameters from yaml file
         file_name = rospy.get_param('~filename', 'PositionControl.yaml')
         file_name = RosPack().get_path('mmuav_control') + '/config/' + file_name
-        initial_params = yaml.load(file(file_name, 'r'))
+        initial_params = yaml.load(open(file_name, 'r'), Loader=yaml.FullLoader)
 
         # (m_uav + m_other)/(C*4*cos(tilt_angle))
         self.g = 9.81
@@ -187,10 +187,10 @@ class PositionControl:
         i = 0
         while not self.start_flag and not rospy.is_shutdown():
             if (i % 50) == 0:
-                print 'Waiting for pose measurements.'
+                print('Waiting for pose measurements.')
             i = i+1
             rospy.sleep(0.01)
-        print "Starting position control."
+        print("Starting position control.")
 
         self.t_old = rospy.Time.now()
         #self.t_old = datetime.now()
@@ -198,7 +198,7 @@ class PositionControl:
         while not rospy.is_shutdown():
 
             while not self.start_flag and not rospy.is_shutdown():
-                print 'Waiting for pose measurements.'
+                print('Waiting for pose measurements.')
                 rospy.sleep(0.01)
 
             #rospy.sleep(1.0/float(self.rate))

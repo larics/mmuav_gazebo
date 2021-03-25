@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 import sys, os
 import rospy
 import copy
@@ -45,7 +45,7 @@ class SquareTrajectory():
 
         self.waypointArrayService(self.waypointArray)
         #print self.waypointArray
-        print "Service called"
+        print("Service called")
 
 
 if __name__=="__main__":

@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 import rospy
 import numpy as np
 import tf
@@ -328,7 +328,7 @@ class TrajectoryPlanner():
 
         self.keyframes=np.copy(keyframes)
 
-        print "Keyframes received, segments: ", self.segments
+        print("Keyframes received, segments: ", self.segments)
 
         """
         self.T=self.generate_T(self.keyframes)

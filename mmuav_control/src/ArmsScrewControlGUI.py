@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 import sys, os, copy
 #print os.path.abspath(__file__ + '/../../resources')
 #parentDir = os.path.abspath(__file__ + '/../../') # get parent directory
@@ -90,10 +90,10 @@ class ArmsControlGUI():
 		pass
 
 	def StartControlButtonCallback(self):
-		print "Start"
+		print("Start")
 
 	def PositionLockButtonCallback(self):
-		print "Lock"
+		print("Lock")
 
 	def LeftArmShoulderDialCallback(self):
 		self.ArmsAngles.x = float(self.window.LeftArmShoulderDial.value())
@@ -137,7 +137,7 @@ class ArmsControlGUI():
 		t0 = time.time()
 		q = arms_kinematics_screw.ik_both_arms(self.armsQRight, self.armsQLeft, 
 			arms_pos, L1, L2, L3)
-		print "ik time: ", time.time() - t0
+		print("ik time: ", time.time() - t0)
 		self.armsQRight = copy.deepcopy(q[0])
 		self.armsQLeft = copy.deepcopy(q[1])
 		#print q
@@ -172,7 +172,7 @@ class ArmsControlGUI():
 		if self.armsPosition[1] < -0.03: self.armsPosition[1] = -0.03
 
 		self.armsPosition[1] = -self.armsPosition[1]
-		print self.armsPosition
+		print(self.armsPosition)
 
 
 		arms_pos = [self.armsPosition[0]*cos(-pi/4) - self.armsPosition[1]*sin(-pi/4), \

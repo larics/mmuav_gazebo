@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 __author__ = 'aivanovic'
 
@@ -150,7 +150,7 @@ class GripperControl:
         try: 
             (dq1R, dq2R, dq3R) = self.func(self.L1, self.L2, self.L3, q1, q2, q3, -dx_right_pitch, -dy_right_roll)
         except ZeroDivisionError:
-            print "ZeroDivisionError"
+            print("ZeroDivisionError")
             dq1R = 0
             dq2R = 0
             dq3R = 0
@@ -208,7 +208,7 @@ class GripperControl:
         try:
             (dq1L, dq2L, dq3L) = self.func(self.L1, self.L2, self.L3, q1, q2, q3, -dx_left_pitch, -dy_left_roll)
         except ZeroDivisionError:
-            print "ZeroDivisionError"
+            print("ZeroDivisionError")
             dq2L = 0
             dq1L = 0
             dq3L = 0

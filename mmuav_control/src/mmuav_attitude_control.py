@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 __author__ = 'thaus'
 
@@ -157,14 +157,14 @@ class AttitudeControl:
         '''
 
         while (rospy.get_time() == 0) and (not rospy.is_shutdown()):
-            print 'Waiting for clock server to start'
+            print('Waiting for clock server to start')
 
-        print 'Received first clock message'
+        print('Received first clock message')
 
         while (not self.start_flag) and (not rospy.is_shutdown()):
-            print "Waiting for the first measurement."
+            print("Waiting for the first measurement.")
             rospy.sleep(0.5)
-        print "Starting attitude control."
+        print("Starting attitude control.")
 
         self.t_old = rospy.Time.now()
         clock_old = self.clock

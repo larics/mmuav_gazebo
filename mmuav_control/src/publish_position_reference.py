@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 import sys, os
 import rospy
 import copy
@@ -42,7 +42,7 @@ class PublishReference():
     def trajectory_callback(self, msg):
         trajectory = msg
 
-        print "Trajectory received, length:", len(trajectory.points)
+        print("Trajectory received, length:", len(trajectory.points))
         rate = rospy.Rate(100)
         position_ref = Vector3()
         for i in range(len(trajectory.points)):

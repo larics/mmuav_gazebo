@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 __author__ = 'thaus'
 
@@ -94,9 +94,9 @@ class HeightControl:
         '''
 
         while not self.start_flag and not rospy.is_shutdown():
-            print 'Waiting for pose measurements.'
+            print('Waiting for pose measurements.')
             rospy.sleep(0.5)
-        print "Starting height control."
+        print("Starting height control.")
 
         self.t_old = rospy.Time.now()
         #self.t_old = datetime.now()

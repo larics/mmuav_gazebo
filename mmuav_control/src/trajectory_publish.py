@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 import rospy
 from trajectory_msgs.msg import MultiDOFJointTrajectory
 from trajectory_msgs.msg import MultiDOFJointTrajectoryPoint
@@ -74,7 +74,7 @@ if __name__== '__main__':
 
 
     try:
-        print "generating trajectory"
+        print("generating trajectory")
         rospy.sleep(5)
         generate=reference_gen()
         file_name = RosPack().get_path('mmuav_control') + '/resources/4seg.txt'
