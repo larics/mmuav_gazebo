@@ -8,6 +8,8 @@
   <xacro:property name="manipulator_tool" value="$(arg manipulator_tool)" />
   <xacro:arg name="turn_off_all_collisions" default="false" />
   <xacro:property name="turn_off_all_collisions" value="$(arg turn_off_all_collisions)" />
+  <xacro:arg name="collision_bitmask" default="-1" />
+  <xacro:property name="collision_bitmask" value="$(arg collision_bitmask)" />
   <!-- Properties -->
   <xacro:property name="rotor_velocity_slowdown_sim" value="15" />
   <xacro:property name="mesh_file" value="3DR_Arducopter.dae" />
@@ -268,6 +270,15 @@
 
     <xacro:if value="${'rod' == manipulator_tool or 'rod_with_camera' == manipulator_tool or 'rod_with_kinect' == manipulator_tool}">
       <!-- Rod link -->
+      <gazebo reference="rod">
+        <collision>
+          <surface>
+            <contact>
+              <collide_bitmask>${collision_bitmask}</collide_bitmask>
+            </contact>
+          </surface>
+        </collision>
+      </gazebo>
       <link name="rod">
 
         <!--collision>
@@ -307,6 +318,8 @@
 
       <gazebo reference="rod">
         <material>Gazebo/Red</material>
+        <mu1>10.8</mu1>
+        <mu2>10.8</mu2>
       </gazebo>
 
       <!-- Rod joint with reference to the parent link -->
@@ -437,6 +450,15 @@
     </gazebo>
 
     <xacro:if value="${'rod' == manipulator_tool}">
+      <gazebo reference="rod">
+        <collision>
+          <surface>
+            <contact>
+              <collide_bitmask>${collision_bitmask}</collide_bitmask>
+            </contact>
+          </surface>
+        </collision>
+      </gazebo>
       <!-- Rod link -->
       <link name="rod">
 

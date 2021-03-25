@@ -27,6 +27,7 @@
   <arg name="mount_magnet_with_disk" default="false" />
   <arg name="magnet_dipole_moment_z" default="1" />
   <arg name="turn_off_all_collisions" default="false" />
+  <arg name="collision_bitmask" default="-1" />
 
 
   <!-- Launch gazebo -->
@@ -52,6 +53,7 @@
     <arg name="mount_magnet_with_disk" value="$(arg mount_magnet_with_disk)" />
     <arg name="magnet_dipole_moment_z" value="$(arg magnet_dipole_moment_z)" />
     <arg name="turn_off_all_collisions" default="$(arg turn_off_all_collisions)" />
+    <arg name="collision_bitmask" default="$(arg collision_bitmask)" />
   </include>
 
   <!-- Start attitude height control -->

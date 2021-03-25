@@ -38,6 +38,9 @@
   <xacro:arg name="manipulator_tool" default="none" />
   <xacro:property name="manipulator_tool" value="$(arg manipulator_tool)" />
 
+  <xacro:arg name="collision_bitmask" default="-1" />
+  <xacro:property name="collision_bitmask" value="$(arg collision_bitmask)" />
+
 
 	<xacro:property name="front_facing_camera">
 		<origin xyz="0.025 0 0.1" rpy="0 0 0"/>
@@ -62,6 +65,15 @@
   <xacro:include filename="$(find rotors_description)/urdf/component_snippets.xacro" />
 
   <!-- Create link and joint for a sensor -->
+  <gazebo reference="pose_sensor1_link">
+    <collision>
+      <surface>
+        <contact>
+          <collide_bitmask>${collision_bitmask}</collide_bitmask>
+        </contact>
+      </surface>
+    </collision>
+  </gazebo>
   <link name="pose_sensor1_link">
     <inertial>
       <inertia ixx="0.00001" ixy="0.0" ixz="0.0" iyy="0.00001" iyz="0.0"
@@ -122,6 +134,15 @@
         <child link="electromagnet_actuator"/>
       </joint>
 
+      <gazebo reference="electromagnet_actuator">
+        <collision>
+          <surface>
+            <contact>
+              <collide_bitmask>${collision_bitmask}</collide_bitmask>
+            </contact>
+          </surface>
+        </collision>
+      </gazebo>
       <link name="electromagnet_actuator">
         <inertial>
         <origin xyz="0 0 0" rpy="0 0 0" />
@@ -238,5 +259,15 @@
       <xacro:insert_block name="camera_inertia"/>
     </xacro:stereo_cam>
   </xacro:if>
+
+  <!--gazebo reference="rod">
+    <collision>
+      <surface>
+        <contact>
+          <collide_bitmask>0x01</collide_bitmask>
+        </contact>
+      </surface>
+    </collision>
+  </gazebo-->
 
 </robot>

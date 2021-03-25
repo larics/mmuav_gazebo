@@ -5,15 +5,36 @@
   <xacro:arg name="turn_off_all_collisions" default="false" />
   <xacro:property name="turn_off_all_collisions" value="$(arg turn_off_all_collisions)" />
 
+  <xacro:arg name="collision_bitmask" default="-1" />
+  <xacro:property name="collision_bitmask" value="$(arg collision_bitmask)" />
+
   <xacro:macro name="multirotor_base_macro"
     params="robot_namespace mass body_width body_height mesh_file *origin *inertia">
     
+    <gazebo reference="base_link">
+      <collision>
+        <surface>
+          <contact>
+            <collide_bitmask>${collision_bitmask}</collide_bitmask>
+          </contact>
+        </surface>
+      </collision>
+    </gazebo>
     <link name="base_link"></link>
     <joint name="base_joint" type="fixed">
       <xacro:insert_block name="origin"/>
       <parent link="base_link" />
       <child link="base_link_inertia" />
     </joint>
+    <gazebo reference="base_link_inertia">
+      <collision>
+        <surface>
+          <contact>
+            <collide_bitmask>${collision_bitmask}</collide_bitmask>
+          </contact>
+        </surface>
+      </collision>
+    </gazebo>
     <link name="base_link_inertia">
       <inertial>
         <mass value="${mass}" />  <!-- [kg] -->
@@ -43,6 +64,15 @@
     </link>
 
     <!-- IMU -->
+    <gazebo reference="imu_link">
+      <collision>
+        <surface>
+          <contact>
+            <collide_bitmask>${collision_bitmask}</collide_bitmask>
+          </contact>
+        </surface>
+      </collision>
+    </gazebo>
     <link name="imu_link">
       <inertial>
         <inertia ixx="0.00001" ixy="0.0" ixz="0.0" iyy="0.00001" iyz="0.0"
@@ -84,6 +114,15 @@
     <!-- TODO(ff): not currently set because it's not yet supported -->
     <!-- <gazebo reference="rotor_${motor_number}_joint"> <axis> <xyz>0 0 1</xyz> 
       <limit> <velocity> ${max_rot_velocity} </velocity> </limit> </axis> </gazebo> -->
+    <gazebo reference="rotor_${motor_number}">
+      <collision>
+        <surface>
+          <contact>
+            <collide_bitmask>${collision_bitmask}</collide_bitmask>
+          </contact>
+        </surface>
+      </collision>
+    </gazebo>
     <link name="rotor_${motor_number}">
       <inertial>
         <mass value="${mass_rotor}" /> <!-- [kg] -->
@@ -145,6 +184,15 @@
     <!-- TODO(ff): not currently set because it's not yet supported -->
     <!-- <gazebo reference="rotor_${motor_number}_joint"> <axis> <xyz>0 0 1</xyz> 
       <limit> <velocity> ${max_rot_velocity} </velocity> </limit> </axis> </gazebo> -->
+    <gazebo reference="rotor_${motor_number}">
+      <collision>
+        <surface>
+          <contact>
+            <collide_bitmask>${collision_bitmask}</collide_bitmask>
+          </contact>
+        </surface>
+      </collision>
+    </gazebo>
     <link name="rotor_${motor_number}">
       <inertial>
         <mass value="${mass_rotor}" /> <!-- [kg] -->
@@ -222,6 +270,15 @@
       <child link="tilt_${motor_number}"/>
       <limit lower="-0.785398163" upper="0.785398163" effort="100000" velocity="3"/>
     </joint>
+    <gazebo reference="tilt_${motor_number}">
+      <collision>
+        <surface>
+          <contact>
+            <collide_bitmask>${collision_bitmask}</collide_bitmask>
+          </contact>
+        </surface>
+      </collision>
+    </gazebo>
     <link name="tilt_${motor_number}">
       <visual>
         <origin rpy="0 0 0" xyz="0 0 ${length/2}"/>
@@ -263,6 +320,15 @@
       <limit lower="-0.785398163" upper="0.785398163" effort="10000" velocity="10"/>
     </joint>
 
+    <gazebo reference="wing_${wing_number}">
+      <collision>
+        <surface>
+          <contact>
+            <collide_bitmask>${collision_bitmask}</collide_bitmask>
+          </contact>
+        </surface>
+      </collision>
+    </gazebo>
     <link name="wing_${wing_number}">
       <visual>
         <origin rpy="0 0 0" xyz="0 0 0"/>
@@ -309,6 +375,15 @@
       <parent link="${parent}"/>
       <child link="land_gear_${gear_num}"/>
     </joint>
+    <gazebo reference="land_gear_${gear_num}">
+      <collision>
+        <surface>
+          <contact>
+            <collide_bitmask>${collision_bitmask}</collide_bitmask>
+          </contact>
+        </surface>
+      </collision>
+    </gazebo>
     <link name="land_gear_${gear_num}">
       <visual>
         <origin rpy="0 0 0" xyz="0 0 0"/>
@@ -345,6 +420,15 @@
   <xacro:macro name="cam" params="namespace camera_name camera_link camera_mass parent *origin *inertia">
 
     <!-- Camera link -->
+    <gazebo reference="camera_box">
+      <collision>
+        <surface>
+          <contact>
+            <collide_bitmask>${collision_bitmask}</collide_bitmask>
+          </contact>
+        </surface>
+      </collision>
+    </gazebo>
     <link name="camera_box">
 
       <!--collision>
@@ -383,10 +467,10 @@
         <update_rate>30.0</update_rate>
         
         <camera name="head">
-          <horizontal_fov>1.3962634</horizontal_fov>
+          <horizontal_fov>1.0</horizontal_fov>
           <image>
-            <width>1920</width>
-            <height>1080</height>
+            <width>640</width>
+            <height>480</height>
             <format>R8G8B8</format>
           </image>
           <clip>
@@ -431,6 +515,15 @@
   <xacro:macro name="stereo_cam" params="namespace camera_link camera_mass parent *origin *inertia">
 
     <!-- Camera link -->
+    <gazebo reference="camera_box">
+      <collision>
+        <surface>
+          <contact>
+            <collide_bitmask>${collision_bitmask}</collide_bitmask>
+          </contact>
+        </surface>
+      </collision>
+    </gazebo>
     <link name="camera_box">
 
       <!--collision>
@@ -469,8 +562,8 @@
         <camera name="head">
           <horizontal_fov>1.3962634</horizontal_fov>
           <image>
-            <width>640</width>
-            <height>480</height>
+            <width>1920</width>
+            <height>1080</height>
             <format>R8G8B8</format>
           </image>
           <clip>
@@ -521,6 +614,15 @@
     <!--_____________________________________________________________-->
     <!--LINK1 Dynamixel-->
     <!--_____________________________________________________________-->
+    <gazebo reference="dynamixel_1_${suffix}">
+      <collision>
+        <surface>
+          <contact>
+            <collide_bitmask>${collision_bitmask}</collide_bitmask>
+          </contact>
+        </surface>
+      </collision>
+    </gazebo>
     <link name='dynamixel_1_${suffix}'>
       
       <inertial>
@@ -553,6 +655,15 @@
     <!--_____________________________________________________________-->
     <!--LINK1 F3-->
     <!--_____________________________________________________________-->
+    <gazebo reference="link_F3_fixed_${suffix}">
+      <collision>
+        <surface>
+          <contact>
+            <collide_bitmask>${collision_bitmask}</collide_bitmask>
+          </contact>
+        </surface>
+      </collision>
+    </gazebo>
     <link name='link_F3_fixed_${suffix}'>
       
       <inertial>
@@ -576,6 +687,15 @@
     <!--_____________________________________________________________-->
     <!--LINK1 F4-->
     <!--_____________________________________________________________-->
+    <gazebo reference="link_F4_fixed_${suffix}">
+      <collision>
+        <surface>
+          <contact>
+            <collide_bitmask>${collision_bitmask}</collide_bitmask>
+          </contact>
+        </surface>
+      </collision>
+    </gazebo>
     <link name='link_F4_fixed_${suffix}'>
       
       <inertial>
@@ -599,6 +719,15 @@
     <!--_____________________________________________________________-->
     <!--LINK2 Dynamixel-->
     <!--_____________________________________________________________-->
+    <gazebo reference="dynamixel_2_${suffix}">
+      <collision>
+        <surface>
+          <contact>
+            <collide_bitmask>${collision_bitmask}</collide_bitmask>
+          </contact>
+        </surface>
+      </collision>
+    </gazebo>
     <link name='dynamixel_2_${suffix}'>
       
       <inertial>
@@ -631,6 +760,15 @@
     <!--_____________________________________________________________-->
     <!--GRIPPER PART1-->
     <!--_____________________________________________________________-->
+    <gazebo reference="link_gripper1_${suffix}">
+      <collision>
+        <surface>
+          <contact>
+            <collide_bitmask>${collision_bitmask}</collide_bitmask>
+          </contact>
+        </surface>
+      </collision>
+    </gazebo>
     <link name='link_gripper1_${suffix}'>
       
       <inertial>
@@ -654,6 +792,15 @@
     <!--_____________________________________________________________-->
     <!--GRIPPER PART2-->
     <!--_____________________________________________________________-->
+    <gazebo reference="link_gripper2_${suffix}">
+      <collision>
+        <surface>
+          <contact>
+            <collide_bitmask>${collision_bitmask}</collide_bitmask>
+          </contact>
+        </surface>
+      </collision>
+    </gazebo>
     <link name='link_gripper2_${suffix}'>
       
       <inertial>
@@ -750,6 +897,15 @@
       <limit lower="${-path_len/2}" upper="${path_len/2}" effort="10000" velocity="20"/>
       <dynamics damping="10" />
     </joint>
+    <gazebo reference="movable_mass_${mass_number}">
+      <collision>
+        <surface>
+          <contact>
+            <collide_bitmask>${collision_bitmask}</collide_bitmask>
+          </contact>
+        </surface>
+      </collision>
+    </gazebo>
     <link name="movable_mass_${mass_number}">
       <visual>
         <origin rpy="0 0 ${orientation}" xyz="0 0 ${0*dimension/2}"/>
@@ -787,7 +943,15 @@
             <preserveFixedJoint>true</preserveFixedJoint>
         </gazebo>
 
-
+        <gazebo reference="gimbal_link_1">
+          <collision>
+            <surface>
+              <contact>
+                <collide_bitmask>${collision_bitmask}</collide_bitmask>
+              </contact>
+            </surface>
+          </collision>
+        </gazebo>
         <link name="gimbal_link_1">
             <inertial>
                 <mass value="0.0001" />
@@ -808,7 +972,15 @@
             <dynamics damping="0.0" friction="0.0" />
         </joint>
 
-
+        <gazebo reference="gimbal_link_2">
+          <collision>
+            <surface>
+              <contact>
+                <collide_bitmask>${collision_bitmask}</collide_bitmask>
+              </contact>
+            </surface>
+          </collision>
+        </gazebo>
         <link name="gimbal_link_2">
             <inertial>
                 <mass value="0.0001" />
@@ -829,6 +1001,15 @@
             <dynamics damping="0.0" friction="0.0" />
         </joint>
 
+        <gazebo reference="gimbal_link_3">
+          <collision>
+            <surface>
+              <contact>
+                <collide_bitmask>${collision_bitmask}</collide_bitmask>
+              </contact>
+            </surface>
+          </collision>
+        </gazebo>
         <link name="gimbal_link_3">
             <inertial>
                 <mass value="0.0001" />
@@ -848,6 +1029,16 @@
             <axis xyz="1 0 0" />
             <dynamics damping="0.0" friction="0.0" />
         </joint>
+
+        <gazebo reference="gimbal_link_4">
+          <collision>
+            <surface>
+              <contact>
+                <collide_bitmask>${collision_bitmask}</collide_bitmask>
+              </contact>
+            </surface>
+          </collision>
+        </gazebo>
         <link name="gimbal_link_4">
             <inertial>
                 <mass value="0.0001" />
@@ -866,6 +1057,16 @@
             <axis xyz="0 0 1" />
             <dynamics damping="0.0" friction="0.0" />
         </joint>
+
+        <gazebo reference="camera_link">
+          <collision>
+            <surface>
+              <contact>
+                <collide_bitmask>${collision_bitmask}</collide_bitmask>
+              </contact>
+            </surface>
+          </collision>
+        </gazebo>
         <link name="camera_link">
         </link>
 
@@ -876,6 +1077,15 @@
         </joint>
         <gazebo reference="camera_optical_joint">
             <preserveFixedJoint>true</preserveFixedJoint>
+        </gazebo>
+        <gazebo reference="camera_optical_frame">
+          <collision>
+            <surface>
+              <contact>
+                <collide_bitmask>${collision_bitmask}</collide_bitmask>
+              </contact>
+            </surface>
+          </collision>
         </gazebo>
         <link name="camera_optical_frame">
         </link>
