@@ -19,9 +19,9 @@
   <arg name="x" default="0.0" />
   <arg name="y" default="0.0" />
   <arg name="z" default="0.0" />
-
-  <arg name="manipulator_type" default="magnet" />
-  <arg name="manipulator_tool" default="rod_with_camera" />
+  
+  <arg name="manipulator_type" default="none" />
+  <arg name="manipulator_tool" default="none" />
   <arg name="start_gazebo" default="true" />
   <arg name="mount_magnet" default="false" />
   <arg name="mount_magnet_with_disk" default="false" />
@@ -52,8 +52,8 @@
     <arg name="mount_magnet" value="$(arg mount_magnet)" />
     <arg name="mount_magnet_with_disk" value="$(arg mount_magnet_with_disk)" />
     <arg name="magnet_dipole_moment_z" value="$(arg magnet_dipole_moment_z)" />
-    <arg name="turn_off_all_collisions" default="$(arg turn_off_all_collisions)" />
-    <arg name="collision_bitmask" default="$(arg collision_bitmask)" />
+    <arg name="turn_off_all_collisions" value="$(arg turn_off_all_collisions)" />
+    <arg name="collision_bitmask" value="$(arg collision_bitmask)" />
   </include>
 
   <!-- Start attitude height control -->
