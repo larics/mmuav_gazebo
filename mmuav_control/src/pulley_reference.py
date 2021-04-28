@@ -22,7 +22,7 @@ class PulleyReference:
 
         rospy.Subscriber('start', Empty, self.start_callback)
 
-        print "Starting pulley control."
+        print("Starting pulley control.")
 
     def run(self):
         rospy.spin()

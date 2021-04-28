@@ -1,13 +1,13 @@
 #!/usr/bin/env python
 import sys, os, copy
-#print os.path.abspath(__file__ + '/../../resources')
+#print(os.path.abspath(__file__ + '/../../resources'))
 #parentDir = os.path.abspath(__file__ + '/../../') # get parent directory
 # abspath will get absolute path to file /blah/blah/file.py
 
 #sys.path.insert(0, os.path.abspath(parentDir + '/resources')) # from parent
 # directory get to resources
 
-#print sys.path.append(os.path.realpath('../resources'))
+#print(sys.path.append(os.path.realpath('../resources')))
 #from PyQt4.QtGui import QApplication, QDialog
 from PyQt4 import QtCore, QtGui, uic
 import rospy
@@ -90,10 +90,10 @@ class ArmsControlGUI():
 		pass
 
 	def StartControlButtonCallback(self):
-		print "Start"
+		print("Start")
 
 	def PositionLockButtonCallback(self):
-		print "Lock"
+		print("Lock")
 
 	def LeftArmShoulderDialCallback(self):
 		self.ArmsAngles.x = float(self.window.LeftArmShoulderDial.value())
@@ -137,17 +137,17 @@ class ArmsControlGUI():
 		t0 = time.time()
 		q = arms_kinematics_screw.ik_both_arms(self.armsQRight, self.armsQLeft, 
 			arms_pos, L1, L2, L3)
-		print "ik time: ", time.time() - t0
+		print("ik time: ", time.time() - t0)
 		self.armsQRight = copy.deepcopy(q[0])
 		self.armsQLeft = copy.deepcopy(q[1])
-		#print q
-		#print self.armsQRight, self.armsQLeft
+		#print(q)
+		#print(self.armsQRight, self.armsQLeft)
 
 		self.PublishData()
-		#print "Data"
-		#print self.armsPosition
-		#print self.armsQRight
-		#print self.armsQLeft
+		#print("Data")
+		#print(self.armsPosition)
+		#print(self.armsQRight)
+		#print(self.armsQLeft)
 
 	def PublishData(self):
 		self.JointRight1Pub.publish(Float64(self.armsQRight[0]-1.57))
@@ -172,7 +172,7 @@ class ArmsControlGUI():
 		if self.armsPosition[1] < -0.03: self.armsPosition[1] = -0.03
 
 		self.armsPosition[1] = -self.armsPosition[1]
-		print self.armsPosition
+		print(self.armsPosition)
 
 
 		arms_pos = [self.armsPosition[0]*cos(-pi/4) - self.armsPosition[1]*sin(-pi/4), \

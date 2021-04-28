@@ -93,9 +93,9 @@ def ik_both_arms(q01_list, q02_list, goal, L1, L2, L3):
         #t2 = time.time()
         q2=ik_2R_MMUAV_closest(q02,goal2,DH,L1,L2)
         #t3 = time.time()
-        #print "Left: ", t1-t0, "Right: ", t3-t2
+        #print("Left: ", t1-t0, "Right: ", t3-t2)
         DQ=(q1[0]-q01[0])**2+(q1[1]-q01[1])**2+(q1[2]-q01[2])**2+(q2[0]-q02[0])**2+(q2[1]-q02[1])**2+(q2[2]-q02[2])**2
-        #print(DQ)
+        #print(DQ))
         #Find minimal distance in Q space
         if (DQ<DQ_min):
             DQ_min=DQ
@@ -110,11 +110,11 @@ def ik_both_arms(q01_list, q02_list, goal, L1, L2, L3):
             Q1[2] = -PHI
             Q2[2] = -PHI
 
-    #print "PHI: ", PHI*180/math.pi
+    #print("PHI: ", PHI*180/math.pi)
 
     # Put phi in q1 and q2
-    #print Q1    
-    #print PHI*180.0/np.pi
+    #print(Q1)
+    #print(PHI*180.0/np.pi)
     return [Q1, Q2]
 
 
@@ -146,7 +146,7 @@ for phi in range(-N,N):
     goal2 = (-goal[0]+L1+L2-L3*np.cos(phi),(goal[1]-L3*np.sin(phi)),0)
     q2=ik_2R_MMUAV_closest(q02,goal2,DH,L1,L2)
     DQ=(q1[0]-q01[0])**2+(q1[1]-q01[1])**2+(q1[2]-q01[2])**2+(q2[0]-q02[0])**2+(q2[1]-q02[1])**2+(q2[2]-q02[2])**2
-    print(DQ)
+    print(DQ))
     #Find minimal distance in Q space
     if (DQ<DQ_min):
         DQ_min=DQ
@@ -157,7 +157,7 @@ for phi in range(-N,N):
 #q01=(-np.pi/2,0.0,PHI)
 #q02=(0,0.0,PHI)
 
-print Q1
-print Q2
-print phi
+print(Q1)
+print(Q2)
+print(phi
 """

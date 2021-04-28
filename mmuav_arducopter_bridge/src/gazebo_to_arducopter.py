@@ -25,19 +25,19 @@ class StepperInterface():
     def run(self):
 
         ##Open communication
-        print 'Opening serial communication'
+        print('Opening serial communication')
         self.serial_device.open()
 
         while not self.serial_device.is_open:
-            print 'Waiting...'
+            print('Waiting...')
 
-        print 'Serial communication opened!'
+        print('Serial communication opened!')
 
         rospy.spin()
 
     def all_mass_cb(self,msg):
         if len(msg.data) < 4:
-            print "Not enough data, should be at least 4. Length: ", len(msg.data)
+            print("Not enough data, should be at least 4. Length: ", len(msg.data))
         else:
             for i in range(len(msg.data)):
                 self.mass_all_array[i] = msg.data[i]

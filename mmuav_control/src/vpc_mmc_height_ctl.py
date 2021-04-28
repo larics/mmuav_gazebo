@@ -93,9 +93,9 @@ class HeightControl:
         '''
 
         while not self.start_flag and not rospy.is_shutdown():
-            print 'Waiting for pose measurements.'
+            print('Waiting for pose measurements.')
             rospy.sleep(0.5)
-        print "Starting height control."
+        print("Starting height control.")
 
         self.t_old = rospy.Time.now()
         #self.t_old = datetime.now()
@@ -119,7 +119,7 @@ class HeightControl:
             #t = datetime.now()
             #dt = (t - self.t_old).total_seconds()
             if dt > 1.05/float(self.rate) or dt < 0.95/float(self.rate):
-                #print dt
+                #print(dt)
                 pass
 
             self.t_old = t
@@ -129,10 +129,10 @@ class HeightControl:
             #a = 0.1
             #self.z_ref_filt = (1-a) * self.z_ref_filt  + a * self.z_sp
             vz_ref = self.pid_z.compute(self.z_sp, self.z_mv, dt)
-            #print "vz_ref", vz_ref
+            #print("vz_ref", vz_ref)
             self.mot_speed = self.mot_speed_hover + \
                         self.pid_vz.compute(vz_ref, self.vz_mv, dt)
-            #print "mot_speed", self.mot_speed
+            #print("mot_speed", self.mot_speed)
 
             ########################################################
             ########################################################
@@ -184,7 +184,7 @@ class HeightControl:
         """
         Callback for dynamically reconfigurable parameters (P,I,D gains for height and velocity controller)
         """
-        #print "CFG callback"
+        #print("CFG callback")
 
         if not self.config_start:
             # callback is called for the first time. Use this to set the new params to the config server

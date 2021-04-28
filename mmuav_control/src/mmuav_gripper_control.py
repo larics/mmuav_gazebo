@@ -133,9 +133,9 @@ class GripperControl:
         right_point.z = -0.07349
         self.right_gripper_pub.publish(right_point)
 
-        #print 'x_right_target: ', x_right_target, ' y_right_target: ', y_right_target
-        #print 'x_right_curr: ', x_right_curr, ' y_right_curr: ', y_right_curr
-        #print 'dx: ', dx_pitch, ' dy: ', dy_roll
+        #print('x_right_target: ', x_right_target, ' y_right_target: ', y_right_target)
+        #print('x_right_curr: ', x_right_curr, ' y_right_curr: ', y_right_curr)
+        #print('dx: ', dx_pitch, ' dy: ', dy_roll)
 
         dx_right_pitch = x_right_target - x_right_curr
         dy_right_roll = y_right_target - y_right_curr
@@ -144,19 +144,19 @@ class GripperControl:
         dx_right_pitch = self.saturation(dx_right_pitch, limit)
         dy_right_roll = self.saturation(dy_right_roll, limit)
 
-        #print 'dx_new: ', dx_right_pitch, ' dy_new: ', dy_right_roll
+        #print('dx_new: ', dx_right_pitch, ' dy_new: ', dy_right_roll)
 
         # New angle increments (right)
         try: 
             (dq1R, dq2R, dq3R) = self.func(self.L1, self.L2, self.L3, q1, q2, q3, -dx_right_pitch, -dy_right_roll)
         except ZeroDivisionError:
-            print "ZeroDivisionError"
+            print("ZeroDivisionError")
             dq1R = 0
             dq2R = 0
             dq3R = 0
         
-        #print 'dq1R: ', dq1R, ' dq2R: ', dq2R
-        #print ''
+        #print('dq1R: ', dq1R, ' dq2R: ', dq2R)
+        #print('')
 
         return (dq1R, dq2R)
 
@@ -179,7 +179,7 @@ class GripperControl:
         l2 = self.L2
         l3 = self.L3
 
-        #print ''
+        #print('')
         # Get current position of the right manipulator 
         x_left_curr = l1 * cos(q1) + l2 * cos(q2 + q1) + l3 * cos(q3 + q2 + q1)
         y_left_curr = l1 * sin(q1) + l2 * sin(q2 + q1) + l3 * sin(q3 + q2 + q1)
@@ -190,9 +190,9 @@ class GripperControl:
         left_point.z = -0.07349
         self.left_gripper_pub.publish(left_point)
 
-        #print 'x_left_target: ', x_left_target, ' y_left_target: ', y_left_target
-        #print 'x_left_curr: ', x_left_curr, ' y_left_curr: ', y_left_curr
-        #print 'dx: ', dx_pitch, ' dy: ', dy_roll
+        #print('x_left_target: ', x_left_target, ' y_left_target: ', y_left_target)
+        #print('x_left_curr: ', x_left_curr, ' y_left_curr: ', y_left_curr)
+        #print('dx: ', dx_pitch, ' dy: ', dy_roll)
 
         # Calculate distance to the target position
         dx_left_pitch = x_left_target - x_left_curr
@@ -202,19 +202,19 @@ class GripperControl:
         dx_left_pitch = self.saturation(dx_left_pitch, limit)
         dy_left_roll = self.saturation(dy_left_roll, limit)
 
-        #print 'dx_new: ', dx_left_pitch, ' dy_new: ', dy_left_roll
+        #print('dx_new: ', dx_left_pitch, ' dy_new: ', dy_left_roll)
 
         # New angle increments (left)
         try:
             (dq1L, dq2L, dq3L) = self.func(self.L1, self.L2, self.L3, q1, q2, q3, -dx_left_pitch, -dy_left_roll)
         except ZeroDivisionError:
-            print "ZeroDivisionError"
+            print("ZeroDivisionError")
             dq2L = 0
             dq1L = 0
             dq3L = 0
 
-        #print 'dq1L: ', dq1L, ' dq2L: ', dq2L
-        #print ''
+        #print('dq1L: ', dq1L, ' dq2L: ', dq2L)
+        #print('')
         
         return (dq1L, dq2L, dq3L) 
 

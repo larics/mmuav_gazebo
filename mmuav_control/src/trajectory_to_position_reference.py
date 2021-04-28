@@ -13,7 +13,7 @@ class TrajectoryToPositionReference():
 
     def __init__(self):
         self.rate = rospy.get_param("~rate", 100)
-        print "----------------------RATE-------------------_", self.rate
+        print("----------------------RATE-------------------_", self.rate)
         rospy.Subscriber('multi_dof_trajectory', MultiDOFJointTrajectory, 
             self.trajectory_callback, queue_size=1)
         self.pose_ref_pub = rospy.Publisher('pose_ref', Pose, queue_size=1)
@@ -24,7 +24,7 @@ class TrajectoryToPositionReference():
     def trajectory_callback(self, msg):
         trajectory = msg
 
-        print "Trajectory received, length:", len(trajectory.points)
+        print("Trajectory received, length:", len(trajectory.points))
         rate = rospy.Rate(float(self.rate))
         pose_ref = Pose()
         for i in range(len(trajectory.points)):

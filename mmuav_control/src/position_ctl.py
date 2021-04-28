@@ -48,7 +48,7 @@ class PositionControl:
         self.rate = rospy.get_param('~rate', 100)
         # 0 for simulation, 1 for optitrack
         self.feedback_source = rospy.get_param('~feedback', 0)
-        print self.feedback_source
+        print(self.feedback_source)
 
         # Load parameters from yaml file
         file_name = rospy.get_param('~filename', 'PositionControl.yaml')
@@ -187,10 +187,10 @@ class PositionControl:
         i = 0
         while not self.start_flag and not rospy.is_shutdown():
             if (i % 50) == 0:
-                print 'Waiting for pose measurements.'
+                print('Waiting for pose measurements.')
             i = i+1
             rospy.sleep(0.01)
-        print "Starting position control."
+        print("Starting position control.")
 
         self.t_old = rospy.Time.now()
         #self.t_old = datetime.now()
@@ -198,7 +198,7 @@ class PositionControl:
         while not rospy.is_shutdown():
 
             while not self.start_flag and not rospy.is_shutdown():
-                print 'Waiting for pose measurements.'
+                print('Waiting for pose measurements.')
                 rospy.sleep(0.01)
 
             #rospy.sleep(1.0/float(self.rate))
@@ -220,7 +220,7 @@ class PositionControl:
             #t = datetime.now()
             #dt = (t - self.t_old).total_seconds()
             if dt > 1.05/float(self.rate) or dt < 0.95/float(self.rate):
-                #print dt
+                #print(dt)
                 dt = 1.0/float(self.rate)
             self.t_old = t
 
@@ -241,7 +241,7 @@ class PositionControl:
                         self.Kff_a*self.z_ff_scaler*self.acceleration_ff.z)) / \
                         (cos(self.euler_mv.x*0)*cos(self.euler_mv.y*0))
             """(cos(0.0*self.euler_mv.x)*cos(0.0*self.euler_mv.y))"""
-            #print 1/(cos(self.euler_mv.x)*cos(self.euler_mv.y))
+            #print(1/(cos(self.euler_mv.x)*cos(self.euler_mv.y)))
 
             ########################################################
             ########################################################

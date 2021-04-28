@@ -20,5 +20,5 @@ if __name__ == '__main__':
         message = Float64MultiArray()
         message.data = [x, 0, -x, 0]
         pub_mm_ref.publish(message)
-        #print "Published {}. reference".format(cmd_msg.data)
+        #print("Published {}. reference".format(cmd_msg.data))
         t += dt

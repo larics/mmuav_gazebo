@@ -32,11 +32,11 @@ class ArducopterTrajectoryExamples():
         rospy.spin()
 
     def typeCallback(self, msg):
-        print msg
+        print(msg)
         split_msg = msg.data.split(" ")
         if split_msg[0] == "square":
             if len(split_msg) < 2:
-                print "Please specify side length of the square."
+                print("Please specify side length of the square.")
             else:
                 self.squareTrajectory(float(split_msg[1]))
 
@@ -47,10 +47,10 @@ class ArducopterTrajectoryExamples():
                 self.helixTrajectorySmall()
 
         else:
-            print "No such trajectory type."
+            print("No such trajectory type.")
 
     def squareTrajectory(self, a):
-        print "Generating square trajectory with side length ", a, "m"
+        print("Generating square trajectory with side length ", a, "m")
 
         config = ChangePlanningConfigRequest()
         config.max_speed = 0.8
@@ -78,7 +78,7 @@ class ArducopterTrajectoryExamples():
 
 
     def helixTrajectorySmall(self):
-        print "Generating helix trajectory with radius 0.5m."
+        print("Generating helix trajectory with radius 0.5m.")
         temp = SendHelixParamsRequest()
         temp.r = 0.5
         temp.angleStep = 0.7
@@ -91,7 +91,7 @@ class ArducopterTrajectoryExamples():
         self.sendHelixParamsService(temp)
 
     def helixTrajectoryBig(self):
-        print "Generating helix trajectory with radius 1.0m."
+        print("Generating helix trajectory with radius 1.0m.")
         temp = SendHelixParamsRequest()
         temp.r = 1.0
         temp.angleStep = 0.7

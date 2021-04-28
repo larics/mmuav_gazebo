@@ -160,14 +160,14 @@ class AttitudeControl:
         '''
 
         while (rospy.get_time() == 0) and (not rospy.is_shutdown()):
-            print 'Waiting for clock server to start'
+            print('Waiting for clock server to start')
 
-        print 'Received first clock message'
+        print('Received first clock message')
 
         while (not self.start_flag) and (not rospy.is_shutdown()):
-            print "Waiting for the first measurement."
+            print("Waiting for the first measurement.")
             rospy.sleep(0.5)
-        print "Starting attitude control."
+        print("Starting attitude control.")
 
         self.t_old = rospy.Time.now()
         clock_old = self.clock
@@ -178,7 +178,7 @@ class AttitudeControl:
         while not rospy.is_shutdown():
             #self.ros_rate.sleep()
             while (not self.start_flag) and (not rospy.is_shutdown()):
-                print "Waiting for the first measurement."
+                print("Waiting for the first measurement.")
                 rospy.sleep(0.5)
             rospy.sleep(1.0/float(self.rate))
 
@@ -199,11 +199,11 @@ class AttitudeControl:
             clock_old = clock_now
             if dt_clk > (1.0 / self.rate + 0.005):
                 self.count += 1
-                print self.count, ' - ',  dt_clk
+                print(self.count, ' - ',  dt_clk)
 
             if dt_clk < (1.0 / self.rate - 0.005):
                 self.count += 1
-                print self.count, ' - ',  dt_clk
+                print(self.count, ' - ',  dt_clk)
 
             if dt_clk < 0.005:
                 dt_clk = 0.01

@@ -23,5 +23,5 @@ if __name__ == '__main__':
         euler_ref_msg.y = ref_seq_pitch[i]
         i = (i + 1) % 9
         pub_euler_ref.publish(euler_ref_msg)
-        print "Published {}. reference".format(i)
+        print("Published {}. reference".format(i))
         rospy.sleep(10)

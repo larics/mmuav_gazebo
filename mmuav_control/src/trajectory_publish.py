@@ -74,7 +74,7 @@ if __name__== '__main__':
 
 
     try:
-        print "generating trajectory"
+        print("generating trajectory")
         rospy.sleep(5)
         generate=reference_gen()
         file_name = RosPack().get_path('mmuav_control') + '/resources/4seg.txt'

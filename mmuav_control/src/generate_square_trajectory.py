@@ -44,8 +44,8 @@ class SquareTrajectory():
         self.waypointArray.waypoints[8].position = copy.deepcopy(Point(0.0,0.0,2))
 
         self.waypointArrayService(self.waypointArray)
-        #print self.waypointArray
-        print "Service called"
+        #print(self.waypointArray)
+        print("Service called")
 
 
 if __name__=="__main__":

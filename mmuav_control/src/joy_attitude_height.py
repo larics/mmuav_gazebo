@@ -31,7 +31,7 @@ class JoyToEuler:
             queue_size=1)
         rospy.Subscriber('/joy', Joy, self.joy_callback)
 
-        print "Starting joy control."
+        print("Starting joy control.")
 
 
     def run(self):

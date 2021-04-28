@@ -328,13 +328,13 @@ class TrajectoryPlanner():
 
         self.keyframes=np.copy(keyframes)
 
-        print "Keyframes received, segments: ", self.segments
+        print("Keyframes received, segments: ", self.segments)
 
         """
         self.T=self.generate_T(self.keyframes)
         C=self.generate_C()
         d=self.generate_deq(self.keyframes)
-        print np.dot(np.transpose(d),C)
+        print(np.dot(np.transpose(d),C))
         """
 
     def run(self):

@@ -14,7 +14,7 @@ class TrajectoryToPositionReference():
 
     def __init__(self):
         self.rate = rospy.get_param("~rate", 20)
-        print "----------------------RATE-------------------", self.rate
+        print("----------------------RATE-------------------", self.rate)
         rospy.Subscriber('multi_dof_trajectory', MultiDOFJointTrajectory, 
             self.trajectory_callback, queue_size=1)
         self.position_controller_reference_pub = rospy.Publisher(
@@ -27,7 +27,7 @@ class TrajectoryToPositionReference():
     def trajectory_callback(self, msg):
         trajectory = msg
 
-        print "Trajectory received, length:", len(trajectory.points)
+        print("Trajectory received, length:", len(trajectory.points))
         rate = rospy.Rate(float(self.rate))
         ref = PositionControllerReference()
         for i in range(len(trajectory.points)):
@@ -54,7 +54,7 @@ class TrajectoryToPositionReference():
 
             self.position_controller_reference_pub.publish(ref)
 
-        print "Trajectory finished."
+        print("Trajectory finished.")
 
 if __name__=="__main__":
     rospy.init_node("TrajectoryToMcuPositionReference")

@@ -46,14 +46,14 @@ class MergeControllerOutputs:
 
     def run(self):
         while (not self.attitude_command_received_flag) and (not rospy.is_shutdown()):
-            print "Waiting for attitude controller to start"
+            print("Waiting for attitude controller to start")
             rospy.sleep(0.5)
-        print "Attitude control started."
+        print("Attitude control started.")
 
         while (not self.mot_vel_ref_received_flag) and (not rospy.is_shutdown()):
-            print "Waiting for height controller to start"
+            print("Waiting for height controller to start")
             rospy.sleep(0.5)
-        print "Height control started."
+        print("Height control started.")
 
         while not rospy.is_shutdown():
             self.ros_rate.sleep()

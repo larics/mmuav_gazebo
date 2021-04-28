@@ -157,14 +157,14 @@ class AttitudeControl:
         '''
 
         while (rospy.get_time() == 0) and (not rospy.is_shutdown()):
-            print 'Waiting for clock server to start'
+            print('Waiting for clock server to start')
 
-        print 'Received first clock message'
+        print('Received first clock message')
 
         while (not self.start_flag) and (not rospy.is_shutdown()):
-            print "Waiting for the first measurement."
+            print("Waiting for the first measurement.")
             rospy.sleep(0.5)
-        print "Starting attitude control."
+        print("Starting attitude control.")
 
         self.t_old = rospy.Time.now()
         clock_old = self.clock
@@ -191,11 +191,11 @@ class AttitudeControl:
             clock_old = clock_now
             if dt_clk > (1.0 / self.rate + 0.005):
                 self.count += 1
-                #print self.count, ' - ',  dt_clk
+                #print(self.count, ' - ',  dt_clk)
 
             if dt_clk < (1.0 / self.rate - 0.005):
                 self.count += 1
-                #print self.count, ' - ',  dt_clk
+                #print(self.count, ' - ',  dt_clk)
 
             # Roll
             roll_rate_sv = self.pid_roll.compute(self.euler_sp_filt.x, self.euler_mv.x, dt_clk)
@@ -225,11 +225,11 @@ class AttitudeControl:
             L2 = 0.061
             L3 = 0.08
             arms_pos = [-roll_rate_output, -pitch_rate_output]
-            #print arms_pos
+            #print(arms_pos)
             t0 = time.time()
             q = ArmsKinematics.ik_both_arms(self.q_right, 
                 self.q_left, arms_pos, L1, L2, L3)
-            #print time.time() - t0
+            #print(time.time() - t0)
             self.q_right = copy.deepcopy(q[0])
             self.q_left = copy.deepcopy(q[1])
             q_left = self.q_left

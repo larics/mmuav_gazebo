@@ -70,7 +70,7 @@ class RCIn2OverrideRCIn():
 
     def attitude_command_cb(self,msg):
         if len(msg.data) < 5:
-            print "Not enough data, should be 5. Length: ", len(msg.data)
+            print("Not enough data, should be 5. Length: ", len(msg.data))
         else:
             self.roll_command = msg.data[0]
             self.pitch_command = msg.data[1]
