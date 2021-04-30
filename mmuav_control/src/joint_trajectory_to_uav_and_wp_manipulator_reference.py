@@ -36,6 +36,8 @@ class JointTrajectoryToUavAndWpManipulatorReference:
 
         rospy.Subscriber('joint_trajectory', JointTrajectory, 
             self.jointTrajectoryCallback, queue_size=1)
+        rospy.Subscriber('joint_trajectory_point', JointTrajectoryPoint, 
+            self.jointTrajectoryPointCallback, queue_size=1)
 
         self.rate = rospy.get_param('~rate', 100)
         self.ros_rate = rospy.Rate(self.rate) 
@@ -76,6 +78,13 @@ class JointTrajectoryToUavAndWpManipulatorReference:
             self.executing_trajectory_flag = True
         else:
             print("Currently executing a trajectory.")
+
+    def jointTrajectoryPointCallback(self, msg):
+        # This empties the trjectory and appends a single point to it.
+        # This means it overrides the trajectory so be careful with it.
+        self.trajectory.points.clear()
+        self.trajectory.points.append(copy.deepcopy(msg))
+        self.executing_trajectory_flag = True
 
     def publishAll(self):
         self.manipulator_joint1_pub.publish(self.current_trajectory_point.positions[4+2])
