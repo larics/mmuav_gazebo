@@ -53,7 +53,7 @@ class JointTrajectoryToUavAndWpManipulatorReference:
         while not rospy.is_shutdown():
             rate.sleep()
 
-            if self.executing_trajectory_flag == True:
+            if (self.executing_trajectory_flag == True) and (len(self.trajectory.points) != 0):
                 self.executing_trajectory_pub.publish(1)
                 # Take first point from trajectory, publish it and remove it
                 # from trajectory
@@ -80,9 +80,9 @@ class JointTrajectoryToUavAndWpManipulatorReference:
             print("Currently executing a trajectory.")
 
     def jointTrajectoryPointCallback(self, msg):
-        # This empties the trjectory and appends a single point to it.
+        # This empties the trajectory and appends a single point to it.
         # This means it overrides the trajectory so be careful with it.
-        self.trajectory.points.clear()
+        self.trajectory = JointTrajectory()
         self.trajectory.points.append(copy.deepcopy(msg))
         self.executing_trajectory_flag = True
 
