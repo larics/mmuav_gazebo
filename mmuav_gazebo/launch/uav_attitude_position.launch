@@ -71,7 +71,7 @@
       <arg name="velocity_control_file" default="$(find mmuav_control)/config/wp_manipulator_velocity_control.yaml"/>
     </include>
 
-    <node name="joint_trajectory_to_uav_and_manipulator" pkg="mmuav_control" type="joint_trajectory_to_uav_and_wp_manipulator_reference.py" ns="$(arg name)"/>
+    <node name="joint_trajectory_to_uav_and_manipulator" pkg="mmuav_control" type="joint_trajectory_to_uav_and_wp_manipulator_reference.py" ns="$(arg name)" output="screen"/>
   </group>
 
   <group if="$(eval 'wp_manipulator_3rx' == manipulator_type)">

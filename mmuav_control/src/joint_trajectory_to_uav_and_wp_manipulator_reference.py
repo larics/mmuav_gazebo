@@ -50,19 +50,27 @@ class JointTrajectoryToUavAndWpManipulatorReference:
     def run(self):
         
         rate = rospy.Rate(self.rate)
+        exception_counter = 0
         while not rospy.is_shutdown():
             rate.sleep()
-
-            if (self.executing_trajectory_flag == True) and (len(self.trajectory.points) != 0):
-                self.executing_trajectory_pub.publish(1)
-                # Take first point from trajectory, publish it and remove it
-                # from trajectory
-                self.current_trajectory_point = self.trajectory.points[0]
-                self.uav_current_trajectory_point = jointTrajectoryPointToMultiDofJointTrajectoryPoint(
-                    self.current_trajectory_point)
-                self.publishAll()
-                #self.trajectory_point_pub.publish(self.current_trajectory_point)
-                self.trajectory.points.pop(0)
+            
+            if (self.executing_trajectory_flag == True) and (len(self.trajectory.points) > 0):
+                try:
+                    self.executing_trajectory_pub.publish(1)
+                    # Take first point from trajectory, publish it and remove it
+                    # from trajectory
+                    self.current_trajectory_point = self.trajectory.points[0]
+                    self.uav_current_trajectory_point = jointTrajectoryPointToMultiDofJointTrajectoryPoint(
+                        self.current_trajectory_point)
+                    self.publishAll()
+                    #self.trajectory_point_pub.publish(self.current_trajectory_point)
+                
+                    self.trajectory.points.pop(0)
+                except Exception as e:
+                    exception_counter = exception_counter + 1
+                    print("The exception number " + str(exception_counter) + " is:")
+                    print(e)
+                    print("---------------------------------------")
                 
                 if len(self.trajectory.points) == 0:
                     self.executing_trajectory_flag = False
