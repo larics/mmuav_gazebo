@@ -21,6 +21,7 @@
   <arg name="z" default="0.0" />
   
   <arg name="manipulator_type" default="none" />
+  <!-- manipulator_tool = (rod, rod_with_camera, camera, rod_with_kinect) -->
   <arg name="manipulator_tool" default="none" />
   <arg name="start_gazebo" default="true" />
   <arg name="mount_magnet" default="false" />
