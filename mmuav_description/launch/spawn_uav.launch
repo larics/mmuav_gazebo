@@ -21,6 +21,9 @@
   <arg name="mount_stereo_cam" default="false" />
   <arg name="turn_off_all_collisions" default="false" />
   <arg name="collision_bitmask" default="-1" />
+  <!-- Odometry type can be ground_truth which has no noise
+    or realistic which has generic noise parameters. -->
+  <arg name="odometry_type" default="ground_truth" />
 
 
   <!-- send the robot XML to param server -->
@@ -39,7 +42,8 @@
     mount_velodyne:=$(arg mount_velodyne)
     mount_stereo_cam:=$(arg mount_stereo_cam)
     turn_off_all_collisions:=$(arg turn_off_all_collisions)
-    collision_bitmask:=$(arg collision_bitmask)"
+    collision_bitmask:=$(arg collision_bitmask)
+    odometry_type:=$(arg odometry_type)"
   />
 
   <param name="tf_prefix" type="string" value="$(arg tf_prefix)" />

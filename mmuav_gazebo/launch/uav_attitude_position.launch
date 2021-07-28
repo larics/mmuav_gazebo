@@ -29,6 +29,9 @@
   <arg name="magnet_dipole_moment_z" default="1" />
   <arg name="turn_off_all_collisions" default="false" />
   <arg name="collision_bitmask" default="-1" />
+  <!-- Odometry type can be ground_truth which has no noise
+    or realistic which has generic noise parameters. -->
+  <arg name="odometry_type" default="ground_truth" />
 
 
   <!-- Launch gazebo -->
@@ -55,6 +58,7 @@
     <arg name="magnet_dipole_moment_z" value="$(arg magnet_dipole_moment_z)" />
     <arg name="turn_off_all_collisions" value="$(arg turn_off_all_collisions)" />
     <arg name="collision_bitmask" value="$(arg collision_bitmask)" />
+    <arg name="odometry_type" value="$(arg odometry_type)" />
   </include>
 
   <!-- Start attitude height control -->
