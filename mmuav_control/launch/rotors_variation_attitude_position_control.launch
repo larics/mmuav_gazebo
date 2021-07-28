@@ -7,6 +7,7 @@
   <arg name="y" default="0.0"/>
   <arg name="z" default="0.0"/>
   <arg name="run_trajectory_node" default="true" />
+  <arg name="control_parameters_file" default="UavPositionControl.yaml" />
 
   <group ns="$(arg namespace)">
     <!-- Attitude control -->
@@ -17,7 +18,7 @@
     <!-- Position control -->
     <node name="position_control" pkg="mmuav_control" type="position_ctl.py" output="screen">
       <param name="rate" value="$(arg rate)"/>
-      <param name="filename" value="UavPositionControl.yaml"/>
+      <param name="filename" value="$(arg control_parameters_file)"/>
       <param name="x" value="$(arg x)"/>
       <param name="y" value="$(arg y)"/>
       <param name="z" value="$(arg z)"/>
