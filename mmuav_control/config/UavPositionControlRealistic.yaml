@@ -6,14 +6,14 @@ Kff_a: 0.0
 tilt_angle: 0.0
 
 pid_x:
-  Kp: 1.8 #1.4 
+  Kp: 1.4 #1.4 
   Ki: 0.0 # 0
   Kd: 0.0 # 0.05
   limit:
     high: 10.0
     low: -10.0
 pid_vx:
-  Kp: 0.37 #0.3
+  Kp: 0.3 #0.3
   Ki: 0.0 # 0.0
   Kd: 0.0 # 0.0
   limit:
@@ -21,14 +21,14 @@ pid_vx:
     low: -1.57
 
 pid_y:
-  Kp: 1.8
+  Kp: 1.4
   Ki: 0.0
   Kd: 0.0
   limit:
     high: 10.0
     low: -10.0
 pid_vy:
-  Kp: 0.37
+  Kp: 0.3
   Ki: 0.0
   Kd: 0.0
   limit:
@@ -36,14 +36,14 @@ pid_vy:
     low: -1.57
 
 pid_z:
-  Kp: 3.0 #2.5
+  Kp: 2.0 #2.5
   Ki: 0.15 #0.0
   Kd: 0.0 #0.2
   limit:
     high: 10.0
     low: -10.0
 pid_vz:
-  Kp: 280.0 #250.0
+  Kp: 220.0 #250.0
   Ki: 20.0 #20.0
   Kd: 0.0
   limit:

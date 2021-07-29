@@ -8,6 +8,7 @@
   <arg name="z" default="0.0"/>
   <arg name="run_trajectory_node" default="true" />
   <arg name="control_parameters_file" default="UavPositionControl.yaml" />
+  <arg name="odometry_type" default="ground_truth" />
 
   <group ns="$(arg namespace)">
     <!-- Attitude control -->
@@ -22,6 +23,12 @@
       <param name="x" value="$(arg x)"/>
       <param name="y" value="$(arg y)"/>
       <param name="z" value="$(arg z)"/>
+      <remap if="$(eval 'realistic' == odometry_type)" from="pose" to="filtered/pose" />
+      <remap if="$(eval 'realistic' == odometry_type)" from="velocity_relative" to="filtered/velocity_relative" />
+    </node>
+
+    <node if="$(eval 'realistic' == odometry_type)" name="odometry_filter" pkg="mmuav_control" type="odometry_filter.py">
+      <param name="rate" value="$(arg rate)" />
     </node>
 
     <!-- Merge position and attitude control node -->

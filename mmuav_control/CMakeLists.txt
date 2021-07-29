@@ -34,6 +34,8 @@ generate_dynamic_reconfigure_options(
     config/VpcMmuavZCtlParams.cfg
     config/VpcMmuavAttitudeCtlParams.cfg
     config/VpcMmuavPositionCtlParams.cfg
+    # Odometry filter parameters
+    config/OdometryFilterParams.cfg
     )
     
 catkin_package(

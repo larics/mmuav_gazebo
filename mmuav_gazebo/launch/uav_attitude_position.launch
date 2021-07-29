@@ -72,6 +72,7 @@
     <arg name="z" value="$(arg z)" />
     <arg name="run_trajectory_node" value="$(eval 'none' == manipulator_type)" />
     <arg name="control_parameters_file" value="$(arg position_control_params_file)" />
+    <arg name="odometry_type" value="$(arg odometry_type)" />
   </include>
 
   <group if="$(eval 'wp_manipulator' == manipulator_type)">
