@@ -1,61 +1,43 @@
+default: &default
+  # Publish all joint states -----------------------------------
+  joint_state_controller:
+    type: joint_state_controller/JointStateController
+    publish_rate: 1000
+
+  # Velocity Controllers ---------------------------------------
+
+
+  joint1_velocity_controller:
+    type: effort_controllers/JointVelocityController
+    joint: joint1
+    pid: {p: 0.5, i: 0.0, d: 0.0, i_clamp_max: 100, i_clamp_min: -100}
+  joint2_velocity_controller:
+    type: effort_controllers/JointVelocityController
+    joint: joint2
+    pid: {p: 0.1, i: 0.0, d: 0.0, i_clamp_max: 100, i_clamp_min: -100}
+  joint3_velocity_controller:
+    type: effort_controllers/JointVelocityController
+    joint: joint3
+    pid: {p: 0.015, i: 0.0, d: 0.0, i_clamp_max: 100, i_clamp_min: -100}
+  joint4_velocity_controller:
+    type: effort_controllers/JointVelocityController
+    joint: joint4
+    pid: {p: 0.008, i: 0.0, d: 0.0, i_clamp_max: 100, i_clamp_min: -100}
+  joint5_velocity_controller:
+    type: effort_controllers/JointVelocityController
+    joint: joint5
+    pid: {p: 0.005, i: 0.0, d: 0.0, i_clamp_max: 100, i_clamp_min: -100}
+    #pid: {p: 0.014, i: 0.0, d: 0.0, i_clamp_max: 100, i_clamp_min: -100}
+
 uav:
-  # Publish all joint states -----------------------------------
-  joint_state_controller:
-    type: joint_state_controller/JointStateController
-    publish_rate: 1000
-
-  # Velocity Controllers ---------------------------------------
-
-
-  joint1_velocity_controller:
-    type: effort_controllers/JointVelocityController
-    joint: joint1
-    pid: {p: 0.5, i: 0.0, d: 0.0, i_clamp_max: 100, i_clamp_min: -100}
-  joint2_velocity_controller:
-    type: effort_controllers/JointVelocityController
-    joint: joint2
-    pid: {p: 0.1, i: 0.0, d: 0.0, i_clamp_max: 100, i_clamp_min: -100}
-  joint3_velocity_controller:
-    type: effort_controllers/JointVelocityController
-    joint: joint3
-    pid: {p: 0.015, i: 0.0, d: 0.0, i_clamp_max: 100, i_clamp_min: -100}
-  joint4_velocity_controller:
-    type: effort_controllers/JointVelocityController
-    joint: joint4
-    pid: {p: 0.008, i: 0.0, d: 0.0, i_clamp_max: 100, i_clamp_min: -100}
-  joint5_velocity_controller:
-    type: effort_controllers/JointVelocityController
-    joint: joint5
-    pid: {p: 0.005, i: 0.0, d: 0.0, i_clamp_max: 100, i_clamp_min: -100}
-    #pid: {p: 0.014, i: 0.0, d: 0.0, i_clamp_max: 100, i_clamp_min: -100}
-
+  << : *default
 model_uav:
-  # Publish all joint states -----------------------------------
-  joint_state_controller:
-    type: joint_state_controller/JointStateController
-    publish_rate: 1000
-
-  # Velocity Controllers ---------------------------------------
-
-
-  joint1_velocity_controller:
-    type: effort_controllers/JointVelocityController
-    joint: joint1
-    pid: {p: 0.5, i: 0.0, d: 0.0, i_clamp_max: 100, i_clamp_min: -100}
-  joint2_velocity_controller:
-    type: effort_controllers/JointVelocityController
-    joint: joint2
-    pid: {p: 0.1, i: 0.0, d: 0.0, i_clamp_max: 100, i_clamp_min: -100}
-  joint3_velocity_controller:
-    type: effort_controllers/JointVelocityController
-    joint: joint3
-    pid: {p: 0.015, i: 0.0, d: 0.0, i_clamp_max: 100, i_clamp_min: -100}
-  joint4_velocity_controller:
-    type: effort_controllers/JointVelocityController
-    joint: joint4
-    pid: {p: 0.008, i: 0.0, d: 0.0, i_clamp_max: 100, i_clamp_min: -100}
-  joint5_velocity_controller:
-    type: effort_controllers/JointVelocityController
-    joint: joint5
-    pid: {p: 0.005, i: 0.0, d: 0.0, i_clamp_max: 100, i_clamp_min: -100}
-    #pid: {p: 0.014, i: 0.0, d: 0.0, i_clamp_max: 100, i_clamp_min: -100}
+  << : *default
+uav1:
+  << : *default
+model_uav1:
+  << : *default
+uav2:
+  << : *default
+model_uav2:
+  << : *default
