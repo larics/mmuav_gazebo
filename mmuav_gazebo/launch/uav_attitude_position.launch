@@ -29,15 +29,15 @@
   <arg name="turn_off_all_collisions" default="false" />
   <arg name="collision_bitmask" default="-1" />
 
-
   <!-- Launch gazebo -->
   <group if="$(arg start_gazebo)">
-    <include file="$(find gazebo_ros)/launch/empty_world.launch">
+    <include file="$(find gazebo_ros)/launch/empty_world.launch"> 
       <arg name="debug" value="$(arg debug)" />
       <arg name="gui" value="$(arg gui)" />
       <arg name="paused" value="$(arg paused)"/>
       <arg name="use_sim_time" value="$(arg use_sim_time)"/>
       <arg name="headless" value="$(arg headless)"/>
+      <arg name="world_name" value="$(find mmuav_gazebo)/worlds/wide_maze.world"/>
     </include>
   </group>
 
@@ -54,6 +54,7 @@
     <arg name="magnet_dipole_moment_z" value="$(arg magnet_dipole_moment_z)" />
     <arg name="turn_off_all_collisions" default="$(arg turn_off_all_collisions)" />
     <arg name="collision_bitmask" default="$(arg collision_bitmask)" />
+    <arg name="mount_stereo_cam" value="true" />
   </include>
 
   <!-- Start attitude height control -->

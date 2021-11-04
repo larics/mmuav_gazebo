@@ -18,7 +18,7 @@
   <arg name="mount_magnet_with_disk" default="false" />
   <arg name="magnet_dipole_moment_z" default="970" />
   <arg name="mount_velodyne" default="false" />
-  <arg name="mount_stereo_cam" default="false" />
+  <arg name="mount_stereo_cam" default="true" />
   <arg name="turn_off_all_collisions" default="false" />
   <arg name="collision_bitmask" default="-1" />
 
