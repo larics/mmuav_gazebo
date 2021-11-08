@@ -18,7 +18,7 @@
   <arg name="name" default="uav" />
   <arg name="x" default="0.0" />
   <arg name="y" default="0.0" />
-  <arg name="z" default="0.0" />
+  <arg name="z" default="1.0" />
 
   <arg name="manipulator_type" default="magnet" />
   <arg name="manipulator_tool" default="rod_with_camera" />
@@ -28,6 +28,7 @@
   <arg name="magnet_dipole_moment_z" default="1" />
   <arg name="turn_off_all_collisions" default="false" />
   <arg name="collision_bitmask" default="-1" />
+  <arg name="hmi_integration" default="true" />
 
   <!-- Launch gazebo -->
   <group if="$(arg start_gazebo)">
@@ -37,6 +38,7 @@
       <arg name="paused" value="$(arg paused)"/>
       <arg name="use_sim_time" value="$(arg use_sim_time)"/>
       <arg name="headless" value="$(arg headless)"/>
+      <!-- If you saved world into existing gazebo worls it's possible to use it by changing world name and location of saved file-->
       <arg name="world_name" value="$(find mmuav_gazebo)/worlds/wide_maze.world"/>
     </include>
   </group>
@@ -83,5 +85,15 @@
 
     <node name="joint_trajectory_to_uav_and_manipulator" pkg="mmuav_control" type="joint_trajectory_to_uav_and_wp_manipulator_3rx_reference.py" ns="$(arg name)"/>
   </group>
+
+  <group if="$(arg hmi_integration)"> 
+    <!-- play sound command for UAV operator -->
+    <node name="sound_play" pkg="sound_play" type="soundplay_node.py"/>
+
+    <!-- generate sound comparing current and wanted UAV pose -->
+    <node name="generate_ref_sound" pkg="simulation_sound_play" type="generate_ref_sound.py" output="screen" />
+  </group>
+
+  
 
 </launch>
