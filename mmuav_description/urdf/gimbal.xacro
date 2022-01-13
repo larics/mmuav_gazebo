@@ -1,0 +1,124 @@
+<?xml version="1.0" ?>
+<robot name="gimbal" xmlns:xacro="http://www.ros.org/wiki/xacro">
+
+<xacro:include filename="$(find gimbal_description)/urdf/materials.xacro" />
+<xacro:include filename="$(find gimbal_description)/urdf/gimbal.trans" />
+<xacro:include filename="$(find gimbal_description)/urdf/gimbal.gazebo" />
+
+<!-- define camera macro -->
+<xacro:macro name="gimbal" params="parent">
+
+  <joint name="uav_gimbal_joint" type="fixed"/>
+    <parent link="${parent}"/>
+    <child link="gimbal_base_link"/>
+    <origin xyz="0.0 0.0 0.0" rpy="0.0 0.0 0.0"/>
+  </joint>
+
+  <link name="gimbal_base_link">
+    <inertial>
+      <origin rpy="0 0 0" xyz="0 0 0.007500000000000002"/>
+      <mass value="0.08323257036604456"/>
+      <inertia ixx="6e-06" ixy="0.0" ixz="0.0" iyy="6e-06" iyz="0.0" izz="9e-06"/>
+    </inertial>
+    <visual>
+      <origin rpy="0 0 0" xyz="0 0 0"/>
+      <geometry>
+        <mesh filename="package://gimbal_description/meshes/gimbal_base_link.stl" scale="0.001 0.001 0.001"/>
+      </geometry>
+      <material name="silver"/>
+    </visual>
+    <collision>
+      <origin rpy="0 0 0" xyz="0 0 0"/>
+      <geometry>
+        <mesh filename="package://gimbal_description/meshes/gimbal_base_link.stl" scale="0.001 0.001 0.001"/>
+      </geometry>
+    </collision>
+  </link>
+
+  <link name="gimbal_link_1_1">
+    <inertial>
+      <origin rpy="0 0 0" xyz="-0.023307368309816855 4.399292109813835e-18 -0.041692631690182926"/>
+      <mass value="0.25357536333057096"/>
+      <inertia ixx="0.000293" ixy="0.0" ixz="-0.000154" iyy="0.0004" iyz="0.0" izz="0.000133"/>
+    </inertial>
+    <visual>
+      <origin rpy="0 0 0" xyz="-0.0 -0.0 -0.0"/>
+      <geometry>
+        <mesh filename="package://gimbal_description/meshes/gimbal_link_1_1.stl" scale="0.001 0.001 0.001"/>
+      </geometry>
+      <material name="silver"/>
+    </visual>
+    <collision>
+      <origin rpy="0 0 0" xyz="-0.0 -0.0 -0.0"/>
+      <geometry>
+        <mesh filename="package://gimbal_description/meshes/gimbal_link_1_1.stl" scale="0.001 0.001 0.001"/>
+      </geometry>
+    </collision>
+  </link>
+
+  <link name="gimbal_link_2_1">
+    <inertial>
+      <origin rpy="0 0 0" xyz="0.024953869421747224 -0.03504613057825335 0.0"/>
+      <mass value="0.14259860284251166"/>
+      <inertia ixx="0.000134" ixy="7.8e-05" ixz="-0.0" iyy="8.3e-05" iyz="-0.0" izz="0.000204"/>
+    </inertial>
+    <visual>
+      <origin rpy="0 0 0" xyz="0.0325 -0.0 0.0775"/>
+      <geometry>
+        <mesh filename="package://gimbal_description/meshes/gimbal_link_2_1.stl" scale="0.001 0.001 0.001"/>
+      </geometry>
+      <material name="silver"/>
+    </visual>
+    <collision>
+      <origin rpy="0 0 0" xyz="0.0325 -0.0 0.0775"/>
+      <geometry>
+        <mesh filename="package://gimbal_description/meshes/gimbal_link_2_1.stl" scale="0.001 0.001 0.001"/>
+      </geometry>
+    </collision>
+  </link>
+
+  <link name="gimbal_link_3_1">
+    <inertial>
+      <origin rpy="0 0 0" xyz="5.759281940243e-16 0.01904610876229971 1.3877787807814457e-17"/>
+      <mass value="0.16488476186732373"/>
+      <inertia ixx="8.2e-05" ixy="0.0" ixz="0.0" iyy="4.6e-05" iyz="0.0" izz="5e-05"/>
+    </inertial>
+    <visual>
+      <origin rpy="0 0 0" xyz="-0.02 0.0575 0.0775"/>
+      <geometry>
+        <mesh filename="package://gimbal_description/meshes/gimbal_link_3_1.stl" scale="0.001 0.001 0.001"/>
+      </geometry>
+      <material name="silver"/>
+    </visual>
+    <collision>
+      <origin rpy="0 0 0" xyz="-0.02 0.0575 0.0775"/>
+      <geometry>
+        <mesh filename="package://gimbal_description/meshes/gimbal_link_3_1.stl" scale="0.001 0.001 0.001"/>
+      </geometry>
+    </collision>
+  </link>
+
+  <joint name="Rev1" type="continuous">
+    <origin rpy="0 0 0" xyz="0.0 0.0 0.0"/>
+    <parent link="gimbal_base_link"/>
+    <child link="gimbal_link_1_1"/>
+    <axis xyz="0.0 0.0 1.0"/>
+  </joint>
+
+  <joint name="Rev2" type="continuous">
+    <origin rpy="0 0 0" xyz="-0.0325 0.0 -0.0775"/>
+    <parent link="gimbal_link_1_1"/>
+    <child link="gimbal_link_2_1"/>
+    <axis xyz="1.0 0.0 -0.0"/>
+  </joint>
+
+  <joint name="Rev3" type="continuous">
+    <origin rpy="0 0 0" xyz="0.0525 -0.0575 0.0"/>
+    <parent link="gimbal_link_2_1"/>
+    <child link="gimbal_link_3_1"/>
+    <axis xyz="0.0 1.0 -0.0"/>
+  </joint>
+
+</xacro:macro>
+
+</robot>

@@ -2,8 +2,6 @@
 
 <launch>
 
-  <!-- these are the arguments you can pass this launch file, for example paused:=true -->
-  <arg name="paused" default="false"/>
   <arg name="use_sim_time" default="false"/>
   <arg name="gui" default="true"/>
   <arg name="headless" default="false"/>
@@ -14,21 +12,19 @@
   <arg name="log_file" default="uav"/>
 
   <arg name="model_type" default="uav" />
+  <arg name="model" value="$(find mmuav_description)/urdf/$(arg model_type).gazebo.xacro" />  
+  
+  <arg name="paused" default="false"/>
 
   <arg name="name" default="uav" />
   <arg name="x" default="0.0" />
   <arg name="y" default="0.0" />
   <arg name="z" default="1.0" />
 
-  <arg name="manipulator_type" default="magnet" />
-  <arg name="manipulator_tool" default="rod_with_camera" />
   <arg name="start_gazebo" default="true" />
-  <arg name="mount_magnet" default="false" />
-  <arg name="mount_magnet_with_disk" default="false" />
-  <arg name="magnet_dipole_moment_z" default="1" />
   <arg name="turn_off_all_collisions" default="false" />
   <arg name="collision_bitmask" default="-1" />
-  <arg name="hmi_integration" default="true" />
+  <arg name="hmi_integration" default="false" />
 
   <!-- Launch gazebo -->
   <group if="$(arg start_gazebo)">
@@ -43,23 +39,23 @@
     </include>
   </group>
 
+  <!-- Add if conditions depending on manipulator or not --> 
   <include file="$(find mmuav_description)/launch/spawn_uav.launch">
+
     <arg name="model_type" value="$(arg model_type)" />
+    <arg name="model" value="$(arg model)" />
     <arg name="name" value="$(arg name)" />
     <arg name="x" value="$(arg x)" />
     <arg name="y" value="$(arg y)" />
     <arg name="z" value="$(arg z)" />
-    <arg name="manipulator_type" value="$(arg manipulator_type)" />
-    <arg name="manipulator_tool" value="$(arg manipulator_tool)" />
-    <arg name="mount_magnet" value="$(arg mount_magnet)" />
-    <arg name="mount_magnet_with_disk" value="$(arg mount_magnet_with_disk)" />
-    <arg name="magnet_dipole_moment_z" value="$(arg magnet_dipole_moment_z)" />
     <arg name="turn_off_all_collisions" default="$(arg turn_off_all_collisions)" />
     <arg name="collision_bitmask" default="$(arg collision_bitmask)" />
-    <arg name="mount_stereo_cam" value="true" />
+    <arg name="mount_stereo_cam" value="false" />
+
   </include>
 
   <!-- Start attitude height control -->
+  <arg name="manipulator_type" default="none"/> <!-- Setting this as none to mitigate error -->
   <include file="$(find mmuav_control)/launch/rotors_variation_attitude_position_control.launch">
     <arg name="namespace" value="$(arg name)" />
     <arg name="x" value="$(arg x)" />
@@ -67,24 +63,6 @@
     <arg name="z" value="$(arg z)" />
     <arg name="run_trajectory_node" value="$(eval 'none' == manipulator_type)" />
   </include>
-
-  <group if="$(eval 'wp_manipulator' == manipulator_type)">
-    <include file="$(find aerial_manipulators_control)/launch/wp_manipulator_gazebo_control.launch">
-      <arg name="namespace" value="$(arg name)" />
-      <arg name="velocity_control_file" default="$(find mmuav_control)/config/wp_manipulator_velocity_control.yaml"/>
-    </include>
-
-    <node name="joint_trajectory_to_uav_and_manipulator" pkg="mmuav_control" type="joint_trajectory_to_uav_and_wp_manipulator_reference.py" ns="$(arg name)"/>
-  </group>
-
-  <group if="$(eval 'wp_manipulator_3rx' == manipulator_type)">
-    <include file="$(find aerial_manipulators_control)/launch/wp_manipulator_3rx_gazebo_control.launch">
-        <arg name="namespace" value="$(arg name)" />
-        <arg name="velocity_control_file" default="$(find mmuav_control)/config/wp_manipulator_3rx_velocity_control.yaml"/>
-    </include>
-
-    <node name="joint_trajectory_to_uav_and_manipulator" pkg="mmuav_control" type="joint_trajectory_to_uav_and_wp_manipulator_3rx_reference.py" ns="$(arg name)"/>
-  </group>
 
   <group if="$(arg hmi_integration)"> 
     <!-- play sound command for UAV operator -->
