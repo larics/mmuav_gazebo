@@ -1,6 +1,7 @@
 <?xml version="1.0"?>
 
 <robot name="camera_robot" xmlns:xacro="http://ros.org/wiki/xacro">
+
   <!-- Include definition of a camera -->
   <!--xacro:include filename="$(find mmuav_description)/urdf/multirotor_base.urdf.xacro" / -->
 

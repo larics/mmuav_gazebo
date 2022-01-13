@@ -609,6 +609,15 @@
 
   </xacro:macro>
 
+  <xacro:macro name="gimbal" params="parent">
+  <!-- Camera joint with reference to the parent link -->
+    <joint name="gimbal_joint" type="fixed">
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <parent link="${parent}"/>
+      <child link="gimbal_base_link"/>
+    </joint>  
+  </xacro:macro>
+
   <xacro:macro name="manipulator"
   params="link_length link_width link_mass link_mesh_file parent suffix *axis *origin">
     <!--_____________________________________________________________-->

@@ -10,18 +10,12 @@
   <arg name="enable_ground_truth" default="true"/>
   <arg name="log_file" default="uav_log"/>
   <arg name="exclude_floor_link_from_collision_check" default="ground_plane::link"/>
-  <arg name="model_type" default="uav" />
-  <arg name="model" value="$(find mmuav_description)/urdf/$(arg model_type).gazebo.xacro" />
-  <arg name="manipulator_type" default="none" />
-  <arg name="manipulator_tool" default="none" />
-  <arg name="mount_magnet" default="false" />
-  <arg name="mount_magnet_with_disk" default="false" />
-  <arg name="magnet_dipole_moment_z" default="970" />
+  <arg name="model_type" default="uav_wp_manipulator" />
   <arg name="mount_velodyne" default="false" />
   <arg name="mount_stereo_cam" default="true" />
+  <arg name="mount_gimbal" default="true" />
   <arg name="turn_off_all_collisions" default="false" />
   <arg name="collision_bitmask" default="-1" />
-
 
   <!-- send the robot XML to param server -->
   <param name="/$(arg name)/robot_description" command="
@@ -37,7 +31,8 @@
     mount_magnet_with_disk:=$(arg mount_magnet_with_disk)
     magnet_dipole_moment_z:=$(arg magnet_dipole_moment_z)
     mount_velodyne:=$(arg mount_velodyne)
-    mount_stereo_cam:=$(arg mount_stereo_cam)
+    mount_stereo_cam:=$(arg mount_stereo_cam) 
+    mount_gimbal:=$(arg mount_gimbal)
     turn_off_all_collisions:=$(arg turn_off_all_collisions)
     collision_bitmask:=$(arg collision_bitmask)"
   />
