@@ -13,7 +13,7 @@
   <arg name="exclude_floor_link_from_collision_check" default="ground_plane::link"/>
 
   <!-- Model args for urdf -->
-  <arg name="model_type" default="uav" />
+  <arg name="model_type" default="uav_wp_maninpulator" />
   <arg name="model" default="$(find mmuav_description)/urdf/$(arg model_type).gazebo.xacro" />  
   
   <arg name="paused" default="false"/>

@@ -168,7 +168,6 @@
     </gazebo>
   </xacro:macro>
 
-
 <!-- ducted fan joint and link -->
   <xacro:macro name="ducted_fan"
     params="robot_namespace suffix direction motor_constant moment_constant area_control_flap area_antitorque_flap fluid_density distance_control_flap distance_antitorque_flap thrust_coefficient torque_coefficient slip_velocity_coefficient lift_coefficient_control_flap drag_coefficient_control_flap lift_coefficient_antitorque_flap drag_coefficient_antitorque_flap lift_coefficient_control_flap_at0 drag_coefficient_control_flap_at0 lift_coefficient_antitorque_flap_at0 drag_coefficient_antitorque_flap_at0 parent mass_rotor radius_rotor time_constant_up time_constant_down max_rot_velocity motor_number rotor_drag_coefficient rolling_moment_coefficient color *origin *inertia">
@@ -1149,6 +1148,6 @@
           joint_name="gimbal_yaw_joint">
         </xacro:transmisija>
 
-    </xacro:macro>
+  </xacro:macro>
 
 </robot>

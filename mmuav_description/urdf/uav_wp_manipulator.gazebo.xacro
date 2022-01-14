@@ -1,38 +1,35 @@
-<?xml version="1.0"?>
+<?xml version='1.0' encoding='utf-8'?>
 
 <robot name="uav_wp_manipulator" xmlns:xacro="http://ros.org/wiki/xacro">
 
     <xacro:include filename="$(find mmuav_description)/urdf/uav.gazebo.xacro" />
 
-    <xacro:include filename="$(find aerial_manipulators/urdf/wp_manipulator.gazebo.xacro)" />
-        <xacro:arg name="gazebo" value="${gazebo}"
-    </xacro:include>
+    <!--xacro:include filename="$(find aerial_manipulators_description)/urdf/wp_manipulator.gazebo.xacro" /-->
 
     <!-- aditional arm properties -->
-    <xacro:property name="arm_offset_z" value="0.1" /> <!-- [m] 0.0457-->
+    <!--xacro:property name="arm_offset_z" value="0.1" /--> 
+    <!-- [m] 0.0457-->
 
-    <link name="world">
+    <!--link name="world">
     </link>
 
     <joint name="world_base_joint" type="floating">
         <parent link="world"/>
         <child link="base_link"/>
-    </joint>
+    </joint-->
 
     <!-- uav -->
-    <xacro:uav enable_bag_plugin=${enable_bag_plugin} 
-        mount_velodyne=${mount_velodyne}
-        mount_stereo_cam=${mount_stereo_cam}
-        turn_off_all_collisions=${turn_off_all_collisions}
-        collision_bitmask=${collision_bitmask} />
+    <xacro:uav 
+        mount_velodyne="${arg mount_velodyne}"
+        mount_stereo_cam="${arg mount_stereo_cam}"
+        turn_off_all_collisions="${arg turn_off_all_collisions}"
+        collision_bitmask="${arg collision_bitmask}" >
     </xacro:uav>
 
     <!-- wp_manipulator --> 
-    <xacro:wp_manipulator parent="base_link">
-        <origin xyz="0 0 ${arm_offset_z} rpy="0 0 0" />
-    </xacro:wp_manipulator>
+    <!--xacro:wp_manipulator parent="base_link">
+        <origin xyz="0 0 ${arm_offset_z}" rpy="0 0 0" />
+    </xacro:wp_manipulator-->
 
 
 </robot>
-
-

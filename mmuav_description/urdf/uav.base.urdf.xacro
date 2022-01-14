@@ -1,6 +1,6 @@
-<?xml version="1.0"?>
+<?xml version='1.0' encoding='utf-8'?>
 
-<robot name="uav" xmlns:xacro="http://ros.org/wiki/xacro">
+<robot name="uav_base" xmlns:xacro="http://ros.org/wiki/xacro">
 
   <xacro:arg name="turn_off_all_collisions" default="false" />
   <xacro:property name="turn_off_all_collisions" value="$(arg turn_off_all_collisions)" />
