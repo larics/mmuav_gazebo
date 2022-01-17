@@ -9,10 +9,7 @@
 
   <arg name="enable_logging" default="true"/>
   <arg name="enable_ground_truth" default="true"/>
-  <arg name="log_file" default="uav"/>
-
-  <arg name="model_type" default="uav" />
-  <arg name="model" value="$(find mmuav_description)/urdf/$(arg model_type).gazebo.xacro" />  
+  <arg name="log_file" default="uav"/>  
   
   <arg name="paused" default="false"/>
 
@@ -25,6 +22,8 @@
   <arg name="turn_off_all_collisions" default="false" />
   <arg name="collision_bitmask" default="-1" />
   <arg name="hmi_integration" default="false" />
+
+  <arg name="spawn_manipulator" default="false" />
 
   <!-- Launch gazebo -->
   <group if="$(arg start_gazebo)">
@@ -39,20 +38,50 @@
     </include>
   </group>
 
-  <!-- Add if conditions depending on manipulator or not --> 
-  <include file="$(find mmuav_description)/launch/spawn_uav.launch">
+  <group if="$(arg spawn_manipulator)">
 
-    <arg name="model_type" value="$(arg model_type)" />
-    <arg name="model" value="$(arg model)" />
-    <arg name="name" value="$(arg name)" />
-    <arg name="x" value="$(arg x)" />
-    <arg name="y" value="$(arg y)" />
-    <arg name="z" value="$(arg z)" />
-    <arg name="turn_off_all_collisions" default="$(arg turn_off_all_collisions)" />
-    <arg name="collision_bitmask" default="$(arg collision_bitmask)" />
-    <arg name="mount_stereo_cam" value="false" />
+    <!-- This name determines controllers of an arm-->    
+    <arg name="manipulator_name" default="uav"/>
+    <arg name="model_type" default="uav_wp_manipulator" />
+    <arg name="model" value="$(find mmuav_description)/urdf/$(arg model_type).gazebo.xacro" />  
 
-  </include>
+    <include file="$(find mmuav_description)/launch/spawn_uav_wp_manipulator.launch">
+      <arg name="model_type" value="$(arg model_type)" />
+      <arg name="model" value="$(arg model)" />
+      <arg name="name" value="$(arg name)" />
+      <arg name="x" value="$(arg x)" />
+      <arg name="y" value="$(arg y)" />
+      <arg name="z" value="$(arg z)" />
+      <arg name="turn_off_all_collisions" default="$(arg turn_off_all_collisions)" />
+      <arg name="collision_bitmask" default="$(arg collision_bitmask)" />
+      <arg name="mount_stereo_cam" value="false" />  
+    </include>
+
+    <include file="$(find aerial_manipulators_control)/launch/wp_manipulator_gazebo_control.launch">
+      <arg name="namespace" value="$(arg manipulator_name)" />
+    </include >
+
+
+  </group>
+
+  <group unless="$(arg spawn_manipulator)">
+
+    <arg name="model_type" default="uav" />
+    <arg name="model" value="$(find mmuav_description)/urdf/$(arg model_type).gazebo.xacro" />  
+    
+    <include file="$(find mmuav_description)/launch/spawn_uav.launch">
+      <arg name="model_type" value="$(arg model_type)" />
+      <arg name="model" value="$(arg model)" />
+      <arg name="name" value="$(arg name)" />
+      <arg name="x" value="$(arg x)" />
+      <arg name="y" value="$(arg y)" />
+      <arg name="z" value="$(arg z)" />
+      <arg name="turn_off_all_collisions" default="$(arg turn_off_all_collisions)" />
+      <arg name="collision_bitmask" default="$(arg collision_bitmask)" />
+      <arg name="mount_stereo_cam" value="false" />  
+    </include>
+
+  </group>
 
   <!-- Start attitude height control -->
   <arg name="manipulator_type" default="none"/> <!-- Setting this as none to mitigate error -->
