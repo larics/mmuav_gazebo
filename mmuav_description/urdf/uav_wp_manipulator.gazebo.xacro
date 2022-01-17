@@ -4,7 +4,7 @@
 
     <xacro:include filename="$(find mmuav_description)/urdf/uav.gazebo.xacro" />
 
-    <xacro:include filename="$(find aerial_manipulators_description)/urdf/manipulator_base.urdf.xacro" />
+    <xacro:include filename="$(find aerial_manipulators_description)/urdf/wp_manipulator.base.urdf.xacro" />
 
     <!-- aditional arm properties -->
     <xacro:property name="arm_offset_z" value="0.0457" /> <!-- [m] -->
@@ -18,41 +18,14 @@
     </joint>
 
     <!-- wp_manipulator --> 
-    <xacro:wp_manipulator parent="base_link" >
+    <xacro:aerial_manipulator 
+        name="wp_manipulator"
+        gazebo="true"
+        parent="base_link">
         <origin xyz="0 0 ${arm_offset_z}" rpy="${pi/2} 0 0"/>
-    </xacro:wp_manipulator>
+    </xacro:aerial_manipulator>
 
-    <xacro:joint_transmission
-      trans_number="1"
-      joint_name="joint1">
-    </xacro:joint_transmission>
-  
-    <xacro:joint_transmission
-      trans_number="2"
-      joint_name="joint2">
-    </xacro:joint_transmission>
-  
-    <xacro:joint_transmission
-      trans_number="3"
-      joint_name="joint3">
-    </xacro:joint_transmission>
-  
-    <xacro:joint_transmission
-      trans_number="4"
-      joint_name="joint4">
-    </xacro:joint_transmission>
-  
-    <xacro:joint_transmission
-      trans_number="5"
-      joint_name="joint5">
-    </xacro:joint_transmission>
 
-    <!-- ROS control for aerial manipulator joints -->
-    <gazebo>
-      <plugin name="gazebo_ros_control" filename="libgazebo_ros_control.so">
-        <robotNamespace>uav</robotNamespace>
-      </plugin>
-    </gazebo>
 
 
 </robot>
