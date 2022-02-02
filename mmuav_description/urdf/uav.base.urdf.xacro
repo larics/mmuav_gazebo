@@ -514,7 +514,7 @@
     <xacro:include filename="$(find aerial_manipulators_description)/urdf/manipulator_base.urdf.xacro" />
     <xacro:asap_manipulator parent="base_link">
       <!--origin xyz="0 0 0.2" rpy="${pi/2} 0 0"/-->
-      <origin xyz="0 0 0.2" rpy="0 0 0"/>
+      <origin xyz="0 0 0.1" rpy="${pi/2} 0 0"/>
     </xacro:asap_manipulator>
 
     <xacro:transmisija
