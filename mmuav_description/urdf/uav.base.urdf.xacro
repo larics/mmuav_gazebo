@@ -508,6 +508,138 @@
 
   </xacro:if>
 
+
+  <xacro:if value="${'asap_manipulator_4r' == manipulator_type}">
+
+    <!-- Try to include manipulator -->
+    <xacro:include filename="$(find aerial_manipulators_description)/urdf/manipulator_base.urdf.xacro" />
+    <xacro:asap_manipulator_4r parent="base_link">
+      <!--origin xyz="0 0 0.2" rpy="${pi/2} 0 0"/-->
+      <origin xyz="0 0 -0.2" rpy="0 0 0"/>
+    </xacro:asap_manipulator_4r>
+
+    <xacro:transmisija
+      trans_number="1"
+      joint_name="joint1">
+    </xacro:transmisija>
+
+    <xacro:transmisija
+      trans_number="2"
+      joint_name="joint2">
+    </xacro:transmisija>
+
+    <xacro:transmisija
+      trans_number="3"
+      joint_name="joint3">
+    </xacro:transmisija>
+
+    <xacro:transmisija
+      trans_number="4"
+      joint_name="joint4">
+    </xacro:transmisija>
+
+    <xacro:if value="${'camera' == manipulator_tool}">
+      <xacro:property name="camera_link" value="0.02" />
+      <xacro:property name="camera_inertia">
+        <inertia
+        ixx="1e-8"
+        iyy="1e-8"
+        izz="1e-8"
+        ixy="0.0" ixz="0.0" iyz="0.0" />
+      </xacro:property>
+      <xacro:property name="camera_mass" value="1e-5"/>
+
+      <xacro:cam
+        camera_link="${camera_link}"
+        camera_mass="${camera_mass}"
+        parent="end_effector_base">
+        <origin xyz="0 0 0" rpy="${PI} 0 0"/>
+        <xacro:insert_block name="camera_inertia"/>
+      </xacro:cam>
+    </xacro:if>
+
+    <!-- Enable the Joint Feedback -->
+    <!--gazebo reference="joint3">
+      <stopCfm>0.08</stopCfm>
+      <stopErp>0.2</stopErp>
+      <implicitSpringDamper>true</implicitSpringDamper>
+      <provideFeedback>true</provideFeedback>
+    </gazebo-->
+
+    <!-- The ft_sensor plugin  -->
+    <gazebo>
+      <plugin name="ft_sensor" filename="libgazebo_ros_ft_sensor.so">
+        <updateRate>1000.0</updateRate>
+        <robotNamespace>$(arg name)/asap_manipulator_4r</robotNamespace>
+        <topicName>force_sensor/ft_sensor</topicName> 
+        <jointName>joint4</jointName>
+        <noise>
+          <type>gaussian</type>
+          <mean>0.0</mean>
+          <stddev>0.0001</stddev> <!-- change this to simulate noise --> 
+        </noise>
+      </plugin>
+    </gazebo>
+
+    <xacro:if value="${'rod' == manipulator_tool}">
+      <gazebo reference="rod">
+        <collision>
+          <surface>
+            <contact>
+              <collide_bitmask>${collision_bitmask}</collide_bitmask>
+            </contact>
+          </surface>
+        </collision>
+      </gazebo>
+      <!-- Rod link -->
+      <link name="rod">
+
+        <!--collision>
+          <origin xyz="0 0 0" rpy="0 0 0"/>
+          <geometry>
+            <box size="${camera_link} ${camera_link} ${camera_link}"/>
+          </geometry>
+        </collision-->
+
+        <visual>
+          <origin xyz="0.15 0 0" rpy="0 0 0"/>
+          <geometry>
+            <box size="0.3 0.01 0.01"/>
+          </geometry>
+          <material name="red"/>
+        </visual>
+
+        <xacro:unless value="${turn_off_all_collisions}">
+          <collision>
+            <origin xyz="0.15 0 0" rpy="0 0 0"/>
+            <geometry>
+                <box size="0.3 0.01 0.01"/>
+            </geometry>
+          </collision>
+        </xacro:unless>
+
+        <inertial>
+          <mass value="0.00001" />
+          <origin xyz="0.15 0 0" rpy="0 0 0"/>
+          <inertia
+            ixx="0" ixy="0" ixz="0"
+            iyx="0" iyy="0" iyz="0"
+            izx="0" izy="0" izz="0"/>
+        </inertial>
+
+      </link>
+
+      <!-- Rod joint with reference to the parent link -->
+      <joint name="rod_joint" type="fixed">
+        <origin xyz="0 0 0" rpy="0 0 0" />
+        <parent link="end_effector_base"/>
+        <child link="rod"/>
+      </joint>
+
+    </xacro:if>
+
+  </xacro:if>
+
   <!-- <xacro:camera_macro robot_namespace="${namespace}">
   </xacro:camera_macro> -->
 
