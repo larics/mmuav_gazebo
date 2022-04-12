@@ -113,7 +113,7 @@
         <arg name="position_control_file" value="$(arg asap_manipulator_4r_position_control_file)"/>
     </include>
 
-    <node name="joint_trajectory_to_uav_and_manipulator" pkg="mmuav_control" type="joint_trajectory_to_uav_and_wp_manipulator_3rx_reference.py" ns="$(arg name)"/>
+    <node name="joint_trajectory_to_uav_and_manipulator" pkg="mmuav_control" type="joint_trajectory_to_uav_and_asap_manipulator_4r_reference.py" ns="$(arg name)"/>
   </group>
 
 </launch>
