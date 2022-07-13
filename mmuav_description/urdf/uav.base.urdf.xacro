@@ -559,12 +559,12 @@
     </xacro:if>
 
     <!-- Enable the Joint Feedback -->
-    <!--gazebo reference="joint3">
+    <gazebo reference="joint4">
       <stopCfm>0.08</stopCfm>
       <stopErp>0.2</stopErp>
       <implicitSpringDamper>true</implicitSpringDamper>
       <provideFeedback>true</provideFeedback>
-    </gazebo-->
+    </gazebo>
 
     <!-- The ft_sensor plugin  -->
     <gazebo>
