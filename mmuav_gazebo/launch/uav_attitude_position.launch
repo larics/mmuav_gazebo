@@ -51,8 +51,8 @@
   <arg name="wp_manipulator_3rx_velocity_control_file" default="$(find aerial_manipulators_control)/config/wp_manipulator_3rx_velocity_control_retuned.yaml" />
 
   <!-- If asap manipulator 4r is selected then use these control config files -->
-  <arg name="asap_manipulator_4r_position_control_file" default="$(find aerial_manipulators_control)/config/asap_manipulator_4r_position_control.yaml" />
-  <arg name="asap_manipulator_4r_velocity_control_file" default="$(find aerial_manipulators_control)/config/asap_manipulator_4r_velocity_control.yaml" />
+  <arg name="asap_manipulator_4r_position_control_file" default="$(find aerial_manipulators_control)/config/asap_manipulator_4r_position_control_retuned.yaml" />
+  <arg name="asap_manipulator_4r_velocity_control_file" default="$(find aerial_manipulators_control)/config/asap_manipulator_4r_velocity_control_retuned.yaml" />
 
   <!-- Launch gazebo -->
   <group if="$(arg start_gazebo)">
