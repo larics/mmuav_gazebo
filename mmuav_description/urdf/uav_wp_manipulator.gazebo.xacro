@@ -6,8 +6,13 @@
 
     <xacro:include filename="$(find aerial_manipulators_description)/urdf/wp_manipulator.base.urdf.xacro" />
 
+
+    <!-- positive direction -->
+    <!-- z val = "0.0457" -->
+    <!-- r = ${pi/2} -->
+
     <!-- aditional arm properties -->
-    <xacro:property name="arm_offset_z" value="0.0457" /> <!-- [m] -->
+    <xacro:property name="arm_offset_z" value="-0.0457" /> <!-- [m] -->
     
     <link name="world">
     </link>
@@ -22,7 +27,7 @@
         name="wp_manipulator"
         gazebo="true"
         parent="base_link">
-        <origin xyz="0 0 ${arm_offset_z}" rpy="${pi/2} 0 0"/>
+        <origin xyz="0 0 ${arm_offset_z}" rpy="-${pi/2} 0 0"/>
     </xacro:aerial_manipulator>
 
 
