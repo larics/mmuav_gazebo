@@ -41,7 +41,7 @@
   <group if="$(arg spawn_manipulator)">
 
     <!-- This name determines controllers of an arm-->    
-    <arg name="manipulator_name" default="uav"/>
+    <arg name="manipulator_name" default="wp_manipulator"/>
     <arg name="model_type" default="uav_wp_manipulator" />
     <arg name="model" value="$(find mmuav_description)/urdf/$(arg model_type).gazebo.xacro" />  
 
