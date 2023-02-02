@@ -212,7 +212,7 @@ def joint_generator(n, xml_parent, rope_list, base_list):
             etree.SubElement(joints1[i - 1], "parent", link="{0}".format(rope_list[i-1]), )
             etree.SubElement(joints1[i - 1], "child", link="{0}".format(rope_Psi[i]))
             etree.SubElement(joints1[i - 1], "origin", xyz="0 0 ${-body_len}", rpy="0.0 0.0 0.0")
-            etree.SubElement(joints1[i - 1 ], "axis", xyz="0 0 1")
+            etree.SubElement(joints1[i - 1], "axis", xyz="0 0 1")
             etree.SubElement(joints1[i - 1], "dynamics", damping="${damping1}", friction="${friction}")
             etree.SubElement(joints1[i - 1], "limit", lower="${-pi/2}", upper="${pi/2}", effort="${effort_joint}",velocity="${velocity_joint}")
 

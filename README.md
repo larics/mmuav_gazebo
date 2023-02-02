@@ -88,3 +88,8 @@ After running the command above, the UAV will hover at 1m height. You can contro
 - ``` /vpc_mmcuav/imu``` -> Imu data from the UAV
 - ``` /vpc_mmcuav/odometry ``` -> Provides position, orientation, linear velocities and angular velocities of the UAV
 - ``` /vpc_mmcuav/pid_*``` -> All topics starting with ```pid_``` are publishing controller status
+
+# TODO: 
+- [ ] Fix README.md
+- [ ] Remove redundant files regarding control 
+- [ ] Create another robot arm
