@@ -1,0 +1,36 @@
+<?xml version='1.0' encoding='utf-8'?>
+
+<robot name="uav_wp_manipulator" xmlns:xacro="http://ros.org/wiki/xacro">
+
+    <xacro:include filename="$(find mmuav_description)/urdf/uav.gazebo.xacro" />
+
+    <xacro:include filename="$(find aerial_manipulators_description)/urdf/licas_manipulator.base.urdf.xacro" />
+
+
+    <!-- positive direction -->
+    <!-- z val = "0.0457" -->
+    <!-- r = ${pi/2} -->
+
+    <!-- aditional arm properties -->
+    <xacro:property name="arm_offset_z" value="-0.0457" /> <!-- [m] -->
+    
+    <link name="world">
+    </link>
+
+    <joint name="world_base_joint" type="floating">
+        <parent link="world"/>
+        <child link="base_link"/>
+    </joint>
+
+    <!-- wp_manipulator --> 
+    <xacro:aerial_manipulator 
+        name="licas_manipulator"
+        gazebo="true"
+        parent="base_link">
+        <origin xyz="0 0 ${arm_offset_z}" rpy="-${pi/2} 0 0"/>
+    </xacro:aerial_manipulator>
+
+
+
+
+</robot>

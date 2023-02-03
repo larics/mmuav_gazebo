@@ -41,11 +41,11 @@
   <group if="$(arg spawn_manipulator)">
 
     <!-- This name determines controllers of an arm-->    
-    <arg name="manipulator_name" default="wp_manipulator"/>
-    <arg name="model_type" default="uav_wp_manipulator" />
+    <arg name="manipulator_name" default="licas_manipulator"/>
+    <arg name="model_type" default="uav_licas_manipulator" />
     <arg name="model" value="$(find mmuav_description)/urdf/$(arg model_type).gazebo.xacro" />  
 
-    <include file="$(find mmuav_description)/launch/spawn_uav_wp_manipulator.launch">
+    <include file="$(find mmuav_description)/launch/spawn_uav_licas_manipulator.launch">
       <arg name="model_type" value="$(arg model_type)" />
       <arg name="model" value="$(arg model)" />
       <arg name="name" value="$(arg name)" />
@@ -57,7 +57,7 @@
       <arg name="mount_stereo_cam" value="false" />  
     </include>
 
-    <include file="$(find aerial_manipulators_control)/launch/wp_manipulator_gazebo_control.launch">
+    <include file="$(find aerial_manipulators_control)/launch/licas_manipulator_gazebo_control.launch">
       <arg name="namespace" value="$(arg manipulator_name)" />
     </include >
 

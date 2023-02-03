@@ -1,0 +1,54 @@
+<?xml version="1.0"?>
+
+<launch>
+  <arg name="name" default="uav"/>
+  <!-- Check if tf_prefix is needed --> 
+  <arg name="tf_prefix" default="$(optenv ROS_NAMESPACE)"/>
+  <arg name="x" default="0.0"/>
+  <arg name="y" default="0.0"/>
+  <arg name="z" default="2.10421"/>
+  <arg name="enable_logging" default="false"/>
+  <arg name="enable_ground_truth" default="true"/>
+  <arg name="log_file" default="uav_log"/>
+  <arg name="exclude_floor_link_from_collision_check" default="ground_plane::link"/>
+
+  <!-- Model args for urdf -->
+  <arg name="model_type" default="uav_licas_manipulator" />
+  <arg name="model" default="$(find mmuav_description)/urdf/$(arg model_type).gazebo.xacro" />  
+  
+  <arg name="paused" default="false"/>
+
+  <arg name="mount_velodyne" default="false" />
+  <arg name="mount_stereo_cam" default="true" />
+  <arg name="mount_gimbal" default="true" />
+  <arg name="turn_off_all_collisions" default="false" />
+  <arg name="collision_bitmask" default="-1" />
+
+  <!-- send the robot XML to param server -->
+  <param name="/$(arg name)/robot_description" command="
+    $(find xacro)/xacro '$(arg model)'
+    enable_logging:=$(arg enable_logging)
+    enable_ground_truth:=$(arg enable_ground_truth)
+    exclude_floor_link_from_collision_check:=$(arg exclude_floor_link_from_collision_check)
+    log_file:=$(arg log_file)
+    name:=$(arg name)
+    mount_velodyne:=$(arg mount_velodyne)
+    mount_stereo_cam:=$(arg mount_stereo_cam) 
+    turn_off_all_collisions:=$(arg turn_off_all_collisions)
+    collision_bitmask:=$(arg collision_bitmask)"
+  />
+
+  <param name="tf_prefix" type="string" value="$(arg tf_prefix)" />
+
+  <!-- push robot_description to factory and spawn robot in gazebo -->
+  <node name="$(arg name)_spawn_robot" pkg="gazebo_ros" type="spawn_model"
+   args="-param /$(arg name)/robot_description
+         -urdf
+         -x $(arg x)
+         -y $(arg y)
+         -z $(arg z)
+         -model $(arg name)"
+   respawn="false" output="screen" >
+  </node>
+
+</launch>
