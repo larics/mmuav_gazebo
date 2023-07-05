@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 __author__ = 'aivanovic'
 
@@ -50,7 +50,7 @@ class OdometryFilter:
     # Load parameters from yaml file
     file_name = rospy.get_param('~filename', 'OdometryFilter.yaml')
     file_name = RosPack().get_path('mmuav_control') + '/config/' + file_name
-    initial_params = yaml.load(file(file_name, 'r'))
+    initial_params = yaml.load(open(file_name, 'r'))
 
 
     #########################################################

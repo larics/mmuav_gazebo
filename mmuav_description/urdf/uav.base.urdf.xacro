@@ -508,7 +508,6 @@
 
   </xacro:if>
 
-
   <xacro:if value="${'asap_manipulator_4r' == manipulator_type}">
 
     <!-- Try to include manipulator -->
@@ -517,6 +516,7 @@
       <!--origin xyz="0 0 0.2" rpy="${pi/2} 0 0"/-->
       <origin xyz="0 0 -0.2" rpy="0 0 0"/>
     </xacro:asap_manipulator_4r>
+
 
     <xacro:transmisija
       trans_number="1"
