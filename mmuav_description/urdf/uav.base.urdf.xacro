@@ -508,14 +508,15 @@
 
   </xacro:if>
 
-  <xacro:if value="${'asap_manipulator' == manipulator_type}">
+  <xacro:if value="${'asap_manipulator_4r' == manipulator_type}">
 
     <!-- Try to include manipulator -->
     <xacro:include filename="$(find aerial_manipulators_description)/urdf/manipulator_base.urdf.xacro" />
-    <xacro:asap_manipulator parent="base_link">
+    <xacro:asap_manipulator_4r parent="base_link">
       <!--origin xyz="0 0 0.2" rpy="${pi/2} 0 0"/-->
-      <origin xyz="0 0 0.1" rpy="${pi/2} 0 0"/>
-    </xacro:asap_manipulator>
+      <origin xyz="0 0 -0.2" rpy="0 0 0"/>
+    </xacro:asap_manipulator_4r>
+
 
     <xacro:transmisija
       trans_number="1"
@@ -535,11 +536,6 @@
     <xacro:transmisija
       trans_number="4"
       joint_name="joint4">
-    </xacro:transmisija>
-   
-    <xacro:transmisija
-      trans_number="5"
-      joint_name="joint5">
     </xacro:transmisija>
 
     <xacro:if value="${'camera' == manipulator_tool}">
@@ -563,7 +559,7 @@
     </xacro:if>
 
     <!-- Enable the Joint Feedback -->
-    <gazebo reference="joint5">
+    <gazebo reference="joint4">
       <stopCfm>0.08</stopCfm>
       <stopErp>0.2</stopErp>
       <implicitSpringDamper>true</implicitSpringDamper>
@@ -574,9 +570,9 @@
     <gazebo>
       <plugin name="ft_sensor" filename="libgazebo_ros_ft_sensor.so">
         <updateRate>1000.0</updateRate>
-        <robotNamespace>$(arg name)/asap_manipulator</robotNamespace>
+        <robotNamespace>$(arg name)/asap_manipulator_4r</robotNamespace>
         <topicName>force_sensor/ft_sensor</topicName> 
-        <jointName>joint5</jointName>
+        <jointName>joint4</jointName>
         <noise>
           <type>gaussian</type>
           <mean>0.0</mean>

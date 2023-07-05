@@ -36,6 +36,12 @@
     odometry type. -->
   <arg name="position_control_params_file" default="UavPositionControl.yaml" />
 
+  <!-- Some applications require starting a joint_trajectory_to_uav_and_manipulator node for
+  trajectory dequeue. Sometimes this is not desireable because other control nodes are in place,
+  for instance when using impedance control. This parameter will determine whether to start
+  trajectory dequeue node or not. -->
+  <arg name="start_trajectory_dequeue" default="false" />
+
   <!-- If wp manipulator is selected then use these control config files -->
   <arg name="wp_manipulator_position_control_file" default="$(find aerial_manipulators_control)/config/wp_manipulator_position_control_retuned.yaml" />
   <arg name="wp_manipulator_velocity_control_file" default="$(find aerial_manipulators_control)/config/wp_manipulator_velocity_control_retuned.yaml" />
@@ -43,6 +49,10 @@
   <!-- If wp manipulator 3rx is selected then use these control config files -->
   <arg name="wp_manipulator_3rx_position_control_file" default="$(find aerial_manipulators_control)/config/wp_manipulator_3rx_position_control_retuned.yaml" />
   <arg name="wp_manipulator_3rx_velocity_control_file" default="$(find aerial_manipulators_control)/config/wp_manipulator_3rx_velocity_control_retuned.yaml" />
+
+  <!-- If asap manipulator 4r is selected then use these control config files -->
+  <arg name="asap_manipulator_4r_position_control_file" default="$(find aerial_manipulators_control)/config/asap_manipulator_4r_position_control_retuned.yaml" />
+  <arg name="asap_manipulator_4r_velocity_control_file" default="$(find aerial_manipulators_control)/config/asap_manipulator_4r_velocity_control_retuned.yaml" />
 
   <!-- Launch gazebo -->
   <group if="$(arg start_gazebo)">
@@ -89,7 +99,7 @@
       <arg name="position_control_file" value="$(arg wp_manipulator_position_control_file)"/>
     </include>
 
-    <node name="joint_trajectory_to_uav_and_manipulator" pkg="mmuav_control" type="joint_trajectory_to_uav_and_wp_manipulator_reference.py" ns="$(arg name)" output="screen"/>
+    <node name="joint_trajectory_to_uav_and_manipulator" pkg="mmuav_control" type="joint_trajectory_to_uav_and_wp_manipulator_reference.py" ns="$(arg name)" output="screen" if="$(arg start_trajectory_dequeue)"/>
   </group>
 
   <group if="$(eval 'wp_manipulator_3rx' == manipulator_type)">
@@ -99,7 +109,17 @@
         <arg name="position_control_file" value="$(arg wp_manipulator_3rx_position_control_file)"/>
     </include>
 
-    <node name="joint_trajectory_to_uav_and_manipulator" pkg="mmuav_control" type="joint_trajectory_to_uav_and_wp_manipulator_3rx_reference.py" ns="$(arg name)"/>
+    <node name="joint_trajectory_to_uav_and_manipulator" pkg="mmuav_control" type="joint_trajectory_to_uav_and_wp_manipulator_3rx_reference.py" ns="$(arg name)" if="$(arg start_trajectory_dequeue)"/>
+  </group>
+
+  <group if="$(eval 'asap_manipulator_4r' == manipulator_type)">
+    <include file="$(find aerial_manipulators_control)/launch/asap_manipulator_4r_gazebo_control.launch">
+        <arg name="namespace" value="$(arg name)" />
+        <arg name="velocity_control_file" value="$(arg asap_manipulator_4r_velocity_control_file)"/>
+        <arg name="position_control_file" value="$(arg asap_manipulator_4r_position_control_file)"/>
+    </include>
+
+    <node name="joint_trajectory_to_uav_and_manipulator" pkg="mmuav_control" type="joint_trajectory_to_uav_and_asap_manipulator_4r_reference.py" ns="$(arg name)" if="$(arg start_trajectory_dequeue)"/>
   </group>
 
 </launch>
